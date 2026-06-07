@@ -12,6 +12,8 @@
   <Folder Name="/tests/">
     <Project Path="tests/Application.Tests/Application.Tests.csproj" />
     <Project Path="tests/Architecture.Tests/Architecture.Tests.csproj" />
+    <Project Path="tests/Dictation.Specs/Dictation.Specs.csproj" />
     <Project Path="tests/Hosting.Tests/Hosting.Tests.csproj" />
+    <Project Path="tests/Logic.AudioManagement.Tests/Logic.AudioManagement.Tests.csproj" />
   </Folder>
 </Solution>

@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Acceptance (BDD) project. Reqnroll feature files drive behavior outside-in through IMediator
+    against the REAL Application + Logic.* composition; only the Infrastructure ports are faked. It
+    references Domain, Application, and every Logic.* project — deliberately NOT Presentation or
+    Infrastructure. xUnit v3 test projects are executables.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Reqnroll.xunit.v3" />
+    <PackageReference Include="Reqnroll.Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="NSubstitute" />
+    <PackageReference Include="AwesomeAssertions" />
+    <PackageReference Include="coverlet.collector" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Domain\Domain.csproj" />
+    <ProjectReference Include="..\..\src\Application\Application.csproj" />
+    <ProjectReference Include="..\..\src\Logic.AppManagement\Logic.AppManagement.csproj" />
+    <ProjectReference Include="..\..\src\Logic.AudioManagement\Logic.AudioManagement.csproj" />
+    <ProjectReference Include="..\..\src\Logic.ModelManagement\Logic.ModelManagement.csproj" />
+    <ProjectReference Include="..\..\src\Logic.GpuContactPoint\Logic.GpuContactPoint.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="reqnroll.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>
