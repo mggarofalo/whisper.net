@@ -6,6 +6,7 @@
 using Application.DependencyInjection;
 using Application.Ports;
 using Dictation.Specs.Drivers;
+using Infrastructure.Audio;
 using Logic.AppManagement.DependencyInjection;
 using Logic.AudioManagement.DependencyInjection;
 using Logic.GpuContactPoint.DependencyInjection;
@@ -36,6 +37,12 @@ public static class TestDependencies
 		services.AddScoped(_ => Substitute.For<ISettingsStore>());
 		services.AddScoped(_ => Substitute.For<IHistoryStore>());
 
+		// Capture (WHISPER-7): drive the REAL WasapiAudioSource over a fake device seam, so the
+		// capture contract is validated for real while no microphone is touched.
+		services.AddScoped<FakeAudioCaptureClient>();
+		services.AddScoped<IAudioCaptureClient>(sp => sp.GetRequiredService<FakeAudioCaptureClient>());
+		services.AddScoped<IAudioSource, WasapiAudioSource>();
+
 		services.AddScoped<ScenarioWorld>();
 		services.AddScoped<TranscriptionDriver>();
 		services.AddScoped<RepositoryGuidanceDriver>();
@@ -45,6 +52,7 @@ public static class TestDependencies
 		services.AddScoped<HistoryDriver>();
 		services.AddScoped<UsageStatsDriver>();
 		services.AddScoped<MappingDriver>();
+		services.AddScoped<AudioCaptureDriver>();
 
 		return services;
 	}

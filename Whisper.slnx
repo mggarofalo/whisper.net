@@ -15,6 +15,7 @@
     <Project Path="tests/Dictation.Specs/Dictation.Specs.csproj" />
     <Project Path="tests/Domain.Tests/Domain.Tests.csproj" />
     <Project Path="tests/Hosting.Tests/Hosting.Tests.csproj" />
+    <Project Path="tests/Infrastructure.Tests/Infrastructure.Tests.csproj" />
     <Project Path="tests/Logic.AppManagement.Tests/Logic.AppManagement.Tests.csproj" />
     <Project Path="tests/Logic.AudioManagement.Tests/Logic.AudioManagement.Tests.csproj" />
   </Folder>

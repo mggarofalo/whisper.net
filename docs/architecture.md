@@ -66,6 +66,15 @@ Implements the Application ports against the outside world: Whisper.net (transcr
 (WASAPI capture), ONNX Runtime (Silero VAD), SendInput (text injection), persistence, and any
 opt-in network client. This is the only place real I/O happens.
 
+**Device-seam testing of adapters.** A native adapter is split into device-independent *coordination*
+logic and the thin *device glue* that calls the native library. The glue sits behind a small internal
+seam (e.g. `IAudioCaptureClient` wraps NAudio's `WasapiCapture`); the coordination class (e.g.
+`WasapiAudioSource`) depends only on that seam. This lets the adapter's real behavior — idempotent
+start, flush-on-stop, mapping device errors to typed failures — be driven headlessly over a fake seam,
+while the actual native glue is verified by manual real-device smoke. Because of this, the BDD specs
+*do* reference Infrastructure (since WHISPER-7): they drive the real adapter over a fake low-level
+seam at the port boundary. Only the device glue is excluded from automated tests, never the behavior.
+
 ### Presentation
 WPF + MVVM (the tray app, settings, overlays). It is the **only** layer permitted to reference
 Infrastructure, where it composes the object graph at startup. The WPF project targets

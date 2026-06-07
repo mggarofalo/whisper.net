@@ -3,6 +3,8 @@
 // from configuration (proving the layered config -> logging path). The host uses the exact same
 // AddWhisperServices / AddSerilogLogging extensions the WPF app calls.
 
+using Application.Ports;
+using Infrastructure.Audio;
 using Infrastructure.DependencyInjection;
 using Mediator;
 using Microsoft.Extensions.Configuration;
@@ -33,6 +35,18 @@ public sealed class HostCompositionTests
 		using IServiceScope scope = host.Services.CreateScope();
 
 		Assert.NotNull(scope.ServiceProvider.GetService<IMediator>());
+	}
+
+	// WHISPER-7 AC6: the WASAPI capture port is registered by the Infrastructure layer and resolvable
+	// from the production composition (constructing it must not require a real device).
+	[Fact]
+	public void Resolves_the_wasapi_audio_capture_port_from_infrastructure()
+	{
+		using IHost host = BuildHost();
+
+		IAudioSource source = host.Services.GetRequiredService<IAudioSource>();
+
+		Assert.IsType<WasapiAudioSource>(source);
 	}
 
 	[Fact]

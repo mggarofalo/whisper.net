@@ -3,6 +3,8 @@
 // Host calls; the BDD specs deliberately do NOT call it, substituting the ports with fakes instead.
 // Concrete adapters are registered here as later modules add them.
 
+using Application.Ports;
+using Infrastructure.Audio;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -10,6 +12,12 @@ namespace Infrastructure.DependencyInjection;
 
 public static class InfrastructureServiceCollectionExtensions
 {
-	public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration? configuration = null) =>
-		services;
+	public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration? configuration = null)
+	{
+		// Microphone capture (WHISPER-7): the WASAPI source over the real NAudio device client.
+		services.AddSingleton<IAudioCaptureClient, NAudioCaptureClient>();
+		services.AddSingleton<IAudioSource, WasapiAudioSource>();
+
+		return services;
+	}
 }
