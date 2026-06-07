@@ -20,23 +20,29 @@ internal sealed class FakeWhisperEngineFactory : IWhisperEngineFactory
 	public ComputeBackend? LastBackend { get; private set; }
 	public string? LastLanguage { get; private set; }
 
+	// The decoding options the most recent transcription was conditioned with (WHISPER-38).
+	public DecodingOptions? LastDecodingOptions { get; private set; }
+
 	public IWhisperEngine Create(string modelPath, ComputeBackend backend, string? language)
 	{
 		CreateCount++;
 		LastModelPath = modelPath;
 		LastBackend = backend;
 		LastLanguage = language;
-		return new FakeWhisperEngine(_segments);
+		return new FakeWhisperEngine(_segments, options => LastDecodingOptions = options);
 	}
 }
 
-internal sealed class FakeWhisperEngine(WhisperSegment[] segments) : IWhisperEngine
+internal sealed class FakeWhisperEngine(WhisperSegment[] segments, Action<DecodingOptions> onDecodingOptions) : IWhisperEngine
 {
 	public async IAsyncEnumerable<WhisperSegment> TranscribeAsync(
 		IReadOnlyList<float> samples,
 		int sampleRate,
+		DecodingOptions decodingOptions,
 		[EnumeratorCancellation] CancellationToken cancellationToken)
 	{
+		onDecodingOptions(decodingOptions);
+
 		foreach (WhisperSegment segment in segments)
 		{
 			cancellationToken.ThrowIfCancellationRequested();

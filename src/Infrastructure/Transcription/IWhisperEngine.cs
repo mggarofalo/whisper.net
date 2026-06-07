@@ -11,8 +11,16 @@ namespace Infrastructure.Transcription;
 /// <summary>A loaded model ready to transcribe 16 kHz mono float PCM into timed segments.</summary>
 public interface IWhisperEngine : IAsyncDisposable
 {
-	/// <summary>Streams the recognized segments for <paramref name="samples"/> (mono float PCM at <paramref name="sampleRate"/>).</summary>
-	IAsyncEnumerable<WhisperSegment> TranscribeAsync(IReadOnlyList<float> samples, int sampleRate, CancellationToken cancellationToken);
+	/// <summary>
+	/// Streams the recognized segments for <paramref name="samples"/> (mono float PCM at
+	/// <paramref name="sampleRate"/>), applying the per-call <paramref name="decodingOptions"/>
+	/// (custom-vocabulary initial prompt + first-token threshold override).
+	/// </summary>
+	IAsyncEnumerable<WhisperSegment> TranscribeAsync(
+		IReadOnlyList<float> samples,
+		int sampleRate,
+		DecodingOptions decodingOptions,
+		CancellationToken cancellationToken);
 }
 
 /// <summary>One segment as the engine reports it: text plus the timing/confidence Whisper.net exposes.</summary>

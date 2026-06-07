@@ -10,6 +10,7 @@ using System.Text;
 using Application.Ports;
 using Domain.Audio;
 using Domain.Models;
+using Logic.ModelManagement;
 using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Transcription;
@@ -17,6 +18,7 @@ namespace Infrastructure.Transcription;
 public sealed class WhisperTranscriber(
 	IWhisperEngineFactory engineFactory,
 	IBackendSelector backendSelector,
+	VocabularyConditioner vocabularyConditioner,
 	IOptions<WhisperOptions> options) : ITranscriber, IAsyncDisposable
 {
 	private readonly WhisperOptions _options = options.Value;
@@ -27,11 +29,15 @@ public sealed class WhisperTranscriber(
 	{
 		IWhisperEngine engine = await EnsureEngineLoadedAsync(cancellationToken).ConfigureAwait(false);
 
+		// Assemble decoder conditioning from the CURRENT custom vocabulary on every call, so an edited
+		// vocabulary biases the next utterance without reloading the (expensive) model.
+		DecodingOptions decodingOptions = vocabularyConditioner.Assemble(_options.CustomVocabulary);
+
 		StringBuilder text = new();
 		List<TranscriptionSegment> segments = [];
 
 		await foreach (WhisperSegment segment in engine
-			.TranscribeAsync(clip.Samples, clip.SampleRate, cancellationToken)
+			.TranscribeAsync(clip.Samples, clip.SampleRate, decodingOptions, cancellationToken)
 			.ConfigureAwait(false))
 		{
 			text.Append(segment.Text);

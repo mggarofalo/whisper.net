@@ -14,4 +14,11 @@ public sealed class WhisperOptions
 
 	/// <summary>Language code (e.g. "en"); empty or "auto" enables automatic detection.</summary>
 	public string Language { get; set; } = "auto";
+
+	/// <summary>
+	/// User-supplied terms/phrases (names, jargon) the decoder is biased toward via prompt-token
+	/// conditioning (WHISPER-38). Read fresh on each transcription, so an edited vocabulary takes effect
+	/// on the next utterance without reloading the model. Empty by default — no conditioning.
+	/// </summary>
+	public IReadOnlyList<string> CustomVocabulary { get; set; } = [];
 }
