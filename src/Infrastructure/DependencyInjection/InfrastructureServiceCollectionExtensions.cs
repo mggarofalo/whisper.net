@@ -8,6 +8,7 @@ using Application.Ports;
 using Infrastructure.Audio;
 using Infrastructure.Gpu;
 using Infrastructure.Hotkeys;
+using Infrastructure.Lifecycle;
 using Infrastructure.Models;
 using Infrastructure.Settings;
 using Infrastructure.Startup;
@@ -145,6 +146,34 @@ public static class InfrastructureServiceCollectionExtensions
 			return new RegistryStartupRegistration(serviceProvider.GetRequiredService<IOptions<StartupRegistrationOptions>>());
 		});
 
+		// Single-instance enforcement (WHISPER-25): a named Mutex (the lock) and a named EventWaitHandle
+		// (cross-process activation), both in the current-user session namespace — no elevation. Built
+		// behind an OS guard for the same reason as the registry adapter above (portable net10.0 target).
+		services.AddSingleton<IInstanceLock>(_ =>
+		{
+			if (!OperatingSystem.IsWindows())
+			{
+				throw new PlatformNotSupportedException("Single-instance enforcement requires Windows.");
+			}
+
+			return new MutexInstanceLock(SingleInstanceMutexName);
+		});
+
+		services.AddSingleton<IInstanceSignal>(_ =>
+		{
+			if (!OperatingSystem.IsWindows())
+			{
+				throw new PlatformNotSupportedException("Single-instance activation requires Windows.");
+			}
+
+			return new EventWaitHandleInstanceSignal(SingleInstanceActivationName);
+		});
+
 		return services;
 	}
+
+	// Stable names for the single-instance primitives. No "Global\" prefix, so they live in the current
+	// user's session namespace (per-user, no elevation).
+	private const string SingleInstanceMutexName = "whisper-net-single-instance";
+	private const string SingleInstanceActivationName = "whisper-net-single-instance-activate";
 }
