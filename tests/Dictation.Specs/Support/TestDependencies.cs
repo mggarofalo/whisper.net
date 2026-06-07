@@ -56,6 +56,11 @@ public static class TestDependencies
 		services.AddScoped<AudioNormalizationDriver>();
 		services.AddScoped<VadDriver>();
 
+		// Device selection (WHISPER-13): fake enumerator + notification client behind the driver.
+		services.AddScoped<FakeAudioDeviceEnumerator>();
+		services.AddScoped<FakeDefaultDeviceWatcher>();
+		services.AddScoped<AudioDeviceDriver>();
+
 		return services;
 	}
 }

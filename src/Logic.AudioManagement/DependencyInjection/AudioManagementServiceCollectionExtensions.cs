@@ -23,6 +23,9 @@ public static class AudioManagementServiceCollectionExtensions
 		// VAD silence policy (WHISPER-31): the deterministic gate/trim behavior over VAD probabilities.
 		services.AddSingleton<VadSilencePolicy>();
 
+		// Device-selection policy (WHISPER-13): resolves the stored selection against available devices.
+		services.AddSingleton<DeviceSelectionPolicy>();
+
 		return services;
 	}
 }

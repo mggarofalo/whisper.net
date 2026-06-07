@@ -61,6 +61,17 @@ public sealed class HostCompositionTests
 		Assert.IsType<SileroVad>(vad);
 	}
 
+	// WHISPER-13 AC6: enumeration and the default-device notification client are wired through the
+	// Infrastructure DI extension (both create their NAudio enumerator lazily, so resolution is safe).
+	[Fact]
+	public void Resolves_the_audio_device_enumeration_and_watcher_from_infrastructure()
+	{
+		using IHost host = BuildHost();
+
+		Assert.NotNull(host.Services.GetService<IAudioDeviceEnumerator>());
+		Assert.NotNull(host.Services.GetService<IDefaultDeviceWatcher>());
+	}
+
 	[Fact]
 	public void Honors_the_minimum_log_level_from_configuration()
 	{
