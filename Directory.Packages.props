@@ -25,6 +25,15 @@
     <PackageVersion Include="NAudio.Core" Version="2.2.1" />
   </ItemGroup>
 
+  <!--
+    Global keyboard hook (SharpHook over libuiohook). Infrastructure-only: backs the IHotkeyListener
+    port with a focus-independent hook that, unlike Win32 RegisterHotKey, can model push-to-talk
+    hold/release and bind F13. No network egress.
+  -->
+  <ItemGroup>
+    <PackageVersion Include="SharpHook" Version="7.1.2" />
+  </ItemGroup>
+
   <!-- On-device voice-activity detection (Silero VAD via ONNX Runtime). Infrastructure-only; no egress. -->
   <ItemGroup>
     <PackageVersion Include="Microsoft.ML.OnnxRuntime" Version="1.20.1" />

@@ -17,6 +17,7 @@
     <PackageReference Include="Serilog.Sinks.Console" />
     <PackageReference Include="NAudio.Wasapi" />
     <PackageReference Include="NAudio.Core" />
+    <PackageReference Include="SharpHook" />
     <PackageReference Include="Microsoft.ML.OnnxRuntime" />
     <PackageReference Include="Whisper.net" />
     <PackageReference Include="Whisper.net.Runtime" />

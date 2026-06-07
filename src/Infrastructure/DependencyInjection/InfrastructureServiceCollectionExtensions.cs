@@ -7,6 +7,7 @@ using Application.Delivery;
 using Application.Ports;
 using Infrastructure.Audio;
 using Infrastructure.Gpu;
+using Infrastructure.Hotkeys;
 using Infrastructure.Models;
 using Infrastructure.TextDelivery;
 using Infrastructure.Transcription;
@@ -94,6 +95,11 @@ public static class InfrastructureServiceCollectionExtensions
 		// UIPI / elevation detection (WHISPER-6): lets the delivery pipeline detect a higher-integrity
 		// foreground window and surface that synthetic input would be dropped, instead of failing silently.
 		services.AddSingleton<IForegroundIntegrityProbe, Win32ForegroundIntegrityProbe>();
+
+		// Global hotkeys (WHISPER-10): the SharpHook event-loop hook behind the IHotkeyListener port,
+		// pumped on its own dedicated thread. Singleton so the single OS hook lives for the app's run.
+		services.AddSingleton<IGlobalKeyHook, SharpHookGlobalKeyHook>();
+		services.AddSingleton<IHotkeyListener, EventLoopHotkeyListener>();
 
 		return services;
 	}

@@ -6,6 +6,7 @@
 using Application.Ports;
 using Infrastructure.Audio;
 using Infrastructure.DependencyInjection;
+using Infrastructure.Hotkeys;
 using Mediator;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -70,6 +71,18 @@ public sealed class HostCompositionTests
 
 		Assert.NotNull(host.Services.GetService<IAudioDeviceEnumerator>());
 		Assert.NotNull(host.Services.GetService<IDefaultDeviceWatcher>());
+	}
+
+	// WHISPER-10 AC2: the global hotkey listener is registered by Infrastructure and resolvable from the
+	// production composition (constructing the SharpHook hook is deferred-native, so resolution is safe).
+	[Fact]
+	public void Resolves_the_global_hotkey_listener_from_infrastructure()
+	{
+		using IHost host = BuildHost();
+
+		IHotkeyListener listener = host.Services.GetRequiredService<IHotkeyListener>();
+
+		Assert.IsType<EventLoopHotkeyListener>(listener);
 	}
 
 	[Fact]

@@ -9,11 +9,13 @@ using Application.DependencyInjection;
 using Application.Ports;
 using Dictation.Specs.Drivers;
 using Infrastructure.Audio;
+using Infrastructure.Hotkeys;
 using Logic.AppManagement.DependencyInjection;
 using Logic.AudioManagement.DependencyInjection;
 using Logic.GpuContactPoint.DependencyInjection;
 using Logic.ModelManagement.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NSubstitute;
 using Reqnroll.Microsoft.Extensions.DependencyInjection;
@@ -26,6 +28,10 @@ public static class TestDependencies
 	public static IServiceCollection CreateServices()
 	{
 		ServiceCollection services = new();
+
+		// Logging infrastructure with no providers: ILogger<T> resolves to a no-op logger, so adapters
+		// that log (e.g. the hotkey listener) compose for real without Serilog's console sink in specs.
+		services.AddLogging();
 
 		// Real production registration — the inner layers run for real.
 		services.AddApplication();
@@ -60,8 +66,15 @@ public static class TestDependencies
 		services.AddScoped<IAudioCaptureClient>(sp => sp.GetRequiredService<FakeAudioCaptureClient>());
 		services.AddScoped<IAudioSource, WasapiAudioSource>();
 
+		// Global hotkeys (WHISPER-10): drive the REAL EventLoopHotkeyListener over a fake hook seam, so
+		// the threading, translation, and modifier tracking are validated for real with no OS hook.
+		services.AddScoped<FakeGlobalKeyHook>();
+		services.AddScoped<IGlobalKeyHook>(sp => sp.GetRequiredService<FakeGlobalKeyHook>());
+		services.AddScoped<IHotkeyListener, EventLoopHotkeyListener>();
+
 		services.AddScoped<ScenarioWorld>();
 		services.AddScoped<TranscriptionDriver>();
+		services.AddScoped<HotkeyListenerDriver>();
 
 		// Text delivery (WHISPER-2): the real SendInputTextInjector over a recording fake keyboard seam.
 		services.AddScoped<TextInjectionDriver>();
