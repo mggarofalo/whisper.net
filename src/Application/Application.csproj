@@ -1,9 +1,19 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    Application layer: use-case orchestration. Defines the ports (interfaces) the outer layers
-    implement, the CQRS messages, their handlers, and DTOs. Depends only on Domain.
+    Application layer: use-case orchestration. Defines the ports (interfaces the outer layers
+    implement), the CQRS messages (ICommand<T>/IQuery<T>), their handlers, pipeline behaviors,
+    and DTOs. CQRS is wired with the source-generated Mediator (martinothamar); validation runs
+    as a pipeline behavior backed by FluentValidation. Depends only on Domain.
   -->
+  <ItemGroup>
+    <PackageReference Include="Mediator.Abstractions" />
+    <PackageReference Include="Mediator.SourceGenerator" PrivateAssets="all" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <PackageReference Include="FluentValidation" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Domain\Domain.csproj" />
   </ItemGroup>
