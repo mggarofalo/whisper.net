@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using Application.Ports;
 using Infrastructure.DependencyInjection;
+using Logic.AppManagement.Lifecycle;
 using Logic.AppManagement.Tray;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -23,6 +24,7 @@ public partial class App
 {
 	private IHost? _host;
 	private TrayIcon? _trayIcon;
+	private bool _hostStarted;
 	private bool _shuttingDown;
 
 	protected override void OnStartup(StartupEventArgs e)
@@ -39,10 +41,26 @@ public partial class App
 		builder.Services.AddSingleton<IShellPresenter, WpfShellPresenter>();
 		builder.Services.AddSingleton<TrayController>();
 		builder.Services.AddSingleton<TrayIconViewModel>();
+
+		// Single-instance coordination (WHISPER-25): resolves the Infrastructure lock + signal and the
+		// shell presenter to surface the running instance on a second launch.
+		builder.Services.AddSingleton<SingleInstanceCoordinator>();
 		_host = builder.Build();
 
 		ILogger<App> logger = _host.Services.GetRequiredService<ILogger<App>>();
 		RegisterUnhandledExceptionLogging(logger);
+
+		// Single-instance enforcement (WHISPER-25): become the sole instance, or signal the already-running
+		// instance to surface and exit without starting a second host. Done before the host starts so a
+		// second launch never installs a second hotkey hook or tray icon. The lock is released when the
+		// host disposes the coordinator on graceful shutdown, so a later launch becomes the sole instance.
+		SingleInstanceCoordinator singleInstance = _host.Services.GetRequiredService<SingleInstanceCoordinator>();
+		if (!singleInstance.TryStartAsPrimary())
+		{
+			logger.LogInformation("Another instance is already running; activated it and exiting.");
+			Shutdown();
+			return;
+		}
 
 		// When the host's lifetime ends — e.g. a future tray Quit calls StopApplication — close the WPF
 		// application so the process exits. Marshaled onto the UI thread because the callback fires on a
@@ -53,6 +71,7 @@ public partial class App
 		// Start the host: every IHostedService (the hotkey listener today) starts now. No StartupUri and
 		// no window — the process runs tray-resident.
 		_host.Start();
+		_hostStarted = true;
 
 		// Create the tray icon: the user's primary entry point now that there is no window. It lives for
 		// the app's lifetime and is disposed on exit.
@@ -67,8 +86,14 @@ public partial class App
 
 		if (_host is not null)
 		{
-			// Graceful shutdown: StopAsync stops every hosted service before the process exits.
-			_host.StopAsync().GetAwaiter().GetResult();
+			// Graceful shutdown: StopAsync stops every hosted service before the process exits. Skipped if
+			// the host never started (a second instance that exited after activating the primary); disposing
+			// the host still releases the single-instance lock and stops the activation listener.
+			if (_hostStarted)
+			{
+				_host.StopAsync().GetAwaiter().GetResult();
+			}
+
 			_host.Dispose();
 		}
 

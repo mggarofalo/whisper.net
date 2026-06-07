@@ -99,6 +99,10 @@ public static class TestDependencies
 		services.AddScoped<FakeApplicationLifetime>();
 		services.AddScoped<TrayDriver>();
 
+		// Single-instance enforcement (WHISPER-25): drive the real coordinator over fake lock + signal
+		// seams (the driver owns those) and the shared fake shell presenter reused from the tray specs.
+		services.AddScoped<SingleInstanceDriver>();
+
 		// Hotkey activation modes (WHISPER-16): the real HotkeyActivationController behind the driver.
 		// Override its production singleton lifetime to scoped so each scenario gets fresh chord state.
 		services.AddScoped<HotkeyActivationController>();

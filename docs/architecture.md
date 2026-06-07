@@ -129,6 +129,14 @@ CommunityToolkit.Mvvm view-model in Presentation only bind to it. Quit calls
 the `IShellPresenter` port — an Application port **implemented by Presentation** (the WPF shell), the
 allowed exception to "ports are implemented by Infrastructure" for UI-surfacing seams.
 
+Single-instance enforcement (WHISPER-25) is the same shape again: the `SingleInstanceCoordinator` in
+`Logic.AppManagement` runs before the host starts — it acquires the OS-global lock (`IInstanceLock`) to
+become the sole instance, or, if another instance holds it, signals that instance (`IInstanceSignal`)
+to surface through `IShellPresenter` and exits without starting a second host. The lock is released
+when the host disposes the coordinator on graceful shutdown. The Infrastructure adapters are a named
+`Mutex` and a named `EventWaitHandle` in the current-user session namespace (no elevation); both are
+composed behind an `OperatingSystem.IsWindows()` guard, like the run-on-login registry adapter.
+
 ## Where the rules are enforced
 
 `tests/Architecture.Tests` asserts the dependency rule (Domain depends on nothing; Application does
