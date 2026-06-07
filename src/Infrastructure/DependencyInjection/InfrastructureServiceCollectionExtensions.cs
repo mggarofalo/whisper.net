@@ -7,6 +7,7 @@ using Application.Ports;
 using Infrastructure.Audio;
 using Infrastructure.Gpu;
 using Infrastructure.Models;
+using Infrastructure.TextDelivery;
 using Infrastructure.Transcription;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -76,6 +77,12 @@ public static class InfrastructureServiceCollectionExtensions
 		services.AddSingleton<IModelCache, FileSystemModelCache>();
 		services.AddSingleton<IModelDownloadSource>(_ => new HuggingFaceModelDownloadSource(new HttpClient()));
 		services.AddSingleton<IModelDownloader, ModelDownloader>();
+
+		// Text delivery (WHISPER-2): the universal typing path. SendInputTextInjector decomposes the text
+		// into Unicode keystrokes over the Win32 SendInput seam, so it lands even in terminals that ignore
+		// clipboard paste. Resolving the port synthesizes no input; it only types when Inject is called.
+		services.AddSingleton<IKeyboardInput, Win32KeyboardInput>();
+		services.AddSingleton<ITextInjector, SendInputTextInjector>();
 
 		return services;
 	}

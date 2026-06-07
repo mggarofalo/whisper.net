@@ -46,6 +46,9 @@ public static class TestDependencies
 
 		services.AddScoped<ScenarioWorld>();
 		services.AddScoped<TranscriptionDriver>();
+
+		// Text delivery (WHISPER-2): the real SendInputTextInjector over a recording fake keyboard seam.
+		services.AddScoped<TextInjectionDriver>();
 		services.AddScoped<RepositoryGuidanceDriver>();
 		services.AddScoped<DomainInvariantsDriver>();
 		services.AddScoped<ApplicationPortsDriver>();
