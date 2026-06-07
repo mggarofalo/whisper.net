@@ -5,10 +5,14 @@
 
 using Application.Interfaces;
 using Domain.Audio;
+using Domain.Settings;
 
 namespace Application.Transcription;
 
-public sealed record DeliverTranscriptionCommand(AudioClip Clip) : ICommand<DeliveryResult>;
+// StrategyOverride forces a delivery strategy for this delivery only (e.g. the pipeline forcing paste
+// for a very long result); when null the configured default strategy applies.
+public sealed record DeliverTranscriptionCommand(AudioClip Clip, DeliveryStrategy? StrategyOverride = null)
+	: ICommand<DeliveryResult>;
 
 /// <summary>Why a delivery did not place text into the focused field.</summary>
 public enum DeliveryBlock

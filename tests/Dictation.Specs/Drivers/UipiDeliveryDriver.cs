@@ -16,7 +16,7 @@ namespace Dictation.Specs.Drivers;
 public sealed class UipiDeliveryDriver(
 	IMediator mediator,
 	IForegroundIntegrityProbe integrityProbe,
-	ITextInjector textInjector,
+	FakeTextInjectorFactory injectors,
 	ScenarioWorld world)
 {
 	public void ForegroundWindowIntegrityIs(ForegroundIntegrity integrity) =>
@@ -30,7 +30,8 @@ public sealed class UipiDeliveryDriver(
 		world.LastResult.Should().NotBeNull();
 		world.LastResult!.Block.Should().Be(DeliveryBlock.Uipi);
 		world.LastResult.Delivered.Should().BeFalse();
-		textInjector.DidNotReceive().Inject(Arg.Any<string>());
+		injectors.Typing.DidNotReceive().Inject(Arg.Any<string>());
+		injectors.Paste.DidNotReceive().Inject(Arg.Any<string>());
 	}
 
 	// Reaching an assertion at all means AttemptDelivery returned a result rather than throwing.
@@ -41,6 +42,6 @@ public sealed class UipiDeliveryDriver(
 		world.LastResult.Should().NotBeNull();
 		world.LastResult!.Delivered.Should().BeTrue();
 		world.LastResult.Block.Should().Be(DeliveryBlock.None);
-		textInjector.Received(1).Inject(expected);
+		injectors.Typing.Received(1).Inject(expected);
 	}
 }

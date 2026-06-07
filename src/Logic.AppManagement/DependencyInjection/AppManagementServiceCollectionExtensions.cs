@@ -2,6 +2,7 @@
 // and the BDD specs call; it registers the real app-management behaviors so specs exercise them for
 // real (only Infrastructure ports are faked).
 
+using Application.Delivery;
 using Application.Ports;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,6 +14,9 @@ public static class AppManagementServiceCollectionExtensions
 	public static IServiceCollection AddAppManagement(this IServiceCollection services, IConfiguration? configuration = null)
 	{
 		services.AddSingleton<IUsageStatsCalculator, UsageStatsCalculator>();
+
+		// Delivery-strategy selection (WHISPER-8): pure override-vs-default precedence for each delivery.
+		services.AddSingleton<IDeliveryStrategySelector, DeliveryStrategySelector>();
 
 		return services;
 	}
