@@ -148,6 +148,10 @@ public static class TestDependencies
 		services.AddScoped<VocabularyConditioningDriver>();
 		services.AddScoped<VocabularyTranscriptionDriver>();
 
+		// Opt-in localhost rephrase (WHISPER-40): the real OllamaRephraseClient + validator over a
+		// recording HTTP transport, so the opt-in gate and loopback-only rule are proven without a socket.
+		services.AddScoped<RephraseDriver>();
+
 		// GPU contact point (WHISPER-9): the real backend selector over a faked raw probe.
 		services.AddScoped<GpuBackendDriver>();
 

@@ -10,12 +10,14 @@ using Infrastructure.Gpu;
 using Infrastructure.Hotkeys;
 using Infrastructure.Lifecycle;
 using Infrastructure.Models;
+using Infrastructure.Rephrase;
 using Infrastructure.Settings;
 using Infrastructure.Startup;
 using Infrastructure.TextDelivery;
 using Infrastructure.Transcription;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Infrastructure.DependencyInjection;
@@ -125,6 +127,22 @@ public static class InfrastructureServiceCollectionExtensions
 		});
 
 		services.AddSingleton<ISettingsStore, FileSettingsStore>();
+
+		// Opt-in localhost AI rephrase (WHISPER-40): the single disclosed transcript-bearing network seam.
+		// Disabled by default; when enabled the endpoint must be loopback, enforced by a validator that
+		// rejects a remote host rather than letting it be silently used.
+		OptionsBuilder<OllamaRephraseOptions> rephraseOptions = services.AddOptions<OllamaRephraseOptions>();
+		if (configuration is not null)
+		{
+			rephraseOptions.Bind(configuration.GetSection(OllamaRephraseOptions.SectionName));
+		}
+
+		services.AddSingleton<IValidateOptions<OllamaRephraseOptions>, OllamaRephraseOptionsValidator>();
+		rephraseOptions.ValidateOnStart();
+		services.AddSingleton<IRephraseClient>(serviceProvider => new OllamaRephraseClient(
+			new HttpClient(),
+			serviceProvider.GetRequiredService<IOptions<OllamaRephraseOptions>>(),
+			serviceProvider.GetRequiredService<ILogger<OllamaRephraseClient>>()));
 
 		// Run on login (WHISPER-32): the registry-backed launch-at-login registration under the current-user
 		// Run key (no elevation). The key/value default to the standard Windows Run key when not configured.
