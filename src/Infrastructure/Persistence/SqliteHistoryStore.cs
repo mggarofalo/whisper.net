@@ -24,8 +24,8 @@ public sealed class SqliteHistoryStore(SqliteDatabase database, ILogger<SqliteHi
 			await using SqliteCommand command = connection.CreateCommand();
 			command.CommandText =
 				"""
-				INSERT INTO history (id, text, created_at, created_ticks, word_count)
-				VALUES ($id, $text, $created_at, $created_ticks, $word_count)
+				INSERT INTO history (id, text, created_at, created_ticks, word_count, duration_ticks)
+				VALUES ($id, $text, $created_at, $created_ticks, $word_count, $duration_ticks)
 				ON CONFLICT (id) DO NOTHING;
 				""";
 			command.Parameters.AddWithValue("$id", entry.Id.ToString());
@@ -33,6 +33,7 @@ public sealed class SqliteHistoryStore(SqliteDatabase database, ILogger<SqliteHi
 			command.Parameters.AddWithValue("$created_at", entry.CreatedAt.ToString("O", CultureInfo.InvariantCulture));
 			command.Parameters.AddWithValue("$created_ticks", entry.CreatedAt.UtcTicks);
 			command.Parameters.AddWithValue("$word_count", entry.WordCount);
+			command.Parameters.AddWithValue("$duration_ticks", entry.AudioDuration.Ticks);
 			await command.ExecuteNonQueryAsync(cancellationToken);
 		}
 		catch (SqliteException ex)
@@ -84,7 +85,7 @@ public sealed class SqliteHistoryStore(SqliteDatabase database, ILogger<SqliteHi
 			await using SqliteCommand command = connection.CreateCommand();
 			command.CommandText =
 				"""
-				SELECT id, text, created_at
+				SELECT id, text, created_at, duration_ticks
 				FROM history
 				WHERE ($from IS NULL OR created_ticks >= $from)
 				  AND ($to   IS NULL OR created_ticks <= $to)
@@ -104,8 +105,9 @@ public sealed class SqliteHistoryStore(SqliteDatabase database, ILogger<SqliteHi
 				string text = reader.GetString(1);
 				DateTimeOffset createdAt = DateTimeOffset.Parse(
 					reader.GetString(2), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind);
+				TimeSpan audioDuration = TimeSpan.FromTicks(reader.GetInt64(3));
 
-				entries.Add(new TranscriptEntry(id, text, createdAt));
+				entries.Add(new TranscriptEntry(id, text, createdAt, audioDuration));
 			}
 		}
 		catch (SqliteException ex)

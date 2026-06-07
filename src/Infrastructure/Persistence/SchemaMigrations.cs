@@ -36,6 +36,10 @@ internal static class SchemaMigrations
 				document TEXT    NOT NULL
 			);
 			"""),
+
+		// v3: the captured audio duration per transcription, in ticks, for usage statistics (WHISPER-24).
+		// Existing rows default to zero (duration was not recorded before this migration).
+		new(3, "ALTER TABLE history ADD COLUMN duration_ticks INTEGER NOT NULL DEFAULT 0;"),
 	];
 
 	public static int LatestVersion => All[^1].Version;

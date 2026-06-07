@@ -6,6 +6,8 @@ using Application.Ports;
 using AwesomeAssertions;
 using Domain.History;
 using Infrastructure.Persistence;
+using Infrastructure.Tests.TestSupport;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
@@ -19,8 +21,8 @@ public sealed class SqliteHistoryStoreTests : IDisposable
 
 	private readonly SqliteTestDatabase _fixture = new();
 
-	private SqliteHistoryStore NewStore() =>
-		new(_fixture.NewDatabase(), NullLogger<SqliteHistoryStore>.Instance);
+	private SqliteHistoryStore NewStore(ILogger<SqliteHistoryStore>? logger = null) =>
+		new(_fixture.NewDatabase(), logger ?? NullLogger<SqliteHistoryStore>.Instance);
 
 	[Fact]
 	public async Task Returns_empty_on_a_fresh_database()
@@ -86,6 +88,34 @@ public sealed class SqliteHistoryStoreTests : IDisposable
 			await NewStore().GetEntriesAsync(from: Middle, to: Newest, limit: null, CancellationToken.None);
 
 		entries.Select(entry => entry.Text).Should().Equal("newest", "middle");
+	}
+
+	[Fact]
+	public async Task Round_trips_the_audio_duration()
+	{
+		TranscriptEntry entry = TranscriptEntry.Create("take notes", Newest, TimeSpan.FromSeconds(12));
+
+		await NewStore().AddAsync(entry, CancellationToken.None);
+		IReadOnlyList<TranscriptEntry> entries =
+			await NewStore().GetEntriesAsync(from: null, to: null, limit: null, CancellationToken.None);
+
+		entries.Should().ContainSingle();
+		entries[0].AudioDuration.Should().Be(TimeSpan.FromSeconds(12));
+	}
+
+	[Fact]
+	public async Task Add_logs_and_does_not_throw_when_the_database_is_corrupt()
+	{
+		// A bad database makes initialization fail; recording must degrade safely so the pipeline is never
+		// blocked (WHISPER-24 AC4) — the failure is logged rather than thrown.
+		File.WriteAllText(_fixture.DatabasePath, "this is not a valid sqlite database file");
+		RecordingLogger<SqliteHistoryStore> logger = new();
+
+		Func<Task> recording = async () =>
+			await NewStore(logger).AddAsync(TranscriptEntry.Create("notes", Newest), CancellationToken.None);
+
+		await recording.Should().NotThrowAsync();
+		logger.Entries.Should().Contain(entry => entry.Level == LogLevel.Error);
 	}
 
 	[Fact]

@@ -14,5 +14,9 @@ public sealed class RecordTranscriptionCommandValidator : AbstractValidator<Reco
 		RuleFor(command => command.CreatedAt)
 			.Must(timestamp => timestamp > DateTimeOffset.MinValue)
 			.WithMessage("A valid transcription timestamp is required.");
+
+		RuleFor(command => command.Duration)
+			.GreaterThanOrEqualTo(TimeSpan.Zero)
+			.WithMessage("Audio duration must not be negative.");
 	}
 }

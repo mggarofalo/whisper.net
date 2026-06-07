@@ -32,6 +32,7 @@ public static class ApplicationServiceCollectionExtensions
 		services.AddSingleton<Settings.SettingsMapper>();
 		services.AddSingleton<History.HistoryMapper>();
 		services.AddSingleton<Statistics.UsageStatsMapper>();
+		services.AddSingleton<Statistics.UsageSummaryMapper>();
 
 		// Register options with their defaults so they always resolve, then bind from the layered
 		// configuration when it is available. DeliveryOptions must always resolve because the delivery
