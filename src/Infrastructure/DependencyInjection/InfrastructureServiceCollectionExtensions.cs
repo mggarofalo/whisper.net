@@ -48,6 +48,10 @@ public static class InfrastructureServiceCollectionExtensions
 		services.AddSingleton<IWhisperEngineFactory, WhisperNetEngineFactory>();
 		services.AddSingleton<ITranscriber, WhisperTranscriber>();
 
+		// Model lifecycle runtime (WHISPER-15): the native load/warmup/transcribe/release operations the
+		// lifecycle policy (Logic.ModelManagement) drives, built on the Whisper.net engine seam above.
+		services.AddSingleton<IModelRuntime, WhisperModelRuntime>();
+
 		// Model registry cache + download (WHISPER-4). Cache detection is filesystem-only (no network).
 		// The downloader fetches a missing model from Hugging Face — the one model-related egress — and
 		// verifies it before moving it into the cache. No background fetch is wired: a download happens

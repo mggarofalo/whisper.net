@@ -15,6 +15,16 @@ public static class ModelManagementServiceCollectionExtensions
 		// Model registry (WHISPER-4): the static catalog of supported Whisper variants. Pure data.
 		services.AddSingleton<IModelCatalog, WhisperModelCatalog>();
 
+		// Model lifecycle (WHISPER-15): the single owner of the loaded model — load/unload/switch,
+		// warmup, precision, and concurrency-safe transcription. Pure policy over IModelRuntime.
+		services.AddOptions<ModelLifecycleOptions>();
+		if (configuration is not null)
+		{
+			services.Configure<ModelLifecycleOptions>(configuration.GetSection(ModelLifecycleOptions.SectionName));
+		}
+
+		services.AddSingleton<IModelLifecycle, ModelLifecycle>();
+
 		return services;
 	}
 }

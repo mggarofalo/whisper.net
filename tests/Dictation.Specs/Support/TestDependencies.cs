@@ -66,6 +66,9 @@ public static class TestDependencies
 		// Model registry/cache/download (WHISPER-4): real catalog + cache + downloader, hermetic source.
 		services.AddScoped<ModelLibraryDriver>();
 
+		// Model lifecycle (WHISPER-15): the real lifecycle policy over a fake runtime.
+		services.AddScoped<ModelLifecycleDriver>();
+
 		// Device selection (WHISPER-13): fake enumerator + notification client behind the driver.
 		services.AddScoped<FakeAudioDeviceEnumerator>();
 		services.AddScoped<FakeDefaultDeviceWatcher>();
