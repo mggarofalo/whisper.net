@@ -24,6 +24,11 @@ public static class InfrastructureServiceCollectionExtensions
 			Path.Combine(AppContext.BaseDirectory, "assets", "silero_vad.onnx")));
 		services.AddSingleton<IVad, SileroVad>();
 
+		// Device enumeration + default-change notification (WHISPER-13). Both create their underlying
+		// NAudio enumerator lazily, so resolving the ports touches no audio hardware.
+		services.AddSingleton<IAudioDeviceEnumerator, NAudioDeviceEnumerator>();
+		services.AddSingleton<IDefaultDeviceWatcher, NAudioDefaultDeviceWatcher>();
+
 		return services;
 	}
 }
