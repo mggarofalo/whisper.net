@@ -18,6 +18,12 @@ public static class InfrastructureServiceCollectionExtensions
 		services.AddSingleton<IAudioCaptureClient, NAudioCaptureClient>();
 		services.AddSingleton<IAudioSource, WasapiAudioSource>();
 
+		// Voice-activity detection (WHISPER-31): the Silero adapter over the on-device ONNX session.
+		// The session loads its model lazily, so resolving the port never requires the asset present.
+		services.AddSingleton<IVadSession>(_ => new OnnxVadSession(
+			Path.Combine(AppContext.BaseDirectory, "assets", "silero_vad.onnx")));
+		services.AddSingleton<IVad, SileroVad>();
+
 		return services;
 	}
 }

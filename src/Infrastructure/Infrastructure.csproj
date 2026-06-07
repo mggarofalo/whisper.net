@@ -16,6 +16,7 @@
     <PackageReference Include="Serilog.Sinks.Console" />
     <PackageReference Include="NAudio.Wasapi" />
     <PackageReference Include="NAudio.Core" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" />
   </ItemGroup>
 
   <ItemGroup>
