@@ -34,6 +34,7 @@ public static class TestDependencies
 		services.AddScoped(_ => Substitute.For<ITranscriber>());
 		services.AddScoped(_ => Substitute.For<ITextInjector>());
 		services.AddScoped(_ => Substitute.For<ISettingsStore>());
+		services.AddScoped(_ => Substitute.For<IHistoryStore>());
 
 		services.AddScoped<ScenarioWorld>();
 		services.AddScoped<TranscriptionDriver>();
@@ -41,6 +42,7 @@ public static class TestDependencies
 		services.AddScoped<DomainInvariantsDriver>();
 		services.AddScoped<ApplicationPortsDriver>();
 		services.AddScoped<SettingsDriver>();
+		services.AddScoped<HistoryDriver>();
 
 		return services;
 	}
