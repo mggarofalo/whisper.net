@@ -44,6 +44,7 @@ public static class TestDependencies
 		services.AddScoped<SettingsDriver>();
 		services.AddScoped<HistoryDriver>();
 		services.AddScoped<UsageStatsDriver>();
+		services.AddScoped<MappingDriver>();
 
 		return services;
 	}
