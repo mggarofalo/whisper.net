@@ -82,6 +82,11 @@ public static class TestDependencies
 		services.AddScoped<HotkeyActivationController>();
 		services.AddScoped<HotkeyActivationDriver>();
 
+		// Recording state machine (WHISPER-22): the real machine behind the driver, scoped so each
+		// scenario starts from a fresh Idle state.
+		services.AddScoped<RecordingStateMachine>();
+		services.AddScoped<RecordingStateMachineDriver>();
+
 		// Text delivery (WHISPER-2): the real SendInputTextInjector over a recording fake keyboard seam.
 		services.AddScoped<TextInjectionDriver>();
 
