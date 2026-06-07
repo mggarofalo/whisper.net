@@ -83,8 +83,12 @@ public static class TestDependencies
 		services.AddScoped<AppLifecycleDriver>();
 
 		// Settings persistence (WHISPER-43): the driver composes the real lifecycle service over the real
-		// file-backed store against a private temp directory, so it owns its own wiring.
+		// SQLite-backed store against a private temp database, so it owns its own wiring.
 		services.AddScoped<SettingsPersistenceDriver>();
+
+		// SQLite persistence store (WHISPER-11): the driver exercises the real migration runner + SQLite
+		// store directly against a private temp-file database — persistence is the seam under test here.
+		services.AddScoped<PersistenceDriver>();
 
 		// Run on login (WHISPER-32): drive the real command/query handlers through IMediator over an
 		// in-memory startup registration, the single OS seam this feature controls.

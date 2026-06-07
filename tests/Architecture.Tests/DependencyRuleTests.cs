@@ -18,6 +18,9 @@ public sealed class DependencyRuleTests
 	private const string InfrastructureNs = "Infrastructure";
 	private const string PresentationNs = "Presentation";
 
+	// Persistence technology must stay behind the Infrastructure ports — no core project may touch SQLite.
+	private const string SqliteNs = "Microsoft.Data.Sqlite";
+
 	private static Assembly Load(string assemblyName) => Assembly.Load(new AssemblyName(assemblyName));
 
 	private static readonly Assembly[] LogicAssemblies =
@@ -76,6 +79,19 @@ public sealed class DependencyRuleTests
 		foreach (Assembly logic in LogicAssemblies)
 		{
 			AssertNoDependency(logic, InfrastructureNs);
+		}
+	}
+
+	// WHISPER-11 AC1: the SQLite persistence lives entirely behind the ports — no Application or Logic code
+	// references Microsoft.Data.Sqlite directly. (Domain is already covered by depending on nothing above it.)
+	[Fact]
+	public void No_core_project_depends_on_sqlite()
+	{
+		AssertNoDependency(Load(ApplicationNs), SqliteNs);
+
+		foreach (Assembly logic in LogicAssemblies)
+		{
+			AssertNoDependency(logic, SqliteNs);
 		}
 	}
 

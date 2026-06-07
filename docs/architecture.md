@@ -116,10 +116,15 @@ the `@WHISPER-12` scenarios driving a real host over the faked hook seam.
 
 Settings persistence is wired into that same lifecycle (WHISPER-43): a `SettingsLifecycleService`
 hosted service **loads** the persisted settings into a shared `SettingsHolder` on startup and **saves**
-them on graceful shutdown, through the Application-layer `ISettingsStore` port. The file-backed
-implementation (`FileSettingsStore`, JSON of the settings DTO) lives in Infrastructure — the only layer
-that touches the filesystem — and recovers to defaults (creating the store on a first run, logging on a
-corrupt one) so a bad or missing file never crashes the host.
+them on graceful shutdown, through the Application-layer `ISettingsStore` port.
+
+Persistence is backed by a single local **SQLite** database (WHISPER-11). Both the `ISettingsStore` and
+`IHistoryStore` ports are implemented over it in Infrastructure — the only layer that touches storage; no
+Application or Logic code references SQLite. The schema is versioned with SQLite's `user_version` PRAGMA
+and brought forward by an ordered, idempotent `SqliteMigrationRunner` on first use (connections run in WAL
+mode); the database file defaults to a per-user application-data path. Settings are stored as the JSON of
+the settings DTO in a single-row table, and the store recovers to defaults (creating the schema on a first
+run, logging on a corrupt database) so a bad or missing file never crashes the host.
 
 The tray icon (WHISPER-18) follows the same seam discipline: the coordination — mapping the recording
 status to the icon/tooltip, and the Open Settings / Quit actions — lives in `Logic.AppManagement`'s

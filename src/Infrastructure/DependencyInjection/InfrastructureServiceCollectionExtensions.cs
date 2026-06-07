@@ -10,8 +10,8 @@ using Infrastructure.Gpu;
 using Infrastructure.Hotkeys;
 using Infrastructure.Lifecycle;
 using Infrastructure.Models;
+using Infrastructure.Persistence;
 using Infrastructure.Rephrase;
-using Infrastructure.Settings;
 using Infrastructure.Startup;
 using Infrastructure.TextDelivery;
 using Infrastructure.Transcription;
@@ -107,26 +107,31 @@ public static class InfrastructureServiceCollectionExtensions
 		services.AddSingleton<IGlobalKeyHook, SharpHookGlobalKeyHook>();
 		services.AddSingleton<IHotkeyListener, EventLoopHotkeyListener>();
 
-		// Settings persistence (WHISPER-43): the file-backed ISettingsStore. The settings file defaults to
-		// a per-user application-data path when not configured, so a fresh install needs no configuration.
-		services.AddOptions<SettingsStoreOptions>();
+		// Persistence (WHISPER-11): a single SQLite database backs both the settings and history ports. The
+		// migration runner brings the schema to the latest version on first use (WAL mode, idempotent); the
+		// database file defaults to a per-user application-data path when not configured, so a fresh install
+		// needs none. No Application or Logic code references SQLite — it lives entirely behind these ports.
+		services.AddOptions<SqlitePersistenceOptions>();
 		if (configuration is not null)
 		{
-			services.Configure<SettingsStoreOptions>(configuration.GetSection(SettingsStoreOptions.SectionName));
+			services.Configure<SqlitePersistenceOptions>(configuration.GetSection(SqlitePersistenceOptions.SectionName));
 		}
 
-		services.PostConfigure<SettingsStoreOptions>(settingsOptions =>
+		services.PostConfigure<SqlitePersistenceOptions>(persistenceOptions =>
 		{
-			if (string.IsNullOrWhiteSpace(settingsOptions.FilePath))
+			if (string.IsNullOrWhiteSpace(persistenceOptions.DatabasePath))
 			{
-				settingsOptions.FilePath = Path.Combine(
+				persistenceOptions.DatabasePath = Path.Combine(
 					Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
 					"whisper.net",
-					"settings.json");
+					"whisper.db");
 			}
 		});
 
-		services.AddSingleton<ISettingsStore, FileSettingsStore>();
+		services.AddSingleton<SqliteMigrationRunner>();
+		services.AddSingleton<SqliteDatabase>();
+		services.AddSingleton<ISettingsStore, SqliteSettingsStore>();
+		services.AddSingleton<IHistoryStore, SqliteHistoryStore>();
 
 		// Opt-in localhost AI rephrase (WHISPER-40): the single disclosed transcript-bearing network seam.
 		// Disabled by default; when enabled the endpoint must be loopback, enforced by a validator that

@@ -7,12 +7,14 @@ using Application.Ports;
 using Infrastructure.Audio;
 using Infrastructure.DependencyInjection;
 using Infrastructure.Hotkeys;
+using Infrastructure.Persistence;
 using Logic.AppManagement.Lifecycle;
 using Mediator;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Xunit;
 
 namespace Hosting.Tests;
@@ -97,6 +99,30 @@ public sealed class HostCompositionTests
 		IEnumerable<IHostedService> hostedServices = host.Services.GetServices<IHostedService>();
 
 		Assert.Contains(hostedServices, service => service is HotkeyListenerHostedService);
+	}
+
+	// WHISPER-11 AC1: the SQLite-backed settings and history stores are wired through the Infrastructure DI
+	// extension (constructing them opens no database — the schema is initialized lazily on first use).
+	[Fact]
+	public void Resolves_the_sqlite_backed_persistence_ports_from_infrastructure()
+	{
+		using IHost host = BuildHost();
+
+		Assert.IsType<SqliteSettingsStore>(host.Services.GetRequiredService<ISettingsStore>());
+		Assert.IsType<SqliteHistoryStore>(host.Services.GetRequiredService<IHistoryStore>());
+	}
+
+	// WHISPER-11 AC2: the database file defaults to a per-user application-data path when not configured.
+	[Fact]
+	public void Defaults_the_database_path_to_the_per_user_app_data_location()
+	{
+		using IHost host = BuildHost();
+
+		string databasePath = host.Services.GetRequiredService<IOptions<SqlitePersistenceOptions>>().Value.DatabasePath;
+
+		string expected = Path.Combine(
+			Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "whisper.net", "whisper.db");
+		Assert.Equal(expected, databasePath);
 	}
 
 	[Fact]
