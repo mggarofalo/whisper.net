@@ -14,6 +14,11 @@
     <PackageVersion Include="Mediator.SourceGenerator" Version="3.0.2" />
   </ItemGroup>
 
+  <!-- Mapping (compile-time, source-generated) -->
+  <ItemGroup>
+    <PackageVersion Include="Riok.Mapperly" Version="4.3.1" />
+  </ItemGroup>
+
   <!-- Validation -->
   <ItemGroup>
     <PackageVersion Include="FluentValidation" Version="12.1.1" />
