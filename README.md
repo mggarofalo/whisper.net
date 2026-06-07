@@ -13,6 +13,13 @@ focus. It is a ground-up rewrite of the Python [`whisper-local`](https://github.
 > choose, on request, from Hugging Face (`https://huggingface.co/ggerganov/whisper.cpp`). Models are
 > never fetched automatically; once cached locally they are reused with no further network access, and
 > transcription itself is always fully offline.
+>
+> **Optional AI rephrase (opt-in, localhost-only):** you may enable an optional step that rewrites the
+> recognized text with a locally-hosted [Ollama](https://ollama.com) model. It is **disabled by
+> default** and makes **no network call** unless you turn it on. When enabled it may only target a
+> **loopback** endpoint (`localhost`/`127.0.0.1`/`[::1]`); a remote endpoint is rejected at startup, so
+> transcript text never leaves your machine. If the local model is unavailable the original text is kept
+> unchanged. This is the only transcript-bearing network seam in the app.
 
 ## Build and run
 
