@@ -18,6 +18,11 @@ public static class AppManagementServiceCollectionExtensions
 		// Delivery-strategy selection (WHISPER-8): pure override-vs-default precedence for each delivery.
 		services.AddSingleton<IDeliveryStrategySelector, DeliveryStrategySelector>();
 
+		// Hotkey activation (WHISPER-16): the stateful chord matcher that turns key edges into recording
+		// start/stop requests for push-to-talk and toggle. Singleton so it holds the live chord state the
+		// orchestration layer (M7) subscribes to and drives from the hotkey listener.
+		services.AddSingleton<HotkeyActivationController>();
+
 		return services;
 	}
 }
