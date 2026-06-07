@@ -5,5 +5,10 @@ namespace Application.Ports;
 
 public interface IFillerWordCleaner
 {
-	string Clean(string text);
+	/// <summary>
+	/// Normalizes raw transcribed text: bracketed/parenthesized noise labels are always stripped, and
+	/// spoken filler words are removed only when <paramref name="removeFillerWords"/> is set. Pure and
+	/// idempotent — running it twice yields the same result.
+	/// </summary>
+	string Clean(string text, bool removeFillerWords = true);
 }
