@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Domain layer: the innermost ring of the clean architecture. Pure types and business rules
+    with NO dependencies on any other solution project or infrastructure concern.
+    TargetFramework / Nullable / ImplicitUsings come from Directory.Build.props.
+  -->
+  <PropertyGroup>
+    <RootNamespace>Domain</RootNamespace>
+    <AssemblyName>Domain</AssemblyName>
+  </PropertyGroup>
+
+</Project>
