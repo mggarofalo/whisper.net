@@ -49,6 +49,9 @@ public static class TestDependencies
 
 		// Text delivery (WHISPER-2): the real SendInputTextInjector over a recording fake keyboard seam.
 		services.AddScoped<TextInjectionDriver>();
+
+		// Clipboard fallback (WHISPER-5): the real ClipboardTextInjector over fake clipboard + keyboard seams.
+		services.AddScoped<ClipboardDeliveryDriver>();
 		services.AddScoped<RepositoryGuidanceDriver>();
 		services.AddScoped<DomainInvariantsDriver>();
 		services.AddScoped<ApplicationPortsDriver>();

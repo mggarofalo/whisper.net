@@ -15,4 +15,11 @@ public interface IClipboard
 
 	/// <summary>Replaces the clipboard contents with the given text.</summary>
 	void SetText(string text);
+
+	/// <summary>
+	/// Returns the system clipboard's change count (Win32 GetClipboardSequenceNumber), which advances
+	/// on every modification by any process. The paste path snapshots it so it can detect — and avoid
+	/// clobbering — content that arrived while it was delivering.
+	/// </summary>
+	uint GetChangeCount();
 }

@@ -14,7 +14,19 @@ public sealed class FakeKeyboardInput : IKeyboardInput
 
 	public List<KeyEvent> Events { get; } = [];
 
-	public void Send(IReadOnlyList<KeyEvent> events) => Events.AddRange(events);
+	/// <summary>Runs when a batch is sent — lets a clipboard scenario simulate a copy "during the paste".</summary>
+	public Action? OnSend { get; set; }
+
+	public void Send(IReadOnlyList<KeyEvent> events)
+	{
+		Events.AddRange(events);
+		OnSend?.Invoke();
+	}
+
+	/// <summary>True once a Ctrl+V chord has been synthesized (both Ctrl and V as virtual keys).</summary>
+	public bool SentCtrlV =>
+		Events.Any(e => e is { Code: 0x11, IsUnicode: false }) &&
+		Events.Any(e => e is { Code: 0x56, IsUnicode: false });
 
 	// The characters a focused field would receive: Unicode events as their code unit (surrogate pairs
 	// recombine when the builder is materialized), Enter as a newline.
