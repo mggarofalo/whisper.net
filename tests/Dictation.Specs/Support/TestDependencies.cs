@@ -12,6 +12,7 @@ using Infrastructure.Audio;
 using Infrastructure.Hotkeys;
 using Logic.AppManagement;
 using Logic.AppManagement.DependencyInjection;
+using Logic.AppManagement.OutputTransforms;
 using Logic.AudioManagement.DependencyInjection;
 using Logic.GpuContactPoint.DependencyInjection;
 using Logic.ModelManagement.DependencyInjection;
@@ -151,6 +152,13 @@ public static class TestDependencies
 		// Opt-in localhost rephrase (WHISPER-40): the real OllamaRephraseClient + validator over a
 		// recording HTTP transport, so the opt-in gate and loopback-only rule are proven without a socket.
 		services.AddScoped<RephraseDriver>();
+
+		// Output transforms (WHISPER-37): the real OutputTransformService + registry over a faked rephrase
+		// port. Override the production singleton service to scoped so each scenario gets the same fresh
+		// IRephraseClient substitute the driver configures (no cross-scenario state, no captive singleton).
+		services.AddScoped(_ => Substitute.For<IRephraseClient>());
+		services.AddScoped<OutputTransformService>();
+		services.AddScoped<OutputTransformDriver>();
 
 		// GPU contact point (WHISPER-9): the real backend selector over a faked raw probe.
 		services.AddScoped<GpuBackendDriver>();
