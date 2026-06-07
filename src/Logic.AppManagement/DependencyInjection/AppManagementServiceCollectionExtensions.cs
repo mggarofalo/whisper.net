@@ -4,6 +4,7 @@
 
 using Application.Delivery;
 using Application.Ports;
+using Logic.AppManagement.Lifecycle;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -30,6 +31,19 @@ public static class AppManagementServiceCollectionExtensions
 		// Hotkey capture + rebinding (WHISPER-30): the one-shot capture-next-key helper that rebinds the
 		// activation controller atomically. Singleton so it shares the live controller it rebinds.
 		services.AddSingleton<HotkeyCaptureService>();
+
+		return services;
+	}
+
+	// The host-owned background components (WHISPER-12). Kept separate from AddAppManagement so the BDD
+	// scenario container — which composes the inner layers but never runs a Generic Host — is not forced
+	// to register hosted services; the production host (via AddWhisperServices) and the host-lifecycle
+	// specs opt in explicitly.
+	public static IServiceCollection AddAppManagementHostedServices(this IServiceCollection services)
+	{
+		// The global hotkey listener runs for the app's whole lifetime: start it on launch, stop it on
+		// graceful shutdown. Registered as IHostedService so the Generic Host owns its lifecycle.
+		services.AddHostedService<HotkeyListenerHostedService>();
 
 		return services;
 	}
