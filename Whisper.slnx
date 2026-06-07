@@ -18,5 +18,6 @@
     <Project Path="tests/Infrastructure.Tests/Infrastructure.Tests.csproj" />
     <Project Path="tests/Logic.AppManagement.Tests/Logic.AppManagement.Tests.csproj" />
     <Project Path="tests/Logic.AudioManagement.Tests/Logic.AudioManagement.Tests.csproj" />
+    <Project Path="tests/Logic.GpuContactPoint.Tests/Logic.GpuContactPoint.Tests.csproj" />
   </Folder>
 </Solution>

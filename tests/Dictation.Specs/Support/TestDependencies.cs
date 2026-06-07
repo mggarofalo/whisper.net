@@ -36,6 +36,7 @@ public static class TestDependencies
 		services.AddScoped(_ => Substitute.For<ITextInjector>());
 		services.AddScoped(_ => Substitute.For<ISettingsStore>());
 		services.AddScoped(_ => Substitute.For<IHistoryStore>());
+		services.AddScoped(_ => Substitute.For<IGpuProbe>());
 
 		// Capture (WHISPER-7): drive the REAL WasapiAudioSource over a fake device seam, so the
 		// capture contract is validated for real while no microphone is touched.
@@ -55,6 +56,9 @@ public static class TestDependencies
 		services.AddScoped<AudioCaptureDriver>();
 		services.AddScoped<AudioNormalizationDriver>();
 		services.AddScoped<VadDriver>();
+
+		// GPU contact point (WHISPER-9): the real backend selector over a faked raw probe.
+		services.AddScoped<GpuBackendDriver>();
 
 		// Device selection (WHISPER-13): fake enumerator + notification client behind the driver.
 		services.AddScoped<FakeAudioDeviceEnumerator>();
