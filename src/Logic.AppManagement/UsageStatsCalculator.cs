@@ -25,4 +25,33 @@ public sealed class UsageStatsCalculator : IUsageStatsCalculator
 
 		return new UsageStats(totalWords, entries.Count);
 	}
+
+	public UsageSummary Summarize(IReadOnlyList<TranscriptEntry> entries)
+	{
+		if (entries.Count == 0)
+		{
+			return UsageSummary.Empty;
+		}
+
+		int totalCharacters = 0;
+		TimeSpan totalAudio = TimeSpan.Zero;
+		foreach (TranscriptEntry entry in entries)
+		{
+			totalCharacters += entry.Text.Length;
+			totalAudio += entry.AudioDuration;
+		}
+
+		// Group by the calendar day the transcription happened on (in its own offset), most-recent day first.
+		List<DailyUsage> byDay = entries
+			.GroupBy(entry => DateOnly.FromDateTime(entry.CreatedAt.Date))
+			.Select(group => new DailyUsage(
+				group.Key,
+				group.Count(),
+				group.Sum(entry => entry.Text.Length),
+				group.Aggregate(TimeSpan.Zero, (running, entry) => running + entry.AudioDuration)))
+			.OrderByDescending(day => day.Day)
+			.ToList();
+
+		return new UsageSummary(entries.Count, totalCharacters, totalAudio, byDay);
+	}
 }

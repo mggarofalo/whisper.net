@@ -132,6 +132,13 @@ History stays bounded by a retention policy (WHISPER-17): after each new transcr
 `BrowseHistoryQuery` — most-recent-first, with optional case-insensitive text and date-range filtering —
 whose paging inputs are validated (`BrowseHistoryQueryValidator`) before the handler runs.
 
+Each recorded transcription also carries the captured audio duration (WHISPER-24), persisted alongside
+the text and word count. `GetUsageSummaryQuery` aggregates history into a `UsageSummary` — total
+transcriptions, characters, and audio duration, plus a most-recent-first per-day breakdown — computed by
+the Logic `UsageStatsCalculator` and Mapperly-projected to a DTO. Because the measures live in the store,
+the totals survive a restart; a recording failure is logged and swallowed by the store, so it never blocks
+the transcription pipeline.
+
 The tray icon (WHISPER-18) follows the same seam discipline: the coordination — mapping the recording
 status to the icon/tooltip, and the Open Settings / Quit actions — lives in `Logic.AppManagement`'s
 `TrayController`, so it is driven for real in the specs. The thin H.NotifyIcon view and its

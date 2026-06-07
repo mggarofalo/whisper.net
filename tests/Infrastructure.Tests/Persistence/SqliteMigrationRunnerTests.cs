@@ -32,14 +32,17 @@ public sealed class SqliteMigrationRunnerTests : IDisposable
 	{
 		using SqliteConnection connection = _fixture.OpenRawConnection();
 
+		int latest = _fixture.NewRunner().LatestVersion;
+
 		int firstWave = _fixture.NewRunner().Migrate(connection, targetVersion: 1);
 		firstWave.Should().Be(1, "only the v1 migration is applied at target version 1");
+		ReadUserVersion(connection).Should().Be(1);
 		TableExists(connection, "settings").Should().BeFalse("the settings table arrives in a later migration");
 
 		int secondWave = _fixture.NewRunner().Migrate(connection);
 
-		secondWave.Should().Be(1, "only the pending v2 migration runs");
-		ReadUserVersion(connection).Should().Be(_fixture.NewRunner().LatestVersion);
+		secondWave.Should().Be(latest - 1, "every migration past v1 runs as the pending tail");
+		ReadUserVersion(connection).Should().Be(latest);
 		TableExists(connection, "settings").Should().BeTrue();
 	}
 

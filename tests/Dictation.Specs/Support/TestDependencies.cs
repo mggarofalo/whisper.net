@@ -94,6 +94,11 @@ public static class TestDependencies
 		// over the real SQLite store against a private temp database, so it owns its own wiring.
 		services.AddScoped<HistoryRetentionDriver>();
 
+		// Usage stats recording + aggregation (WHISPER-24): the driver builds its own real Mediator pipeline
+		// and Logic aggregator over the real SQLite store against a private temp database, so a restart truly
+		// reloads persisted measures from disk.
+		services.AddScoped<UsageStatsRecordingDriver>();
+
 		// Run on login (WHISPER-32): drive the real command/query handlers through IMediator over an
 		// in-memory startup registration, the single OS seam this feature controls.
 		services.AddScoped<FakeStartupRegistration>();

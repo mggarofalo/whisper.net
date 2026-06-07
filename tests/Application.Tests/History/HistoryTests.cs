@@ -44,9 +44,18 @@ public sealed class HistoryTests
 	public void Validator_accepts_a_well_formed_command()
 	{
 		ValidationResult result = new RecordTranscriptionCommandValidator()
-			.Validate(new RecordTranscriptionCommand("hello", T10));
+			.Validate(new RecordTranscriptionCommand("hello", T10, TimeSpan.FromSeconds(5)));
 
 		Assert.True(result.IsValid);
+	}
+
+	[Fact]
+	public void Validator_rejects_a_negative_duration()
+	{
+		ValidationResult result = new RecordTranscriptionCommandValidator()
+			.Validate(new RecordTranscriptionCommand("hello", T10, TimeSpan.FromSeconds(-1)));
+
+		Assert.False(result.IsValid);
 	}
 
 	private static RecordTranscriptionHandler NewRecordHandler(IHistoryStore store, int maxEntries = 1000) =>

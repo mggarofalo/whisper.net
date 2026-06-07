@@ -17,7 +17,7 @@ public sealed class RecordTranscriptionHandler(IHistoryStore store, IOptions<Ret
 {
 	public async ValueTask<Mediator.Unit> Handle(RecordTranscriptionCommand command, CancellationToken cancellationToken)
 	{
-		TranscriptEntry entry = TranscriptEntry.Create(command.Text, command.CreatedAt);
+		TranscriptEntry entry = TranscriptEntry.Create(command.Text, command.CreatedAt, command.Duration);
 		await store.AddAsync(entry, cancellationToken);
 
 		// Enforce retention after the write; a non-positive limit disables pruning (handled by the store).

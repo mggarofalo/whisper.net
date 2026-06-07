@@ -11,4 +11,10 @@ public interface IUsageStatsCalculator
 {
 	/// <summary>Aggregates the given history entries into a <see cref="UsageStats"/> value.</summary>
 	UsageStats Aggregate(IReadOnlyList<TranscriptEntry> entries);
+
+	/// <summary>
+	/// Aggregates the given history entries into a <see cref="UsageSummary"/>: transcription count,
+	/// total characters and audio duration, plus a most-recent-first per-day breakdown (WHISPER-24).
+	/// </summary>
+	UsageSummary Summarize(IReadOnlyList<TranscriptEntry> entries);
 }
