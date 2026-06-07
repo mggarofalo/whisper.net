@@ -1,0 +1,15 @@
+<Window x:Class="Presentation.Shell.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Whisper Settings"
+        Width="480"
+        Height="320"
+        WindowStartupLocation="CenterScreen">
+    <Grid Margin="24">
+        <TextBlock Text="Settings arrive in M10 (Dashboard &amp; Settings UI)."
+                   FontSize="14"
+                   TextWrapping="Wrap"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center" />
+    </Grid>
+</Window>

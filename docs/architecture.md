@@ -121,6 +121,14 @@ implementation (`FileSettingsStore`, JSON of the settings DTO) lives in Infrastr
 that touches the filesystem — and recovers to defaults (creating the store on a first run, logging on a
 corrupt one) so a bad or missing file never crashes the host.
 
+The tray icon (WHISPER-18) follows the same seam discipline: the coordination — mapping the recording
+status to the icon/tooltip, and the Open Settings / Quit actions — lives in `Logic.AppManagement`'s
+`TrayController`, so it is driven for real in the specs. The thin H.NotifyIcon view and its
+CommunityToolkit.Mvvm view-model in Presentation only bind to it. Quit calls
+`IHostApplicationLifetime.StopApplication` (the WHISPER-12 graceful path); Open Settings goes through
+the `IShellPresenter` port — an Application port **implemented by Presentation** (the WPF shell), the
+allowed exception to "ports are implemented by Infrastructure" for UI-surfacing seams.
+
 ## Where the rules are enforced
 
 `tests/Architecture.Tests` asserts the dependency rule (Domain depends on nothing; Application does
