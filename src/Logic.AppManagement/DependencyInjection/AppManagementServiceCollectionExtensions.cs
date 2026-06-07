@@ -37,6 +37,14 @@ public static class AppManagementServiceCollectionExtensions
 		// Singleton so every consumer shares one live view of the settings.
 		services.AddSingleton<SettingsHolder>();
 
+		// Output transforms (WHISPER-37): the registry of named transforms (the built-in formats) and the
+		// service that applies one by name via the rephrase port. A pure framework — the AI execution stays
+		// behind IRephraseClient, so no Infrastructure/network type leaks into this layer.
+		// Construct the registry explicitly (its default ctor seeds the built-ins). A plain AddSingleton
+		// would let the container pick the IEnumerable<OutputTransform> ctor and bind it to an empty set.
+		services.AddSingleton(_ => new OutputTransforms.OutputTransformRegistry());
+		services.AddSingleton<OutputTransforms.OutputTransformService>();
+
 		return services;
 	}
 
