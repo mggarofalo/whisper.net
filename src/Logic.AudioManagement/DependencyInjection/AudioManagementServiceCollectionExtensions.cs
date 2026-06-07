@@ -15,6 +15,11 @@ public static class AudioManagementServiceCollectionExtensions
 		services.AddSingleton<ISilenceTrimmer, SilenceTrimmer>();
 		services.AddSingleton<IFillerWordCleaner, FillerWordCleaner>();
 
+		// Capture normalization (WHISPER-23): the resampler is a stateless, deterministic behavior. The
+		// stateful CaptureBuffer is constructed by the orchestration layer (Module 7) with the per-app
+		// buffering options, so it is not registered here.
+		services.AddSingleton<AudioResampler>();
+
 		return services;
 	}
 }

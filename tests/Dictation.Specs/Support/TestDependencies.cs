@@ -53,6 +53,7 @@ public static class TestDependencies
 		services.AddScoped<UsageStatsDriver>();
 		services.AddScoped<MappingDriver>();
 		services.AddScoped<AudioCaptureDriver>();
+		services.AddScoped<AudioNormalizationDriver>();
 
 		return services;
 	}
