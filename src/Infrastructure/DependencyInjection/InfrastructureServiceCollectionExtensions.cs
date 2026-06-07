@@ -10,10 +10,12 @@ using Infrastructure.Gpu;
 using Infrastructure.Hotkeys;
 using Infrastructure.Models;
 using Infrastructure.Settings;
+using Infrastructure.Startup;
 using Infrastructure.TextDelivery;
 using Infrastructure.Transcription;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace Infrastructure.DependencyInjection;
 
@@ -122,6 +124,26 @@ public static class InfrastructureServiceCollectionExtensions
 		});
 
 		services.AddSingleton<ISettingsStore, FileSettingsStore>();
+
+		// Run on login (WHISPER-32): the registry-backed launch-at-login registration under the current-user
+		// Run key (no elevation). The key/value default to the standard Windows Run key when not configured.
+		services.AddOptions<StartupRegistrationOptions>();
+		if (configuration is not null)
+		{
+			services.Configure<StartupRegistrationOptions>(configuration.GetSection(StartupRegistrationOptions.SectionName));
+		}
+
+		// Constructed behind an OS guard: the registry adapter is Windows-only (the whole app is), and the
+		// guard is what lets this portable net10.0 assembly compose it without a platform-compat warning.
+		services.AddSingleton<IStartupRegistration>(serviceProvider =>
+		{
+			if (!OperatingSystem.IsWindows())
+			{
+				throw new PlatformNotSupportedException("Run-on-login registration requires Windows.");
+			}
+
+			return new RegistryStartupRegistration(serviceProvider.GetRequiredService<IOptions<StartupRegistrationOptions>>());
+		});
 
 		return services;
 	}

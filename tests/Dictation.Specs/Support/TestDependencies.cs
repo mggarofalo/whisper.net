@@ -85,6 +85,12 @@ public static class TestDependencies
 		// file-backed store against a private temp directory, so it owns its own wiring.
 		services.AddScoped<SettingsPersistenceDriver>();
 
+		// Run on login (WHISPER-32): drive the real command/query handlers through IMediator over an
+		// in-memory startup registration, the single OS seam this feature controls.
+		services.AddScoped<FakeStartupRegistration>();
+		services.AddScoped<IStartupRegistration>(sp => sp.GetRequiredService<FakeStartupRegistration>());
+		services.AddScoped<RunOnLoginDriver>();
+
 		// Hotkey activation modes (WHISPER-16): the real HotkeyActivationController behind the driver.
 		// Override its production singleton lifetime to scoped so each scenario gets fresh chord state.
 		services.AddScoped<HotkeyActivationController>();
