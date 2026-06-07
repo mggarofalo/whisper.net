@@ -7,6 +7,7 @@ using Application.Ports;
 using Infrastructure.Audio;
 using Infrastructure.DependencyInjection;
 using Infrastructure.Hotkeys;
+using Logic.AppManagement.Lifecycle;
 using Mediator;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -83,6 +84,19 @@ public sealed class HostCompositionTests
 		IHotkeyListener listener = host.Services.GetRequiredService<IHotkeyListener>();
 
 		Assert.IsType<EventLoopHotkeyListener>(listener);
+	}
+
+	// WHISPER-12 AC1/AC3: the long-lived background components are registered as IHostedService so the
+	// Generic Host owns their lifetime. The global hotkey listener is the first such component; resolving
+	// the hosted-service set must surface it (constructing it installs no OS hook — Start does that).
+	[Fact]
+	public void Registers_the_hotkey_listener_as_a_hosted_service()
+	{
+		using IHost host = BuildHost();
+
+		IEnumerable<IHostedService> hostedServices = host.Services.GetServices<IHostedService>();
+
+		Assert.Contains(hostedServices, service => service is HotkeyListenerHostedService);
 	}
 
 	[Fact]

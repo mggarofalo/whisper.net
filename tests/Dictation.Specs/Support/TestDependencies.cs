@@ -77,6 +77,10 @@ public static class TestDependencies
 		services.AddScoped<TranscriptionDriver>();
 		services.AddScoped<HotkeyListenerDriver>();
 
+		// Host bootstrapping (WHISPER-12): the driver builds its own real Generic Host internally over a
+		// fake hook seam, so it is registered plainly and owns the hosted-service lifecycle it asserts.
+		services.AddScoped<AppLifecycleDriver>();
+
 		// Hotkey activation modes (WHISPER-16): the real HotkeyActivationController behind the driver.
 		// Override its production singleton lifetime to scoped so each scenario gets fresh chord state.
 		services.AddScoped<HotkeyActivationController>();

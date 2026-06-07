@@ -105,6 +105,15 @@ Infrastructure ports — so scenarios exercise production composition (real beha
 real mapping) rather than a parallel wiring that could drift. See
 [`docs/bdd-strategy.md`](bdd-strategy.md) §2.
 
+The host **owns the application lifetime** (WHISPER-12). The WPF `App` has no `StartupUri` and shows
+no window: `OnStartup` builds and **starts** the host, so the process runs tray-resident. Long-lived
+background components are registered as `IHostedService` — via
+`AddAppManagementHostedServices` (wired into `AddWhisperServices`, kept separate so the spec scenario
+container is not forced to run a host) — and the Generic Host starts them on launch and stops them on
+a **graceful** shutdown (`StopAsync` before the process exits). Unhandled exceptions are logged before
+exit. The hotkey listener is the first such hosted component; the host-lifecycle behavior is covered by
+the `@WHISPER-12` scenarios driving a real host over the faked hook seam.
+
 ## Where the rules are enforced
 
 `tests/Architecture.Tests` asserts the dependency rule (Domain depends on nothing; Application does
