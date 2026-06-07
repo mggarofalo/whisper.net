@@ -91,6 +91,14 @@ public static class TestDependencies
 		services.AddScoped<IStartupRegistration>(sp => sp.GetRequiredService<FakeStartupRegistration>());
 		services.AddScoped<RunOnLoginDriver>();
 
+		// Tray icon + menu (WHISPER-18): drive the real TrayController over the real recording state
+		// machine, with the shell-presenter and host-lifetime seams faked. The driver builds the
+		// controller itself, so only the fakes need registering.
+		services.AddScoped<FakeShellPresenter>();
+		services.AddScoped<IShellPresenter>(sp => sp.GetRequiredService<FakeShellPresenter>());
+		services.AddScoped<FakeApplicationLifetime>();
+		services.AddScoped<TrayDriver>();
+
 		// Hotkey activation modes (WHISPER-16): the real HotkeyActivationController behind the driver.
 		// Override its production singleton lifetime to scoped so each scenario gets fresh chord state.
 		services.AddScoped<HotkeyActivationController>();

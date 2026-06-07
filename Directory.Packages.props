@@ -19,6 +19,13 @@
     <PackageVersion Include="Riok.Mapperly" Version="4.3.1" />
   </ItemGroup>
 
+  <!-- Presentation (WPF): tray icon (H.NotifyIcon) + MVVM source generators (CommunityToolkit.Mvvm).
+       Presentation-only; both are Windows/WPF concerns. -->
+  <ItemGroup>
+    <PackageVersion Include="H.NotifyIcon.Wpf" Version="2.4.1" />
+    <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+  </ItemGroup>
+
   <!-- Audio: WASAPI capture + device enumeration (NAudio). Infrastructure-only; Windows at runtime. -->
   <ItemGroup>
     <PackageVersion Include="NAudio.Wasapi" Version="2.2.1" />
