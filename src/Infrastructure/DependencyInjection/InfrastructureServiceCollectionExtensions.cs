@@ -90,6 +90,10 @@ public static class InfrastructureServiceCollectionExtensions
 		services.AddSingleton<IClipboard, Win32Clipboard>();
 		services.AddSingleton<ClipboardTextInjector>();
 
+		// UIPI / elevation detection (WHISPER-6): lets the delivery pipeline detect a higher-integrity
+		// foreground window and surface that synthetic input would be dropped, instead of failing silently.
+		services.AddSingleton<IForegroundIntegrityProbe, Win32ForegroundIntegrityProbe>();
+
 		return services;
 	}
 }

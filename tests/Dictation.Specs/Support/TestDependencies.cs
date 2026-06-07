@@ -38,6 +38,10 @@ public static class TestDependencies
 		services.AddScoped(_ => Substitute.For<IHistoryStore>());
 		services.AddScoped(_ => Substitute.For<IGpuProbe>());
 
+		// Foreground integrity (WHISPER-6): default substitute returns Same (the enum's default), so the
+		// existing delivery specs type normally; the UIPI specs override it to a higher-integrity window.
+		services.AddScoped(_ => Substitute.For<IForegroundIntegrityProbe>());
+
 		// Capture (WHISPER-7): drive the REAL WasapiAudioSource over a fake device seam, so the
 		// capture contract is validated for real while no microphone is touched.
 		services.AddScoped<FakeAudioCaptureClient>();
@@ -52,6 +56,9 @@ public static class TestDependencies
 
 		// Clipboard fallback (WHISPER-5): the real ClipboardTextInjector over fake clipboard + keyboard seams.
 		services.AddScoped<ClipboardDeliveryDriver>();
+
+		// UIPI-aware delivery (WHISPER-6): the real pipeline through IMediator with the integrity probe faked.
+		services.AddScoped<UipiDeliveryDriver>();
 		services.AddScoped<RepositoryGuidanceDriver>();
 		services.AddScoped<DomainInvariantsDriver>();
 		services.AddScoped<ApplicationPortsDriver>();
