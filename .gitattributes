@@ -1,0 +1,19 @@
+# Ensure consistent line endings across platforms (mirrors .editorconfig).
+*.cs       text eol=crlf
+*.csproj   text eol=crlf
+*.slnx     text eol=crlf
+*.props    text eol=crlf
+*.targets  text eol=crlf
+*.xaml     text eol=crlf
+*.config   text eol=crlf
+*.json     text eol=lf
+*.yml      text eol=lf
+*.yaml     text eol=lf
+*.md       text eol=lf
+*.sh       text eol=lf
+*.mjs      text eol=lf
+
+# Binary assets — never normalize.
+*.wav  binary
+*.bin  binary
+*.onnx binary

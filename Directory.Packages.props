@@ -1,0 +1,24 @@
+<!--
+  Central Package Management: every PackageReference version is pinned here, not in csproj files.
+  https://learn.microsoft.com/nuget/consume-packages/central-package-management
+-->
+<Project>
+
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Package versions are pinned centrally as projects begin to need them (WHISPER-55 onward). -->
+  </ItemGroup>
+
+  <!--
+    MinVer derives the assembly version from git tags (see Directory.Build.props). GlobalPackageReference
+    applies it to every project that participates in central package management without each project
+    listing it.
+  -->
+  <ItemGroup>
+    <GlobalPackageReference Include="MinVer" Version="5.0.0" PrivateAssets="all" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,23 @@
+<Project>
+
+  <!--
+    Solution-wide build defaults, imported into every project before its own body.
+    Per-project overrides are still possible (e.g. Presentation retargets to net10.0-windows).
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!--
+      Versioning is derived from git tags by MinVer. Pushing a `vX.Y.Z` tag IS the release;
+      untagged builds produce a pre-release version (e.g. 0.1.0-alpha.0.N). No static <Version>
+      is set here.
+    -->
+    <MinVerTagPrefix>v</MinVerTagPrefix>
+  </PropertyGroup>
+
+</Project>

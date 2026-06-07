@@ -1,0 +1,13 @@
+<Project>
+
+  <!--
+    Projects under central package management receive MinVer via the GlobalPackageReference in
+    Directory.Packages.props. A project that opts out of CPM (ManagePackageVersionsCentrally=false)
+    cannot use a version-less reference, so it picks MinVer up inline here. None opt out yet — this
+    is a forward-looking guard so versioning stays consistent if one ever does.
+  -->
+  <ItemGroup Condition="'$(ManagePackageVersionsCentrally)' == 'false'">
+    <PackageReference Include="MinVer" Version="5.0.0" PrivateAssets="all" />
+  </ItemGroup>
+
+</Project>
