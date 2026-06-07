@@ -45,6 +45,10 @@ public static class AppManagementServiceCollectionExtensions
 		services.AddSingleton(_ => new OutputTransforms.OutputTransformRegistry());
 		services.AddSingleton<OutputTransforms.OutputTransformService>();
 
+		// Post-process pipeline (WHISPER-41): the ordered normalize -> optional transform pipeline behind
+		// the IPostProcessor port, reading the live PostProcessSettingsHolder so edits apply next call.
+		services.AddSingleton<Application.Ports.IPostProcessor, PostProcessing.PostProcessPipeline>();
+
 		return services;
 	}
 

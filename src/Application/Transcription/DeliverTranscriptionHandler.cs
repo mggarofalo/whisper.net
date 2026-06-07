@@ -16,7 +16,7 @@ namespace Application.Transcription;
 public sealed class DeliverTranscriptionHandler(
 	ISilenceTrimmer silenceTrimmer,
 	ITranscriber transcriber,
-	IFillerWordCleaner fillerWordCleaner,
+	IPostProcessor postProcessor,
 	IForegroundIntegrityProbe integrityProbe,
 	IDeliveryStrategySelector strategySelector,
 	IOptions<DeliveryOptions> deliveryOptions,
@@ -27,7 +27,10 @@ public sealed class DeliverTranscriptionHandler(
 	{
 		Domain.Audio.AudioClip trimmed = silenceTrimmer.Trim(command.Clip);
 		Domain.Audio.TranscriptionResult transcription = await transcriber.TranscribeAsync(trimmed, cancellationToken);
-		string cleaned = fillerWordCleaner.Clean(transcription.Text);
+
+		// Post-processing (WHISPER-41): normalize (filler/noise per config) then the optional output
+		// transform, applied in a fixed order behind the IPostProcessor port.
+		string cleaned = await postProcessor.ProcessAsync(transcription.Text, cancellationToken);
 
 		// No speech (or only filler) -> deliver nothing.
 		if (string.IsNullOrWhiteSpace(cleaned))

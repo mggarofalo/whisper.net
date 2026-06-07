@@ -8,6 +8,14 @@ All notable changes to this project are documented here. The format is based on
 
 ### Added
 
+- **Post-process pipeline configuration + hot-reload.** A single `PostProcess` configuration section
+  exposes filler removal on/off, the custom vocabulary, the default output transform, and rephrase
+  enable + endpoint. The ordered pipeline (normalize → optional transform; vocabulary-conditioned decode
+  is applied upstream during transcription) runs behind the `IPostProcessor` port and reads the live
+  configuration, so an edit applied via the `ConfigurePostProcessing` command takes effect on the next
+  transcription without restarting the app. The configuration is validated by FluentValidation through
+  the existing `ValidationBehavior` pipeline (unknown default transform / non-loopback rephrase endpoint
+  rejected), and an unknown transform degrades safely to the normalized text. (WHISPER-41)
 - **Optional AI rephrase (opt-in, localhost-only).** An optional post-processing step can rewrite
   recognized text with a locally-hosted [Ollama](https://ollama.com) model via the `IRephraseClient`
   port (`OllamaRephraseClient`). Privacy stance: it is **disabled by default** and makes **no network
