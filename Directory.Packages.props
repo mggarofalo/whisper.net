@@ -30,6 +30,17 @@
     <PackageVersion Include="Microsoft.ML.OnnxRuntime" Version="1.20.1" />
   </ItemGroup>
 
+  <!--
+    On-device transcription (Whisper.net) with Vulkan GPU acceleration + CPU fallback. Infrastructure-
+    only; transcription is fully local (no network egress). The Runtime packages ship the native
+    whisper.cpp binaries (CPU + Vulkan); the GPU contact point picks the order at load time.
+  -->
+  <ItemGroup>
+    <PackageVersion Include="Whisper.net" Version="1.9.1" />
+    <PackageVersion Include="Whisper.net.Runtime" Version="1.9.1" />
+    <PackageVersion Include="Whisper.net.Runtime.Vulkan" Version="1.9.1" />
+  </ItemGroup>
+
   <!-- Validation -->
   <ItemGroup>
     <PackageVersion Include="FluentValidation" Version="12.1.1" />

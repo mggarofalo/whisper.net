@@ -60,6 +60,9 @@ public static class TestDependencies
 		// GPU contact point (WHISPER-9): the real backend selector over a faked raw probe.
 		services.AddScoped<GpuBackendDriver>();
 
+		// On-device transcription (WHISPER-3): the real Whisper.net adapter over a fake engine seam.
+		services.AddScoped<WhisperTranscriptionDriver>();
+
 		// Device selection (WHISPER-13): fake enumerator + notification client behind the driver.
 		services.AddScoped<FakeAudioDeviceEnumerator>();
 		services.AddScoped<FakeDefaultDeviceWatcher>();
