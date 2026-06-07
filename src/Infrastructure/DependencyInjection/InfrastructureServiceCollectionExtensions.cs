@@ -6,6 +6,7 @@
 using Application.Ports;
 using Infrastructure.Audio;
 using Infrastructure.Gpu;
+using Infrastructure.Models;
 using Infrastructure.Transcription;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -46,6 +47,31 @@ public static class InfrastructureServiceCollectionExtensions
 
 		services.AddSingleton<IWhisperEngineFactory, WhisperNetEngineFactory>();
 		services.AddSingleton<ITranscriber, WhisperTranscriber>();
+
+		// Model registry cache + download (WHISPER-4). Cache detection is filesystem-only (no network).
+		// The downloader fetches a missing model from Hugging Face — the one model-related egress — and
+		// verifies it before moving it into the cache. No background fetch is wired: a download happens
+		// only when explicitly requested. The cache directory defaults to a per-user folder when unset.
+		services.AddOptions<ModelCacheOptions>();
+		if (configuration is not null)
+		{
+			services.Configure<ModelCacheOptions>(configuration.GetSection(ModelCacheOptions.SectionName));
+		}
+
+		services.PostConfigure<ModelCacheOptions>(cacheOptions =>
+		{
+			if (string.IsNullOrWhiteSpace(cacheOptions.CacheDirectory))
+			{
+				cacheOptions.CacheDirectory = Path.Combine(
+					Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+					"whisper.net",
+					"models");
+			}
+		});
+
+		services.AddSingleton<IModelCache, FileSystemModelCache>();
+		services.AddSingleton<IModelDownloadSource>(_ => new HuggingFaceModelDownloadSource(new HttpClient()));
+		services.AddSingleton<IModelDownloader, ModelDownloader>();
 
 		return services;
 	}

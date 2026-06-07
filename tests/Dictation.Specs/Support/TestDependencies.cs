@@ -63,6 +63,9 @@ public static class TestDependencies
 		// On-device transcription (WHISPER-3): the real Whisper.net adapter over a fake engine seam.
 		services.AddScoped<WhisperTranscriptionDriver>();
 
+		// Model registry/cache/download (WHISPER-4): real catalog + cache + downloader, hermetic source.
+		services.AddScoped<ModelLibraryDriver>();
+
 		// Device selection (WHISPER-13): fake enumerator + notification client behind the driver.
 		services.AddScoped<FakeAudioDeviceEnumerator>();
 		services.AddScoped<FakeDefaultDeviceWatcher>();
