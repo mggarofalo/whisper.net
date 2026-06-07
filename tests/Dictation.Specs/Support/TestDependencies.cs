@@ -81,6 +81,10 @@ public static class TestDependencies
 		// fake hook seam, so it is registered plainly and owns the hosted-service lifecycle it asserts.
 		services.AddScoped<AppLifecycleDriver>();
 
+		// Settings persistence (WHISPER-43): the driver composes the real lifecycle service over the real
+		// file-backed store against a private temp directory, so it owns its own wiring.
+		services.AddScoped<SettingsPersistenceDriver>();
+
 		// Hotkey activation modes (WHISPER-16): the real HotkeyActivationController behind the driver.
 		// Override its production singleton lifetime to scoped so each scenario gets fresh chord state.
 		services.AddScoped<HotkeyActivationController>();
