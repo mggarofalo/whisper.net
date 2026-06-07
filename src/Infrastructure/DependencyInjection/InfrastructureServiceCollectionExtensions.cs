@@ -84,6 +84,12 @@ public static class InfrastructureServiceCollectionExtensions
 		services.AddSingleton<IKeyboardInput, Win32KeyboardInput>();
 		services.AddSingleton<ITextInjector, SendInputTextInjector>();
 
+		// Clipboard fallback delivery (WHISPER-5): the paste path, registered as a concrete type for now.
+		// It writes text, issues Ctrl+V, and restores the prior clipboard unless a concurrent copy advanced
+		// the change count. Typing stays the default ITextInjector until WHISPER-8 wires strategy selection.
+		services.AddSingleton<IClipboard, Win32Clipboard>();
+		services.AddSingleton<ClipboardTextInjector>();
+
 		return services;
 	}
 }
