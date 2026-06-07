@@ -37,6 +37,7 @@ public static class TestDependencies
 		services.AddScoped<ScenarioWorld>();
 		services.AddScoped<TranscriptionDriver>();
 		services.AddScoped<RepositoryGuidanceDriver>();
+		services.AddScoped<DomainInvariantsDriver>();
 
 		return services;
 	}
