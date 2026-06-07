@@ -13,6 +13,9 @@
 *.sh       text eol=lf
 *.mjs      text eol=lf
 
+# Git hooks are POSIX shell scripts (run via sh, including on Windows CI) — must stay LF.
+.husky/commit-msg text eol=lf
+
 # Binary assets — never normalize.
 *.wav  binary
 *.bin  binary
