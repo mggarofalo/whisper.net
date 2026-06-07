@@ -8,6 +8,11 @@ focus. It is a ground-up rewrite of the Python [`whisper-local`](https://github.
 > **Privacy:** transcription runs locally. No audio, transcripts, or user data ever leave the device
 > without an explicit, opt-in action. There is no telemetry. See
 > [AGENTS.md → Privacy stance](AGENTS.md#privacy-stance).
+>
+> **Network disclosure:** the only model-related network access is downloading a Whisper model you
+> choose, on request, from Hugging Face (`https://huggingface.co/ggerganov/whisper.cpp`). Models are
+> never fetched automatically; once cached locally they are reused with no further network access, and
+> transcription itself is always fully offline.
 
 ## Build and run
 
