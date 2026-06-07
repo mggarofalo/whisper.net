@@ -140,6 +140,9 @@ public static class TestDependencies
 		services.AddScoped<AudioNormalizationDriver>();
 		services.AddScoped<VadDriver>();
 
+		// Transcription normalization (WHISPER-36): the real IFillerWordCleaner behind the driver.
+		services.AddScoped<TranscriptionNormalizationDriver>();
+
 		// GPU contact point (WHISPER-9): the real backend selector over a faked raw probe.
 		services.AddScoped<GpuBackendDriver>();
 
