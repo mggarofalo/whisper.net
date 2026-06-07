@@ -10,6 +10,7 @@ using Application.Ports;
 using Dictation.Specs.Drivers;
 using Infrastructure.Audio;
 using Infrastructure.Hotkeys;
+using Logic.AppManagement;
 using Logic.AppManagement.DependencyInjection;
 using Logic.AudioManagement.DependencyInjection;
 using Logic.GpuContactPoint.DependencyInjection;
@@ -75,6 +76,11 @@ public static class TestDependencies
 		services.AddScoped<ScenarioWorld>();
 		services.AddScoped<TranscriptionDriver>();
 		services.AddScoped<HotkeyListenerDriver>();
+
+		// Hotkey activation modes (WHISPER-16): the real HotkeyActivationController behind the driver.
+		// Override its production singleton lifetime to scoped so each scenario gets fresh chord state.
+		services.AddScoped<HotkeyActivationController>();
+		services.AddScoped<HotkeyActivationDriver>();
 
 		// Text delivery (WHISPER-2): the real SendInputTextInjector over a recording fake keyboard seam.
 		services.AddScoped<TextInjectionDriver>();
