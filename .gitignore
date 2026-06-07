@@ -39,6 +39,12 @@ ScaffoldingReadMe.txt
 # dotenv environment variables file
 .env
 
+# Node tooling (commitlint + husky for the commit-msg hook). package.json + package-lock.json are
+# committed; installed packages and husky's generated hook shims are not.
+node_modules/
+npm-debug.log*
+.husky/_/
+
 # Others
 ~$*
 *~

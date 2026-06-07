@@ -1,0 +1,32 @@
+#!/usr/bin/env sh
+# Reject commit messages that do not follow Conventional Commits (see commitlint.config.mjs).
+#
+# Prefer the installed commitlint CLI. Fall back to a Node-free check so the hook still guards
+# commits — and the @WHISPER-60 BDD scenario can exercise it — when dependencies are not installed.
+
+msg_file="$1"
+
+if [ -x "node_modules/.bin/commitlint" ]; then
+	npx --no-install commitlint --edit "$msg_file"
+	exit $?
+fi
+
+# --- Node-free fallback --------------------------------------------------------------------------
+header="$(head -n 1 "$msg_file")"
+
+# Allow Git's own generated messages (merge/revert/fixup/squash) through untouched.
+case "$header" in
+Merge\ * | Revert\ * | fixup!\ * | squash!\ *)
+	exit 0
+	;;
+esac
+
+# type(scope)!: subject  — type required, scope optional, subject must be non-empty.
+if printf '%s' "$header" | grep -Eq '^(feat|fix|docs|refactor|test|chore)(\([a-z]+\))?!?: .+'; then
+	exit 0
+fi
+
+echo "✖  Commit message does not follow Conventional Commits." >&2
+echo "   Allowed types: feat, fix, docs, refactor, test, chore" >&2
+echo "   Example: feat(application): add continuous dictation" >&2
+exit 1
