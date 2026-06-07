@@ -1,18 +1,21 @@
 // Per-layer DI registration for the Application layer. Wires the source-generated Mediator (scoped),
-// installs the ValidationBehavior into its pipeline, and registers every FluentValidation validator
-// in this assembly. This is the single registration entry point the Generic Host and the BDD specs
-// both call (WHISPER-57), so production and test composition cannot drift.
+// installs the ValidationBehavior into its pipeline, registers every FluentValidation validator in
+// this assembly, and binds the layered configuration to strongly-typed options. This is the single
+// registration entry point the Generic Host and the BDD specs both call (WHISPER-57), so production
+// and test composition cannot drift.
 
 using Application.Behaviors;
+using Application.Configuration;
 using Application.Interfaces;
 using FluentValidation;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Application.DependencyInjection;
 
 public static class ApplicationServiceCollectionExtensions
 {
-	public static IServiceCollection AddApplication(this IServiceCollection services)
+	public static IServiceCollection AddApplication(this IServiceCollection services, IConfiguration? configuration = null)
 	{
 		// Source-generated Mediator: scoped lifetime, scan this assembly for handlers, and run every
 		// request through ValidationBehavior before its handler.
@@ -24,6 +27,12 @@ public static class ApplicationServiceCollectionExtensions
 		});
 
 		services.AddValidatorsFromAssembly(typeof(ICommand<>).Assembly, includeInternalTypes: true);
+
+		// Bind strongly-typed options from the layered configuration when it is available.
+		if (configuration is not null)
+		{
+			services.Configure<GeneralOptions>(configuration.GetSection(GeneralOptions.SectionName));
+		}
 
 		return services;
 	}
