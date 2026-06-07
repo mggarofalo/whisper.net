@@ -38,6 +38,7 @@ public static class TestDependencies
 		services.AddScoped<TranscriptionDriver>();
 		services.AddScoped<RepositoryGuidanceDriver>();
 		services.AddScoped<DomainInvariantsDriver>();
+		services.AddScoped<ApplicationPortsDriver>();
 
 		return services;
 	}
