@@ -57,6 +57,12 @@
     <PackageVersion Include="Whisper.net.Runtime.Vulkan" Version="1.9.1" />
   </ItemGroup>
 
+  <!-- Persistence: SQLite over the bundled SQLitePCLRaw native provider (no system SQLite required).
+       Infrastructure-only; the single local database backs the settings + history ports. No egress. -->
+  <ItemGroup>
+    <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.0" />
+  </ItemGroup>
+
   <!-- Validation -->
   <ItemGroup>
     <PackageVersion Include="FluentValidation" Version="12.1.1" />
