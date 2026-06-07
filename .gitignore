@@ -58,3 +58,7 @@ nunit-*.xml
 
 # Reqnroll-generated feature code-behind (regenerated on build)
 *.feature.cs
+
+# WHISPER-65 spike: downloaded artifacts (sample audio + ggml models), never committed
+spikes/**/jfk.wav
+spikes/**/models/
