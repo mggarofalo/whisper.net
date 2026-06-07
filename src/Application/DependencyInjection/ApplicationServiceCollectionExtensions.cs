@@ -28,6 +28,9 @@ public static class ApplicationServiceCollectionExtensions
 
 		services.AddValidatorsFromAssembly(typeof(ICommand<>).Assembly, includeInternalTypes: true);
 
+		// Mapperly mappers are stateless; register them as singletons so handlers can inject them.
+		services.AddSingleton<Settings.SettingsMapper>();
+
 		// Bind strongly-typed options from the layered configuration when it is available.
 		if (configuration is not null)
 		{

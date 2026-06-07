@@ -33,12 +33,14 @@ public static class TestDependencies
 		// Substitute ONLY the Infrastructure ports — the seams the specs control.
 		services.AddScoped(_ => Substitute.For<ITranscriber>());
 		services.AddScoped(_ => Substitute.For<ITextInjector>());
+		services.AddScoped(_ => Substitute.For<ISettingsStore>());
 
 		services.AddScoped<ScenarioWorld>();
 		services.AddScoped<TranscriptionDriver>();
 		services.AddScoped<RepositoryGuidanceDriver>();
 		services.AddScoped<DomainInvariantsDriver>();
 		services.AddScoped<ApplicationPortsDriver>();
+		services.AddScoped<SettingsDriver>();
 
 		return services;
 	}
