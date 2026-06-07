@@ -49,6 +49,18 @@ public sealed class HostCompositionTests
 		Assert.IsType<WasapiAudioSource>(source);
 	}
 
+	// WHISPER-31: the Silero VAD port is registered by Infrastructure and resolvable from the
+	// production composition (the ONNX model loads lazily, so resolution needs no asset present).
+	[Fact]
+	public void Resolves_the_silero_vad_port_from_infrastructure()
+	{
+		using IHost host = BuildHost();
+
+		IVad vad = host.Services.GetRequiredService<IVad>();
+
+		Assert.IsType<SileroVad>(vad);
+	}
+
 	[Fact]
 	public void Honors_the_minimum_log_level_from_configuration()
 	{

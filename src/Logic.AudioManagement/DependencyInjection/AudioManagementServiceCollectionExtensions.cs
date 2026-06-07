@@ -20,6 +20,9 @@ public static class AudioManagementServiceCollectionExtensions
 		// buffering options, so it is not registered here.
 		services.AddSingleton<AudioResampler>();
 
+		// VAD silence policy (WHISPER-31): the deterministic gate/trim behavior over VAD probabilities.
+		services.AddSingleton<VadSilencePolicy>();
+
 		return services;
 	}
 }
