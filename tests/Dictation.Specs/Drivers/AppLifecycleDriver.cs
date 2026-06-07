@@ -8,6 +8,7 @@ using Application.DependencyInjection;
 using Application.Ports;
 using AwesomeAssertions;
 using Dictation.Specs.Support;
+using Domain.Settings;
 using Infrastructure.Hotkeys;
 using Logic.AppManagement.DependencyInjection;
 using Logic.AudioManagement.DependencyInjection;
@@ -15,6 +16,7 @@ using Logic.GpuContactPoint.DependencyInjection;
 using Logic.ModelManagement.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using NSubstitute;
 
 namespace Dictation.Specs.Drivers;
 
@@ -43,6 +45,13 @@ public sealed class AppLifecycleDriver : IDisposable
 		_hook = new FakeGlobalKeyHook();
 		builder.Services.AddSingleton<IGlobalKeyHook>(_hook);
 		builder.Services.AddSingleton<IHotkeyListener, EventLoopHotkeyListener>();
+
+		// The host-owned background components also include settings persistence (WHISPER-43); supply a
+		// stub store so the host composes it without touching disk. This driver asserts the hosted-service
+		// lifecycle, not settings, so defaults are fine.
+		ISettingsStore settingsStore = Substitute.For<ISettingsStore>();
+		settingsStore.LoadAsync(Arg.Any<CancellationToken>()).Returns(AppSettings.Default);
+		builder.Services.AddSingleton(settingsStore);
 
 		// The host-owned background components under test (WHISPER-12).
 		builder.Services.AddAppManagementHostedServices();

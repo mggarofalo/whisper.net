@@ -5,6 +5,7 @@
 using Application.Delivery;
 using Application.Ports;
 using Logic.AppManagement.Lifecycle;
+using Logic.AppManagement.Settings;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -32,6 +33,10 @@ public static class AppManagementServiceCollectionExtensions
 		// activation controller atomically. Singleton so it shares the live controller it rebinds.
 		services.AddSingleton<HotkeyCaptureService>();
 
+		// Current settings (WHISPER-43): the in-memory holder loaded on startup and saved on shutdown.
+		// Singleton so every consumer shares one live view of the settings.
+		services.AddSingleton<SettingsHolder>();
+
 		return services;
 	}
 
@@ -44,6 +49,10 @@ public static class AppManagementServiceCollectionExtensions
 		// The global hotkey listener runs for the app's whole lifetime: start it on launch, stop it on
 		// graceful shutdown. Registered as IHostedService so the Generic Host owns its lifecycle.
 		services.AddHostedService<HotkeyListenerHostedService>();
+
+		// Settings persistence (WHISPER-43): load the persisted settings into the holder on startup and
+		// write them back on graceful shutdown, around the host lifetime.
+		services.AddHostedService<SettingsLifecycleService>();
 
 		return services;
 	}

@@ -9,6 +9,7 @@ using Infrastructure.Audio;
 using Infrastructure.Gpu;
 using Infrastructure.Hotkeys;
 using Infrastructure.Models;
+using Infrastructure.Settings;
 using Infrastructure.TextDelivery;
 using Infrastructure.Transcription;
 using Microsoft.Extensions.Configuration;
@@ -100,6 +101,27 @@ public static class InfrastructureServiceCollectionExtensions
 		// pumped on its own dedicated thread. Singleton so the single OS hook lives for the app's run.
 		services.AddSingleton<IGlobalKeyHook, SharpHookGlobalKeyHook>();
 		services.AddSingleton<IHotkeyListener, EventLoopHotkeyListener>();
+
+		// Settings persistence (WHISPER-43): the file-backed ISettingsStore. The settings file defaults to
+		// a per-user application-data path when not configured, so a fresh install needs no configuration.
+		services.AddOptions<SettingsStoreOptions>();
+		if (configuration is not null)
+		{
+			services.Configure<SettingsStoreOptions>(configuration.GetSection(SettingsStoreOptions.SectionName));
+		}
+
+		services.PostConfigure<SettingsStoreOptions>(settingsOptions =>
+		{
+			if (string.IsNullOrWhiteSpace(settingsOptions.FilePath))
+			{
+				settingsOptions.FilePath = Path.Combine(
+					Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+					"whisper.net",
+					"settings.json");
+			}
+		});
+
+		services.AddSingleton<ISettingsStore, FileSettingsStore>();
 
 		return services;
 	}

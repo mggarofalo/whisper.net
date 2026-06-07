@@ -114,6 +114,13 @@ a **graceful** shutdown (`StopAsync` before the process exits). Unhandled except
 exit. The hotkey listener is the first such hosted component; the host-lifecycle behavior is covered by
 the `@WHISPER-12` scenarios driving a real host over the faked hook seam.
 
+Settings persistence is wired into that same lifecycle (WHISPER-43): a `SettingsLifecycleService`
+hosted service **loads** the persisted settings into a shared `SettingsHolder` on startup and **saves**
+them on graceful shutdown, through the Application-layer `ISettingsStore` port. The file-backed
+implementation (`FileSettingsStore`, JSON of the settings DTO) lives in Infrastructure — the only layer
+that touches the filesystem — and recovers to defaults (creating the store on a first run, logging on a
+corrupt one) so a bad or missing file never crashes the host.
+
 ## Where the rules are enforced
 
 `tests/Architecture.Tests` asserts the dependency rule (Domain depends on nothing; Application does
