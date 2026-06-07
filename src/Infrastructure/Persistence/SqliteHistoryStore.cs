@@ -41,6 +41,35 @@ public sealed class SqliteHistoryStore(SqliteDatabase database, ILogger<SqliteHi
 		}
 	}
 
+	public async ValueTask<int> PruneToMostRecentAsync(int maxEntries, CancellationToken cancellationToken)
+	{
+		// A non-positive limit means "keep everything" — pruning is disabled rather than wiping the table.
+		if (maxEntries <= 0)
+		{
+			return 0;
+		}
+
+		try
+		{
+			await using SqliteConnection connection = await database.OpenConnectionAsync(cancellationToken);
+			await using SqliteCommand command = connection.CreateCommand();
+			command.CommandText =
+				"""
+				DELETE FROM history
+				WHERE id NOT IN (
+					SELECT id FROM history ORDER BY created_ticks DESC LIMIT $max
+				);
+				""";
+			command.Parameters.AddWithValue("$max", maxEntries);
+			return await command.ExecuteNonQueryAsync(cancellationToken);
+		}
+		catch (SqliteException ex)
+		{
+			logger.LogError(ex, "Failed to prune transcript history to the most recent {MaxEntries} entries.", maxEntries);
+			return 0;
+		}
+	}
+
 	public async ValueTask<IReadOnlyList<TranscriptEntry>> GetEntriesAsync(
 		DateTimeOffset? from,
 		DateTimeOffset? to,

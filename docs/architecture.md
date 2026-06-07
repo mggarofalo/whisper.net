@@ -126,6 +126,12 @@ mode); the database file defaults to a per-user application-data path. Settings 
 the settings DTO in a single-row table, and the store recovers to defaults (creating the schema on a first
 run, logging on a corrupt database) so a bad or missing file never crashes the host.
 
+History stays bounded by a retention policy (WHISPER-17): after each new transcription is recorded, the
+`RecordTranscriptionCommand` handler prunes entries beyond the configured `History:MaxEntries` cap
+(default **1000**; a non-positive value disables pruning). History is read back through a paged
+`BrowseHistoryQuery` — most-recent-first, with optional case-insensitive text and date-range filtering —
+whose paging inputs are validated (`BrowseHistoryQueryValidator`) before the handler runs.
+
 The tray icon (WHISPER-18) follows the same seam discipline: the coordination — mapping the recording
 status to the icon/tooltip, and the Open Settings / Quit actions — lives in `Logic.AppManagement`'s
 `TrayController`, so it is driven for real in the specs. The thin H.NotifyIcon view and its

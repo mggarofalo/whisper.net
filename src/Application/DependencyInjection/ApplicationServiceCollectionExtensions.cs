@@ -37,10 +37,15 @@ public static class ApplicationServiceCollectionExtensions
 		// configuration when it is available. DeliveryOptions must always resolve because the delivery
 		// handler depends on it (the default strategy is Type when nothing is configured).
 		services.AddOptions<DeliveryOptions>();
+
+		// History retention (WHISPER-17): always resolvable so the record handler can enforce the limit;
+		// the default cap applies when nothing is configured.
+		services.AddOptions<RetentionOptions>();
 		if (configuration is not null)
 		{
 			services.Configure<GeneralOptions>(configuration.GetSection(GeneralOptions.SectionName));
 			services.Configure<DeliveryOptions>(configuration.GetSection(DeliveryOptions.SectionName));
+			services.Configure<RetentionOptions>(configuration.GetSection(RetentionOptions.SectionName));
 		}
 
 		// Post-process configuration (WHISPER-41): a single live holder, seeded from the "PostProcess"

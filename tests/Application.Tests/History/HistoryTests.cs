@@ -2,10 +2,12 @@
 // persistence, and the query handler's newest-first ordering + limit (the edge cases behind the
 // @WHISPER-47 scenarios). Uses a substituted IHistoryStore and the real HistoryMapper.
 
+using Application.Configuration;
 using Application.History;
 using Application.Ports;
 using Domain.History;
 using FluentValidation.Results;
+using Microsoft.Extensions.Options;
 using NSubstitute;
 using Xunit;
 
@@ -47,16 +49,29 @@ public sealed class HistoryTests
 		Assert.True(result.IsValid);
 	}
 
+	private static RecordTranscriptionHandler NewRecordHandler(IHistoryStore store, int maxEntries = 1000) =>
+		new(store, Options.Create(new RetentionOptions { MaxEntries = maxEntries }));
+
 	[Fact]
 	public async Task Record_handler_saves_an_entry_built_from_the_command()
 	{
-		RecordTranscriptionHandler handler = new(_store);
+		RecordTranscriptionHandler handler = NewRecordHandler(_store);
 
 		await handler.Handle(new RecordTranscriptionCommand("take notes", T11), CancellationToken.None);
 
 		await _store.Received(1).AddAsync(
 			Arg.Is<TranscriptEntry>(e => e.Text == "take notes" && e.CreatedAt == T11),
 			Arg.Any<CancellationToken>());
+	}
+
+	[Fact]
+	public async Task Record_handler_prunes_to_the_configured_retention_limit_after_writing()
+	{
+		RecordTranscriptionHandler handler = NewRecordHandler(_store, maxEntries: 100);
+
+		await handler.Handle(new RecordTranscriptionCommand("take notes", T11), CancellationToken.None);
+
+		await _store.Received(1).PruneToMostRecentAsync(100, Arg.Any<CancellationToken>());
 	}
 
 	[Fact]
