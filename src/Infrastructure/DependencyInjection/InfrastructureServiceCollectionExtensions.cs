@@ -3,6 +3,7 @@
 // Host calls; the BDD specs deliberately do NOT call it, substituting the ports with fakes instead.
 // Concrete adapters are registered here as later modules add them.
 
+using Application.Delivery;
 using Application.Ports;
 using Infrastructure.Audio;
 using Infrastructure.Gpu;
@@ -78,17 +79,17 @@ public static class InfrastructureServiceCollectionExtensions
 		services.AddSingleton<IModelDownloadSource>(_ => new HuggingFaceModelDownloadSource(new HttpClient()));
 		services.AddSingleton<IModelDownloader, ModelDownloader>();
 
-		// Text delivery (WHISPER-2): the universal typing path. SendInputTextInjector decomposes the text
-		// into Unicode keystrokes over the Win32 SendInput seam, so it lands even in terminals that ignore
-		// clipboard paste. Resolving the port synthesizes no input; it only types when Inject is called.
+		// Text delivery: the two strategies and the factory that routes between them (WHISPER-2/5/8).
+		// SendInputTextInjector types Unicode keystrokes over the Win32 SendInput seam (the universal path
+		// that lands even in terminals that ignore paste); ClipboardTextInjector writes text, issues Ctrl+V,
+		// and restores the prior clipboard unless a concurrent copy advanced the change count. Both are
+		// registered as concrete types and selected per delivery by TextInjectorFactory. Resolving any of
+		// them performs no I/O; they act only when Inject is called.
 		services.AddSingleton<IKeyboardInput, Win32KeyboardInput>();
-		services.AddSingleton<ITextInjector, SendInputTextInjector>();
-
-		// Clipboard fallback delivery (WHISPER-5): the paste path, registered as a concrete type for now.
-		// It writes text, issues Ctrl+V, and restores the prior clipboard unless a concurrent copy advanced
-		// the change count. Typing stays the default ITextInjector until WHISPER-8 wires strategy selection.
 		services.AddSingleton<IClipboard, Win32Clipboard>();
+		services.AddSingleton<SendInputTextInjector>();
 		services.AddSingleton<ClipboardTextInjector>();
+		services.AddSingleton<ITextInjectorFactory, TextInjectorFactory>();
 
 		// UIPI / elevation detection (WHISPER-6): lets the delivery pipeline detect a higher-integrity
 		// foreground window and surface that synthetic input would be dropped, instead of failing silently.

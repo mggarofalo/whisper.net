@@ -33,10 +33,14 @@ public static class ApplicationServiceCollectionExtensions
 		services.AddSingleton<History.HistoryMapper>();
 		services.AddSingleton<Statistics.UsageStatsMapper>();
 
-		// Bind strongly-typed options from the layered configuration when it is available.
+		// Register options with their defaults so they always resolve, then bind from the layered
+		// configuration when it is available. DeliveryOptions must always resolve because the delivery
+		// handler depends on it (the default strategy is Type when nothing is configured).
+		services.AddOptions<DeliveryOptions>();
 		if (configuration is not null)
 		{
 			services.Configure<GeneralOptions>(configuration.GetSection(GeneralOptions.SectionName));
+			services.Configure<DeliveryOptions>(configuration.GetSection(DeliveryOptions.SectionName));
 		}
 
 		return services;

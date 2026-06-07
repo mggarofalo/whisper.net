@@ -1,11 +1,15 @@
-// Unit coverage for the delivery orchestration's branching (WHISPER-6 adds the UIPI branch). The Logic
-// and Infrastructure ports are substituted so the test pins the handler's decisions: deliver normally,
-// deliver nothing when there is no speech, and — the new behavior — withhold delivery and surface a
-// UIPI block when the focused window is higher-integrity. Uncertainty must not block.
+// Unit coverage for the delivery orchestration's branching: deliver normally, deliver nothing when
+// there is no speech, withhold and surface a UIPI block for a higher-integrity window (WHISPER-6), and
+// route the delivery through the strategy the selector resolves (WHISPER-8). The Logic and
+// Infrastructure ports are substituted so this pins the handler's decisions, not their implementations.
 
+using Application.Configuration;
+using Application.Delivery;
 using Application.Ports;
 using Application.Transcription;
 using Domain.Audio;
+using Domain.Settings;
+using Microsoft.Extensions.Options;
 using NSubstitute;
 using Xunit;
 
@@ -17,10 +21,24 @@ public sealed class DeliverTranscriptionHandlerTests
 	private readonly ITranscriber _transcriber = Substitute.For<ITranscriber>();
 	private readonly IFillerWordCleaner _fillerWordCleaner = Substitute.For<IFillerWordCleaner>();
 	private readonly IForegroundIntegrityProbe _integrityProbe = Substitute.For<IForegroundIntegrityProbe>();
-	private readonly ITextInjector _textInjector = Substitute.For<ITextInjector>();
+	private readonly IDeliveryStrategySelector _strategySelector = Substitute.For<IDeliveryStrategySelector>();
+	private readonly ITextInjectorFactory _textInjectorFactory = Substitute.For<ITextInjectorFactory>();
+	private readonly ITextInjector _typingInjector = Substitute.For<ITextInjector>();
+	private readonly ITextInjector _pasteInjector = Substitute.For<ITextInjector>();
+	private readonly DeliveryOptions _deliveryOptions = new();
+
+	public DeliverTranscriptionHandlerTests()
+	{
+		_textInjectorFactory.For(DeliveryStrategy.Type).Returns(_typingInjector);
+		_textInjectorFactory.For(DeliveryStrategy.Paste).Returns(_pasteInjector);
+		// Default: pass the resolved strategy straight through (override wins over the configured default).
+		_strategySelector.Resolve(Arg.Any<DeliveryStrategy>(), Arg.Any<DeliveryStrategy?>())
+			.Returns(ci => ci.ArgAt<DeliveryStrategy?>(1) ?? ci.ArgAt<DeliveryStrategy>(0));
+	}
 
 	private DeliverTranscriptionHandler CreateHandler() =>
-		new(_silenceTrimmer, _transcriber, _fillerWordCleaner, _integrityProbe, _textInjector);
+		new(_silenceTrimmer, _transcriber, _fillerWordCleaner, _integrityProbe, _strategySelector,
+			Options.Create(_deliveryOptions), _textInjectorFactory);
 
 	private void ModelTranscribesTo(string text)
 	{
@@ -30,11 +48,12 @@ public sealed class DeliverTranscriptionHandlerTests
 			.Returns(new TranscriptionResult(text));
 	}
 
-	private async Task<DeliveryResult> Deliver() =>
-		await CreateHandler().Handle(new DeliverTranscriptionCommand(AudioClip.OneSecondOfSilence()), CancellationToken.None);
+	private async Task<DeliveryResult> Deliver(DeliveryStrategy? overrideStrategy = null) =>
+		await CreateHandler().Handle(
+			new DeliverTranscriptionCommand(AudioClip.OneSecondOfSilence(), overrideStrategy), CancellationToken.None);
 
 	[Fact]
-	public async Task Delivers_into_a_same_integrity_window()
+	public async Task Delivers_into_a_same_integrity_window_via_the_default_strategy()
 	{
 		ModelTranscribesTo("ship it");
 		_integrityProbe.CompareForegroundToCurrent().Returns(ForegroundIntegrity.Same);
@@ -43,7 +62,19 @@ public sealed class DeliverTranscriptionHandlerTests
 
 		Assert.True(result.Delivered);
 		Assert.Equal(DeliveryBlock.None, result.Block);
-		_textInjector.Received(1).Inject("ship it");
+		_typingInjector.Received(1).Inject("ship it");
+		_pasteInjector.DidNotReceive().Inject(Arg.Any<string>());
+	}
+
+	[Fact]
+	public async Task Routes_to_the_paste_injector_when_the_resolved_strategy_is_paste()
+	{
+		ModelTranscribesTo("ship it");
+
+		await Deliver(overrideStrategy: DeliveryStrategy.Paste);
+
+		_pasteInjector.Received(1).Inject("ship it");
+		_typingInjector.DidNotReceive().Inject(Arg.Any<string>());
 	}
 
 	[Fact]
@@ -56,7 +87,8 @@ public sealed class DeliverTranscriptionHandlerTests
 
 		Assert.False(result.Delivered);
 		Assert.Equal(DeliveryBlock.Uipi, result.Block);
-		_textInjector.DidNotReceive().Inject(Arg.Any<string>());
+		_typingInjector.DidNotReceive().Inject(Arg.Any<string>());
+		_pasteInjector.DidNotReceive().Inject(Arg.Any<string>());
 	}
 
 	[Theory]
@@ -70,7 +102,7 @@ public sealed class DeliverTranscriptionHandlerTests
 		DeliveryResult result = await Deliver();
 
 		Assert.True(result.Delivered);
-		_textInjector.Received(1).Inject("ship it");
+		_typingInjector.Received(1).Inject("ship it");
 	}
 
 	[Fact]
@@ -82,7 +114,8 @@ public sealed class DeliverTranscriptionHandlerTests
 
 		Assert.False(result.Delivered);
 		Assert.Equal(DeliveryBlock.None, result.Block);
-		_textInjector.DidNotReceive().Inject(Arg.Any<string>());
+		_typingInjector.DidNotReceive().Inject(Arg.Any<string>());
+		_pasteInjector.DidNotReceive().Inject(Arg.Any<string>());
 		_integrityProbe.DidNotReceive().CompareForegroundToCurrent();
 	}
 }

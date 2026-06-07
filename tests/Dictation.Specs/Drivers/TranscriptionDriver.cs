@@ -14,7 +14,7 @@ namespace Dictation.Specs.Drivers;
 public sealed class TranscriptionDriver(
 	IMediator mediator,
 	ITranscriber transcriber,
-	ITextInjector textInjector,
+	FakeTextInjectorFactory injectors,
 	ScenarioWorld world)
 {
 	public void ModelWillTranscribeTo(string text) =>
@@ -25,9 +25,10 @@ public sealed class TranscriptionDriver(
 	public async Task ReleasePushToTalk() =>
 		world.LastResult = await mediator.Send(new DeliverTranscriptionCommand(world.CapturedClip));
 
+	// The default delivery strategy is Type, so a delivered phrase goes through the typing injector.
 	public void AssertDelivered(string expected) =>
-		textInjector.Received(1).Inject(expected);
+		injectors.Typing.Received(1).Inject(expected);
 
 	public void AssertNothingDelivered() =>
-		textInjector.DidNotReceive().Inject(Arg.Any<string>());
+		injectors.Typing.DidNotReceive().Inject(Arg.Any<string>());
 }
