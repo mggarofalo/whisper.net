@@ -55,3 +55,6 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+# Reqnroll-generated feature code-behind (regenerated on build)
+*.feature.cs
