@@ -19,7 +19,7 @@ public sealed class DeliverTranscriptionHandlerTests
 {
 	private readonly ISilenceTrimmer _silenceTrimmer = Substitute.For<ISilenceTrimmer>();
 	private readonly ITranscriber _transcriber = Substitute.For<ITranscriber>();
-	private readonly IFillerWordCleaner _fillerWordCleaner = Substitute.For<IFillerWordCleaner>();
+	private readonly IPostProcessor _postProcessor = Substitute.For<IPostProcessor>();
 	private readonly IForegroundIntegrityProbe _integrityProbe = Substitute.For<IForegroundIntegrityProbe>();
 	private readonly IDeliveryStrategySelector _strategySelector = Substitute.For<IDeliveryStrategySelector>();
 	private readonly ITextInjectorFactory _textInjectorFactory = Substitute.For<ITextInjectorFactory>();
@@ -37,13 +37,14 @@ public sealed class DeliverTranscriptionHandlerTests
 	}
 
 	private DeliverTranscriptionHandler CreateHandler() =>
-		new(_silenceTrimmer, _transcriber, _fillerWordCleaner, _integrityProbe, _strategySelector,
+		new(_silenceTrimmer, _transcriber, _postProcessor, _integrityProbe, _strategySelector,
 			Options.Create(_deliveryOptions), _textInjectorFactory);
 
 	private void ModelTranscribesTo(string text)
 	{
 		_silenceTrimmer.Trim(Arg.Any<AudioClip>()).Returns(ci => ci.Arg<AudioClip>());
-		_fillerWordCleaner.Clean(Arg.Any<string>()).Returns(ci => ci.Arg<string>());
+		_postProcessor.ProcessAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+			.Returns(ci => new ValueTask<string>(ci.Arg<string>()));
 		_transcriber.TranscribeAsync(Arg.Any<AudioClip>(), Arg.Any<CancellationToken>())
 			.Returns(new TranscriptionResult(text));
 	}

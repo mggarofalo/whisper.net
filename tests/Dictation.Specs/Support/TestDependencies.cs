@@ -160,6 +160,11 @@ public static class TestDependencies
 		services.AddScoped<OutputTransformService>();
 		services.AddScoped<OutputTransformDriver>();
 
+		// Post-process pipeline (WHISPER-41): the real pipeline behind IPostProcessor, overridden to scoped
+		// so it shares the per-scenario OutputTransformService + IRephraseClient substitute the driver sets.
+		services.AddScoped<IPostProcessor, Logic.AppManagement.PostProcessing.PostProcessPipeline>();
+		services.AddScoped<PostProcessPipelineDriver>();
+
 		// GPU contact point (WHISPER-9): the real backend selector over a faked raw probe.
 		services.AddScoped<GpuBackendDriver>();
 
