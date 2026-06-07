@@ -90,6 +90,10 @@ public static class TestDependencies
 		// store directly against a private temp-file database — persistence is the seam under test here.
 		services.AddScoped<PersistenceDriver>();
 
+		// History retention + paged browsing (WHISPER-17): the driver builds its own real Mediator pipeline
+		// over the real SQLite store against a private temp database, so it owns its own wiring.
+		services.AddScoped<HistoryRetentionDriver>();
+
 		// Run on login (WHISPER-32): drive the real command/query handlers through IMediator over an
 		// in-memory startup registration, the single OS seam this feature controls.
 		services.AddScoped<FakeStartupRegistration>();
@@ -166,6 +170,10 @@ public static class TestDependencies
 
 		// Post-process pipeline (WHISPER-41): the real pipeline behind IPostProcessor, overridden to scoped
 		// so it shares the per-scenario OutputTransformService + IRephraseClient substitute the driver sets.
+		// The live settings holder must be scoped for the same reason — otherwise a scenario that configures
+		// a default transform leaks it (via the production singleton) into later scenarios, whose unconfigured
+		// rephrase substitute then yields a null result inside the transform step.
+		services.AddScoped<PostProcessSettingsHolder>();
 		services.AddScoped<IPostProcessor, Logic.AppManagement.PostProcessing.PostProcessPipeline>();
 		services.AddScoped<PostProcessPipelineDriver>();
 

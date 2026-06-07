@@ -88,5 +88,46 @@ public sealed class SqliteHistoryStoreTests : IDisposable
 		entries.Select(entry => entry.Text).Should().Equal("newest", "middle");
 	}
 
+	[Fact]
+	public async Task Prunes_to_the_most_recent_entries_keeping_the_newest()
+	{
+		IHistoryStore store = NewStore();
+		await store.AddAsync(TranscriptEntry.Create("oldest", Oldest), CancellationToken.None);
+		await store.AddAsync(TranscriptEntry.Create("middle", Middle), CancellationToken.None);
+		await store.AddAsync(TranscriptEntry.Create("newest", Newest), CancellationToken.None);
+
+		int pruned = await NewStore().PruneToMostRecentAsync(maxEntries: 2, CancellationToken.None);
+
+		pruned.Should().Be(1);
+		IReadOnlyList<TranscriptEntry> remaining =
+			await NewStore().GetEntriesAsync(from: null, to: null, limit: null, CancellationToken.None);
+		remaining.Select(entry => entry.Text).Should().Equal("newest", "middle");
+	}
+
+	[Fact]
+	public async Task Pruning_is_a_no_op_when_under_the_limit()
+	{
+		IHistoryStore store = NewStore();
+		await store.AddAsync(TranscriptEntry.Create("newest", Newest), CancellationToken.None);
+
+		int pruned = await NewStore().PruneToMostRecentAsync(maxEntries: 10, CancellationToken.None);
+
+		pruned.Should().Be(0);
+	}
+
+	[Fact]
+	public async Task A_non_positive_limit_disables_pruning()
+	{
+		IHistoryStore store = NewStore();
+		await store.AddAsync(TranscriptEntry.Create("newest", Newest), CancellationToken.None);
+
+		int pruned = await NewStore().PruneToMostRecentAsync(maxEntries: 0, CancellationToken.None);
+
+		pruned.Should().Be(0);
+		IReadOnlyList<TranscriptEntry> remaining =
+			await NewStore().GetEntriesAsync(from: null, to: null, limit: null, CancellationToken.None);
+		remaining.Should().ContainSingle();
+	}
+
 	public void Dispose() => _fixture.Dispose();
 }

@@ -24,4 +24,11 @@ public interface IHistoryStore
 		DateTimeOffset? to,
 		int? limit,
 		CancellationToken cancellationToken);
+
+	/// <summary>
+	/// Enforces the retention limit by deleting all but the most recent <paramref name="maxEntries"/>
+	/// entries (by recorded time), returning the number pruned. Newer entries are never removed in
+	/// preference to older ones. A non-positive <paramref name="maxEntries"/> is a no-op (unbounded).
+	/// </summary>
+	ValueTask<int> PruneToMostRecentAsync(int maxEntries, CancellationToken cancellationToken);
 }
