@@ -5,6 +5,7 @@
 // seam but the model fixes the rate. Disposing releases the native model handle.
 
 using System.Runtime.CompilerServices;
+using Domain.Models;
 using Whisper.net;
 
 namespace Infrastructure.Transcription;
@@ -14,12 +15,26 @@ internal sealed class WhisperNetEngine(WhisperFactory factory, string? language)
 	public async IAsyncEnumerable<WhisperSegment> TranscribeAsync(
 		IReadOnlyList<float> samples,
 		int sampleRate,
+		DecodingOptions decodingOptions,
 		[EnumeratorCancellation] CancellationToken cancellationToken)
 	{
 		float[] buffer = samples as float[] ?? [.. samples];
 
 		WhisperProcessorBuilder builder = factory.CreateBuilder();
 		builder = IsAutoDetect(language) ? builder.WithLanguageDetection() : builder.WithLanguage(language!);
+
+		// Custom-vocabulary conditioning (WHISPER-38): bias the decoder toward the user's terms via the
+		// initial prompt, and — when a prompt is supplied — disable the first-token log-probability
+		// threshold by pushing it to its floor, so the injected prompt cannot drop the genuine first token.
+		if (decodingOptions.InitialPrompt is not null)
+		{
+			builder = builder.WithPrompt(decodingOptions.InitialPrompt);
+		}
+
+		if (decodingOptions.DisableFirstTokenLogProbThreshold)
+		{
+			builder = builder.WithLogProbThreshold(float.MinValue);
+		}
 
 		await using WhisperProcessor processor = builder.Build();
 

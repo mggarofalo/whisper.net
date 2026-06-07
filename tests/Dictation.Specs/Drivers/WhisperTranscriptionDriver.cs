@@ -10,6 +10,7 @@ using Dictation.Specs.Support;
 using Domain.Audio;
 using Domain.Models;
 using Infrastructure.Transcription;
+using Logic.ModelManagement;
 using Microsoft.Extensions.Options;
 using NSubstitute;
 
@@ -42,7 +43,8 @@ public sealed class WhisperTranscriptionDriver
 			.Returns(new BackendSelection(ComputeBackend.Cpu, "test"));
 
 		WhisperOptions options = new() { ModelPath = _modelPath, Language = "en" };
-		await using WhisperTranscriber transcriber = new(_factory, backendSelector, Options.Create(options));
+		await using WhisperTranscriber transcriber =
+			new(_factory, backendSelector, new VocabularyConditioner(), Options.Create(options));
 
 		try
 		{

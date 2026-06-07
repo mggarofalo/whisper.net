@@ -8,6 +8,7 @@ using AwesomeAssertions;
 using Domain.Audio;
 using Domain.Models;
 using Infrastructure.Transcription;
+using Logic.ModelManagement;
 using Microsoft.Extensions.Options;
 using NSubstitute;
 using Xunit;
@@ -23,8 +24,16 @@ public sealed class WhisperTranscriberTests : IDisposable
 		_backendSelector.SelectBackendAsync(Arg.Any<CancellationToken>())
 			.Returns(new BackendSelection(ComputeBackend.Cpu, "test"));
 
-	private WhisperTranscriber CreateTranscriber(FakeWhisperEngineFactory factory, string modelPath, string language = "en") =>
-		new(factory, _backendSelector, Options.Create(new WhisperOptions { ModelPath = modelPath, Language = language }));
+	private WhisperTranscriber CreateTranscriber(
+		FakeWhisperEngineFactory factory,
+		string modelPath,
+		string language = "en",
+		IReadOnlyList<string>? vocabulary = null) =>
+		new(
+			factory,
+			_backendSelector,
+			new VocabularyConditioner(),
+			Options.Create(new WhisperOptions { ModelPath = modelPath, Language = language, CustomVocabulary = vocabulary ?? [] }));
 
 	private string ExistingModelFile()
 	{
@@ -98,6 +107,48 @@ public sealed class WhisperTranscriberTests : IDisposable
 		await transcriber.TranscribeAsync(Clip(), CancellationToken.None);
 		await transcriber.TranscribeAsync(Clip(), CancellationToken.None);
 
+		factory.CreateCount.Should().Be(1);
+	}
+
+	[Fact]
+	public async Task Conditions_the_decoder_with_the_custom_vocabulary_prompt()
+	{
+		FakeWhisperEngineFactory factory = new(new WhisperSegment("x", TimeSpan.Zero, TimeSpan.Zero, 1f));
+		await using WhisperTranscriber transcriber =
+			CreateTranscriber(factory, ExistingModelFile(), vocabulary: ["Reqnroll", "Velopack"]);
+
+		await transcriber.TranscribeAsync(Clip(), CancellationToken.None);
+
+		factory.LastDecodingOptions!.InitialPrompt.Should().Contain("Reqnroll").And.Contain("Velopack");
+		factory.LastDecodingOptions.DisableFirstTokenLogProbThreshold.Should().BeTrue();
+	}
+
+	[Fact]
+	public async Task Leaves_decoding_at_defaults_when_no_vocabulary_is_configured()
+	{
+		FakeWhisperEngineFactory factory = new(new WhisperSegment("x", TimeSpan.Zero, TimeSpan.Zero, 1f));
+		await using WhisperTranscriber transcriber = CreateTranscriber(factory, ExistingModelFile());
+
+		await transcriber.TranscribeAsync(Clip(), CancellationToken.None);
+
+		factory.LastDecodingOptions.Should().Be(DecodingOptions.Default);
+	}
+
+	[Fact]
+	public async Task A_changed_vocabulary_conditions_the_next_transcription_without_reloading_the_engine()
+	{
+		FakeWhisperEngineFactory factory = new(new WhisperSegment("x", TimeSpan.Zero, TimeSpan.Zero, 1f));
+		WhisperOptions options = new() { ModelPath = ExistingModelFile(), Language = "en", CustomVocabulary = ["Reqnroll"] };
+		await using WhisperTranscriber transcriber =
+			new(factory, _backendSelector, new VocabularyConditioner(), Options.Create(options));
+
+		await transcriber.TranscribeAsync(Clip(), CancellationToken.None);
+		factory.LastDecodingOptions!.InitialPrompt.Should().Contain("Reqnroll");
+
+		options.CustomVocabulary = ["Velopack"];
+		await transcriber.TranscribeAsync(Clip(), CancellationToken.None);
+
+		factory.LastDecodingOptions!.InitialPrompt.Should().Contain("Velopack");
 		factory.CreateCount.Should().Be(1);
 	}
 

@@ -15,6 +15,10 @@ public static class ModelManagementServiceCollectionExtensions
 		// Model registry (WHISPER-4): the static catalog of supported Whisper variants. Pure data.
 		services.AddSingleton<IModelCatalog, WhisperModelCatalog>();
 
+		// Custom-vocabulary prompt-token conditioning (WHISPER-38): a pure, stateless assembler that
+		// turns a user vocabulary into decoder conditioning (initial prompt + threshold override).
+		services.AddSingleton<VocabularyConditioner>();
+
 		// Model lifecycle (WHISPER-15): the single owner of the loaded model — load/unload/switch,
 		// warmup, precision, and concurrency-safe transcription. Pure policy over IModelRuntime.
 		services.AddOptions<ModelLifecycleOptions>();

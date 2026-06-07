@@ -30,7 +30,7 @@ public sealed class WhisperModelRuntime(IWhisperEngineFactory engineFactory) : I
 		public async ValueTask WarmUpAsync(CancellationToken cancellationToken)
 		{
 			await foreach (WhisperSegment _ in engine
-				.TranscribeAsync(WarmupClip.Samples, WarmupClip.SampleRate, cancellationToken)
+				.TranscribeAsync(WarmupClip.Samples, WarmupClip.SampleRate, DecodingOptions.Default, cancellationToken)
 				.ConfigureAwait(false))
 			{
 				// Drain the warmup inference; its output is discarded.
@@ -43,7 +43,7 @@ public sealed class WhisperModelRuntime(IWhisperEngineFactory engineFactory) : I
 			List<TranscriptionSegment> segments = [];
 
 			await foreach (WhisperSegment segment in engine
-				.TranscribeAsync(clip.Samples, clip.SampleRate, cancellationToken)
+				.TranscribeAsync(clip.Samples, clip.SampleRate, DecodingOptions.Default, cancellationToken)
 				.ConfigureAwait(false))
 			{
 				text.Append(segment.Text);

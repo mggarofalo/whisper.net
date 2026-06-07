@@ -143,6 +143,11 @@ public static class TestDependencies
 		// Transcription normalization (WHISPER-36): the real IFillerWordCleaner behind the driver.
 		services.AddScoped<TranscriptionNormalizationDriver>();
 
+		// Custom vocabulary (WHISPER-38): the real VocabularyConditioner behind the assembly driver, and
+		// the real WhisperTranscriber over a capturing fake engine behind the transcription driver.
+		services.AddScoped<VocabularyConditioningDriver>();
+		services.AddScoped<VocabularyTranscriptionDriver>();
+
 		// GPU contact point (WHISPER-9): the real backend selector over a faked raw probe.
 		services.AddScoped<GpuBackendDriver>();
 

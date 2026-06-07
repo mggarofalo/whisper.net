@@ -22,6 +22,7 @@ internal sealed class FakeTranscriptionEngineFactory(string text) : IWhisperEngi
 		public async IAsyncEnumerable<WhisperSegment> TranscribeAsync(
 			IReadOnlyList<float> samples,
 			int sampleRate,
+			DecodingOptions decodingOptions,
 			[EnumeratorCancellation] CancellationToken cancellationToken)
 		{
 			cancellationToken.ThrowIfCancellationRequested();
