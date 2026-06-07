@@ -27,6 +27,10 @@ public static class AppManagementServiceCollectionExtensions
 		// the Esc cancel. Singleton so the tray/UI and orchestration share one observable state.
 		services.AddSingleton<RecordingStateMachine>();
 
+		// Hotkey capture + rebinding (WHISPER-30): the one-shot capture-next-key helper that rebinds the
+		// activation controller atomically. Singleton so it shares the live controller it rebinds.
+		services.AddSingleton<HotkeyCaptureService>();
+
 		return services;
 	}
 }

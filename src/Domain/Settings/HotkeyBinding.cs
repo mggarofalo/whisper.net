@@ -6,6 +6,7 @@
 // optional primary key — so the activation logic (Logic.AppManagement) can match it against the live
 // key stream without re-parsing strings. This is the single binding model M5 builds on.
 
+using System.Globalization;
 using Domain.Input;
 
 namespace Domain.Settings;
@@ -31,6 +32,47 @@ public sealed record HotkeyBinding
 		Chord = chord;
 		Modifiers = modifiers;
 		PrimaryKey = primaryKey;
+	}
+
+	// Builds a binding from already-decomposed parts — the path the capture-next-key helper uses to
+	// turn a pressed chord into a binding without round-tripping through text. Produces the same
+	// canonical form Parse would, so the two are interchangeable and compare equal. A capture with no
+	// modifiers and no primary key (a bare modifier that was released) is rejected as empty.
+	public static HotkeyBinding FromKeys(KeyModifiers modifiers, KeyboardKey primaryKey)
+	{
+		List<string> parts = [];
+
+		if (modifiers.HasFlag(KeyModifiers.Control))
+		{
+			parts.Add("Ctrl");
+		}
+
+		if (modifiers.HasFlag(KeyModifiers.Shift))
+		{
+			parts.Add("Shift");
+		}
+
+		if (modifiers.HasFlag(KeyModifiers.Alt))
+		{
+			parts.Add("Alt");
+		}
+
+		if (modifiers.HasFlag(KeyModifiers.Win))
+		{
+			parts.Add("Win");
+		}
+
+		if (primaryKey != KeyboardKey.None)
+		{
+			parts.Add(KeyToken(primaryKey));
+		}
+
+		if (parts.Count == 0)
+		{
+			throw new DomainException("Hotkey binding must not be empty.");
+		}
+
+		return new HotkeyBinding(string.Join('+', parts), modifiers, primaryKey);
 	}
 
 	// Parses a free-form chord ("ctrl+win", "F13", "Shift + Alt + Space") into a normalized binding.
@@ -115,4 +157,11 @@ public sealed record HotkeyBinding
 
 		return Enum.TryParse(canonical, out KeyboardKey key) ? key : KeyboardKey.Unknown;
 	}
+
+	// The inverse of ParseKey: the canonical token for a primary key, so FromKeys yields the same chord
+	// text Parse would. Digits D0–D9 collapse back to "0"–"9"; every other key uses its enum name.
+	private static string KeyToken(KeyboardKey key) =>
+		key is >= KeyboardKey.D0 and <= KeyboardKey.D9
+			? (key - KeyboardKey.D0).ToString(CultureInfo.InvariantCulture)
+			: key.ToString();
 }

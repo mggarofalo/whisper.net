@@ -87,6 +87,11 @@ public static class TestDependencies
 		services.AddScoped<RecordingStateMachine>();
 		services.AddScoped<RecordingStateMachineDriver>();
 
+		// Hotkey rebinding (WHISPER-30): the real capture service + controller behind the driver, scoped
+		// so each scenario starts from the default binding.
+		services.AddScoped<HotkeyCaptureService>();
+		services.AddScoped<HotkeyRebindingDriver>();
+
 		// Text delivery (WHISPER-2): the real SendInputTextInjector over a recording fake keyboard seam.
 		services.AddScoped<TextInjectionDriver>();
 
