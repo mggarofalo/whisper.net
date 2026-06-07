@@ -5,6 +5,7 @@
 
 using Application.Ports;
 using Infrastructure.Audio;
+using Infrastructure.Gpu;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -28,6 +29,10 @@ public static class InfrastructureServiceCollectionExtensions
 		// NAudio enumerator lazily, so resolving the ports touches no audio hardware.
 		services.AddSingleton<IAudioDeviceEnumerator, NAudioDeviceEnumerator>();
 		services.AddSingleton<IDefaultDeviceWatcher, NAudioDefaultDeviceWatcher>();
+
+		// GPU runtime detection (WHISPER-9): the raw Vulkan-loader probe the GPU contact point consults.
+		// It resolves the loader without initializing a device, so it returns promptly and never hangs.
+		services.AddSingleton<IGpuProbe, VulkanGpuProbe>();
 
 		return services;
 	}
