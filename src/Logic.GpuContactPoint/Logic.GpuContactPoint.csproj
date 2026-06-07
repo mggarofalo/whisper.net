@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Logic.GpuContactPoint: the single, deliberate touch point for GPU-vs-CPU runtime policy
+    (Vulkan availability, fallback decisions). Pure logic over Application ports + Domain types;
+    the native runtime probing lives in Infrastructure. Depends only on Application and Domain.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\Application\Application.csproj" />
+    <ProjectReference Include="..\Domain\Domain.csproj" />
+  </ItemGroup>
+
+</Project>

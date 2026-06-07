@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Application layer: use-case orchestration. Defines the ports (interfaces) the outer layers
+    implement, the CQRS messages, their handlers, and DTOs. Depends only on Domain.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\Domain\Domain.csproj" />
+  </ItemGroup>
+
+</Project>

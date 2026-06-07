@@ -1,5 +1,15 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/Domain/Domain.csproj" />
+    <Project Path="src/Application/Application.csproj" />
+    <Project Path="src/Logic.AppManagement/Logic.AppManagement.csproj" />
+    <Project Path="src/Logic.AudioManagement/Logic.AudioManagement.csproj" />
+    <Project Path="src/Logic.ModelManagement/Logic.ModelManagement.csproj" />
+    <Project Path="src/Logic.GpuContactPoint/Logic.GpuContactPoint.csproj" />
+    <Project Path="src/Infrastructure/Infrastructure.csproj" />
+    <Project Path="src/Presentation/Presentation.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Architecture.Tests/Architecture.Tests.csproj" />
   </Folder>
 </Solution>

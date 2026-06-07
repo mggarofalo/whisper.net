@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Presentation: the WPF tray application and composition root. The ONLY project permitted to
+    reference Infrastructure; it wires every layer together via the Generic Host (WHISPER-57).
+    Windows-only by necessity (WPF), so it retargets to net10.0-windows.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <OutputType>WinExe</OutputType>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Application\Application.csproj" />
+    <ProjectReference Include="..\Domain\Domain.csproj" />
+    <ProjectReference Include="..\Infrastructure\Infrastructure.csproj" />
+    <ProjectReference Include="..\Logic.AppManagement\Logic.AppManagement.csproj" />
+    <ProjectReference Include="..\Logic.AudioManagement\Logic.AudioManagement.csproj" />
+    <ProjectReference Include="..\Logic.ModelManagement\Logic.ModelManagement.csproj" />
+    <ProjectReference Include="..\Logic.GpuContactPoint\Logic.GpuContactPoint.csproj" />
+  </ItemGroup>
+
+</Project>
