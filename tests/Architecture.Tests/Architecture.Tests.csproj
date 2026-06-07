@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Architecture tests: encode the clean-architecture dependency direction as executable rules so
+    the layering can never silently rot. Uses NetArchTest to inspect the compiled assemblies. It
+    references every core project so their assemblies are present to inspect (Presentation is
+    intentionally excluded — the rules are stated as "no core project may reach Infrastructure /
+    Presentation", which needs only the core assemblies and keeps WPF out of the test host).
+    xUnit v3 test projects are executables.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="NetArchTest.eNhancedEdition" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Domain\Domain.csproj" />
+    <ProjectReference Include="..\..\src\Application\Application.csproj" />
+    <ProjectReference Include="..\..\src\Logic.AppManagement\Logic.AppManagement.csproj" />
+    <ProjectReference Include="..\..\src\Logic.AudioManagement\Logic.AudioManagement.csproj" />
+    <ProjectReference Include="..\..\src\Logic.ModelManagement\Logic.ModelManagement.csproj" />
+    <ProjectReference Include="..\..\src\Logic.GpuContactPoint\Logic.GpuContactPoint.csproj" />
+    <ProjectReference Include="..\..\src\Infrastructure\Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

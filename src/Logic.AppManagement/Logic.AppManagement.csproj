@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Logic.AppManagement: application-lifecycle behaviors (profiles, app rules, command mode,
+    continuous-dictation policy). Pure logic over Application ports + Domain types — no OS or
+    Infrastructure concerns. Depends only on Application and Domain.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\Application\Application.csproj" />
+    <ProjectReference Include="..\Domain\Domain.csproj" />
+  </ItemGroup>
+
+</Project>

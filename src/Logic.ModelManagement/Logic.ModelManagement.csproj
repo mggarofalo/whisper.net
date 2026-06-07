@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Logic.ModelManagement: model registry / cache-selection / download-policy behaviors. Pure
+    logic over Application ports + Domain types; the actual model I/O lives in Infrastructure.
+    Depends only on Application and Domain.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\Application\Application.csproj" />
+    <ProjectReference Include="..\Domain\Domain.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Infrastructure: implements the Application ports against real systems (Whisper.net, NAudio,
+    ONNX VAD, SendInput, persistence). The only layer that talks to the outside world. It composes
+    the Logic.* behaviors with native adapters, so it references Application, Domain, and every
+    Logic.* project. Only Presentation is allowed to reference Infrastructure in turn.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\Application\Application.csproj" />
+    <ProjectReference Include="..\Domain\Domain.csproj" />
+    <ProjectReference Include="..\Logic.AppManagement\Logic.AppManagement.csproj" />
+    <ProjectReference Include="..\Logic.AudioManagement\Logic.AudioManagement.csproj" />
+    <ProjectReference Include="..\Logic.ModelManagement\Logic.ModelManagement.csproj" />
+    <ProjectReference Include="..\Logic.GpuContactPoint\Logic.GpuContactPoint.csproj" />
+  </ItemGroup>
+
+</Project>
