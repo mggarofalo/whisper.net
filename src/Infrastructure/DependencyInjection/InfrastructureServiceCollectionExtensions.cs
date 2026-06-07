@@ -6,6 +6,7 @@
 using Application.Ports;
 using Infrastructure.Audio;
 using Infrastructure.Gpu;
+using Infrastructure.Transcription;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -33,6 +34,18 @@ public static class InfrastructureServiceCollectionExtensions
 		// GPU runtime detection (WHISPER-9): the raw Vulkan-loader probe the GPU contact point consults.
 		// It resolves the loader without initializing a device, so it returns promptly and never hangs.
 		services.AddSingleton<IGpuProbe, VulkanGpuProbe>();
+
+		// Transcription (WHISPER-3): the Whisper.net adapter over an internal engine seam. The model is
+		// loaded lazily on first transcription, so resolving the port touches no model file or native
+		// library; the model path/language come from the bound WhisperOptions.
+		services.AddOptions<WhisperOptions>();
+		if (configuration is not null)
+		{
+			services.Configure<WhisperOptions>(configuration.GetSection(WhisperOptions.SectionName));
+		}
+
+		services.AddSingleton<IWhisperEngineFactory, WhisperNetEngineFactory>();
+		services.AddSingleton<ITranscriber, WhisperTranscriber>();
 
 		return services;
 	}
