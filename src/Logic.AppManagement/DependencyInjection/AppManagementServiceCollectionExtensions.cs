@@ -23,6 +23,10 @@ public static class AppManagementServiceCollectionExtensions
 		// orchestration layer (M7) subscribes to and drives from the hotkey listener.
 		services.AddSingleton<HotkeyActivationController>();
 
+		// Recording state machine (WHISPER-22): the single authority over Idle/Recording/Transcribing and
+		// the Esc cancel. Singleton so the tray/UI and orchestration share one observable state.
+		services.AddSingleton<RecordingStateMachine>();
+
 		return services;
 	}
 }
