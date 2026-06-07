@@ -43,6 +43,7 @@ public static class TestDependencies
 		services.AddScoped<ApplicationPortsDriver>();
 		services.AddScoped<SettingsDriver>();
 		services.AddScoped<HistoryDriver>();
+		services.AddScoped<UsageStatsDriver>();
 
 		return services;
 	}
