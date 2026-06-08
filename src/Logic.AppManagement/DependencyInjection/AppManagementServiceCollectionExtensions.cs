@@ -92,6 +92,16 @@ public static class AppManagementServiceCollectionExtensions
 		// first launch. Transient so each run starts fresh.
 		services.AddTransient<Shell.OnboardingViewModel>();
 
+		// Self-diagnostics (WHISPER-50): the doctor / selftest checks, each probing one subsystem through
+		// the existing ports. Registered in the order they appear in the report so the output is
+		// deterministic; the aggregation lives in the Application handler, so one failing check never stops
+		// the others. Scoped (not singleton) so a check can depend on the scoped store/cache ports the specs
+		// substitute without a captive-dependency violation.
+		services.AddScoped<Application.Diagnostics.IDiagnosticCheck, Diagnostics.AudioCaptureCheck>();
+		services.AddScoped<Application.Diagnostics.IDiagnosticCheck, Diagnostics.ModelCacheCheck>();
+		services.AddScoped<Application.Diagnostics.IDiagnosticCheck, Diagnostics.HotkeyCheck>();
+		services.AddScoped<Application.Diagnostics.IDiagnosticCheck, Diagnostics.GpuCheck>();
+
 		return services;
 	}
 

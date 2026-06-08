@@ -8,15 +8,19 @@
 
 using System.Threading.Tasks;
 using System.Windows;
+using Application.Diagnostics;
 using Application.Ports;
 using Infrastructure.DependencyInjection;
 using Logic.AppManagement;
+using Logic.AppManagement.Diagnostics;
 using Logic.AppManagement.Lifecycle;
 using Logic.AppManagement.Shell;
 using Logic.AppManagement.Tray;
+using Mediator;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Presentation.Diagnostics;
 using Presentation.Onboarding;
 using Presentation.Overlay;
 using Presentation.Shell;
@@ -37,6 +41,15 @@ public partial class App
 	protected override void OnStartup(StartupEventArgs e)
 	{
 		base.OnStartup(e);
+
+		// Doctor / selftest (WHISPER-50): when launched with --doctor, run the environment checks, print the
+		// pass/warn/fail report to the launching terminal, set the exit code from the result, and exit
+		// without going tray-resident. This is the diagnostics entry point users attach to a bug report.
+		if (DoctorMode.IsRequested(e.Args))
+		{
+			RunDoctorAndExit(e.Args);
+			return;
+		}
 
 		HostApplicationBuilder builder = Host.CreateApplicationBuilder();
 		builder.Services.AddSerilogLogging(builder.Configuration);
@@ -100,6 +113,28 @@ public partial class App
 		// view-models depend on the scoped Mediator, so it runs inside a dedicated UI scope kept alive
 		// until the window closes. Skipped silently once setup has been completed.
 		ShowOnboardingIfRequired(logger);
+	}
+
+	// Builds the full composition (but never starts the host, so no hotkey hook / tray / hosted services
+	// run), sends the diagnostics query through the same Mediator pipeline the rest of the app uses, and
+	// prints the formatted report. The exit code is non-zero when any check failed, so a script or CI step
+	// can detect a broken environment. Runs synchronously on the UI thread — this path never shows a window.
+	private void RunDoctorAndExit(string[] args)
+	{
+		HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
+		builder.Services.AddSerilogLogging(builder.Configuration);
+		builder.Services.AddWhisperServices(builder.Configuration);
+
+		using IHost host = builder.Build();
+		using IServiceScope scope = host.Services.CreateScope();
+
+		IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+		DiagnosticReport report = mediator.Send(new RunDiagnosticsQuery()).AsTask().GetAwaiter().GetResult();
+
+		ConsoleOutput.WriteLine(DiagnosticReportFormatter.Format(report));
+
+		Environment.ExitCode = report.Overall == DiagnosticStatus.Fail ? 1 : 0;
+		Shutdown();
 	}
 
 	private void ShowOnboardingIfRequired(ILogger<App> logger)

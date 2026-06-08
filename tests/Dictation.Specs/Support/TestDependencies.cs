@@ -264,6 +264,11 @@ public static class TestDependencies
 		// GPU contact point (WHISPER-9): the real backend selector over a faked raw probe.
 		services.AddScoped<GpuBackendDriver>();
 
+		// Re-scope the real backend selector (WHISPER-50): AddGpuContactPoint registers it as a singleton,
+		// which would capture a root-scope IGpuProbe and ignore the per-scenario substitute. Scoped here so
+		// the diagnostics GPU check sees the same scenario-scoped probe the driver configures.
+		services.AddScoped<IBackendSelector, Logic.GpuContactPoint.GpuBackendSelector>();
+
 		// On-device transcription (WHISPER-3): the real Whisper.net adapter over a fake engine seam.
 		services.AddScoped<WhisperTranscriptionDriver>();
 
@@ -283,6 +288,12 @@ public static class TestDependencies
 		// over the real Mediator pipeline (GetSettings/UpdateSettings + validation) and faked store.
 		services.AddScoped<IAudioDeviceEnumerator>(sp => sp.GetRequiredService<FakeAudioDeviceEnumerator>());
 		services.AddScoped<AudioHotkeyConfigDriver>();
+
+		// Self-diagnostics (WHISPER-50): the real doctor pipeline — RunDiagnosticsQuery through the
+		// Application handler and the Logic checks (incl. the real GpuBackendSelector) — over the faked
+		// device-facing ports already registered above (device enumerator, settings store, model cache,
+		// permission probe, raw GPU probe). The driver configures those fakes per subsystem.
+		services.AddScoped<DiagnosticsDriver>();
 
 		return services;
 	}
