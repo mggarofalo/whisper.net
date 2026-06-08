@@ -9,12 +9,15 @@
 // logged via Serilog and returns the pipeline to a safe Idle — no transition can leave it stuck.
 
 using System.Diagnostics;
+using Application.Configuration;
 using Application.Ports;
 using Application.Transcription;
 using Domain.Audio;
+using Domain.Feedback;
 using Logic.AudioManagement;
 using Mediator;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Logic.AppManagement;
 
@@ -24,6 +27,8 @@ public sealed class DictationOrchestrator
 	private readonly RecordingStateMachine _stateMachine;
 	private readonly CaptureBuffer _captureBuffer;
 	private readonly IMediator _mediator;
+	private readonly IAudioFeedback _audioFeedback;
+	private readonly IOptions<AudioFeedbackOptions> _feedbackOptions;
 	private readonly ILogger<DictationOrchestrator> _logger;
 
 	// Serializes stage reads/writes so overlapping signals (key auto-repeat, a stop racing a capture
@@ -37,12 +42,16 @@ public sealed class DictationOrchestrator
 		AudioResampler resampler,
 		AudioBufferingOptions bufferingOptions,
 		IMediator mediator,
+		IAudioFeedback audioFeedback,
+		IOptions<AudioFeedbackOptions> feedbackOptions,
 		ILogger<DictationOrchestrator> logger)
 	{
 		_audioSource = audioSource;
 		_stateMachine = stateMachine;
 		_captureBuffer = new CaptureBuffer(bufferingOptions, resampler);
 		_mediator = mediator;
+		_audioFeedback = audioFeedback;
+		_feedbackOptions = feedbackOptions;
 		_logger = logger;
 
 		_audioSource.FrameAvailable += OnFrameAvailable;
@@ -115,6 +124,7 @@ public sealed class DictationOrchestrator
 		_captureBuffer.StartRecording();
 		_audioSource.Start();
 		_logger.LogInformation("Dictation recording started.");
+		PlayFeedback(FeedbackSound.RecordingStarted);
 	}
 
 	/// <summary>
@@ -132,6 +142,7 @@ public sealed class DictationOrchestrator
 		_audioSource.Stop();
 		AudioClip clip = _captureBuffer.StopRecording();
 		_stateMachine.RequestStop();
+		PlayFeedback(FeedbackSound.RecordingStopped);
 
 		long startedTicks = Stopwatch.GetTimestamp();
 		try
@@ -142,6 +153,7 @@ public sealed class DictationOrchestrator
 			// observable without forking the proven delivery handler.
 			DeliveryResult result = await _mediator.Send(new DeliverTranscriptionCommand(clip), cancellationToken);
 			Advance(DictationStage.Delivering);
+			PlayFeedback(FeedbackSound.TranscriptionComplete);
 
 			// Command-mode hook (WHISPER-35): a matched transcript was routed to the command branch instead
 			// of being typed. Execution is out of scope here; the orchestrator records the routing.
@@ -196,6 +208,27 @@ public sealed class DictationOrchestrator
 		_captureBuffer.StopRecording(); // finalize-and-drop: the captured clip is discarded, never delivered.
 		_stateMachine.Cancel();
 		_logger.LogInformation("Dictation cancelled; capture discarded.");
+	}
+
+	// Audio feedback (WHISPER-21): play the cue for a pipeline transition, but only when feedback is
+	// enabled (off => no cue and no playback resource is touched). Playback is fire-and-forget and must
+	// never break dictation, so any failure is logged and swallowed here even though the port also
+	// promises not to throw — feedback is a courtesy, never a dependency of the pipeline.
+	private void PlayFeedback(FeedbackSound sound)
+	{
+		if (!_feedbackOptions.Value.Enabled)
+		{
+			return;
+		}
+
+		try
+		{
+			_audioFeedback.Play(sound);
+		}
+		catch (Exception ex)
+		{
+			_logger.LogError(ex, "Audio feedback for {Sound} failed; ignored.", sound);
+		}
 	}
 
 	// Accumulate each captured frame into the buffer while recording. Frames arrive on the capture thread

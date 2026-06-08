@@ -104,6 +104,14 @@ public static class TestDependencies
 		// composition; the driver enters the mode, runs an utterance, and asserts the auto-restart / Esc exit.
 		services.AddScoped<ContinuousDictationDriver>();
 
+		// Audio feedback (WHISPER-21): substitute the feedback port so the driver can assert which cue fired
+		// without a real output device, and bind a scoped, mutable options instance (default on) the driver
+		// toggles per scenario — overriding the IOptions<AudioFeedbackOptions> registered by AddApplication.
+		services.AddScoped(_ => Substitute.For<IAudioFeedback>());
+		services.AddScoped<AudioFeedbackOptions>();
+		services.AddScoped<IOptions<AudioFeedbackOptions>>(sp => Options.Create(sp.GetRequiredService<AudioFeedbackOptions>()));
+		services.AddScoped<AudioFeedbackDriver>();
+
 		// Host bootstrapping (WHISPER-12): the driver builds its own real Generic Host internally over a
 		// fake hook seam, so it is registered plainly and owns the hosted-service lifecycle it asserts.
 		services.AddScoped<AppLifecycleDriver>();

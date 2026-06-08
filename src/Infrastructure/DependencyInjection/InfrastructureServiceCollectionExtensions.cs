@@ -30,6 +30,10 @@ public static class InfrastructureServiceCollectionExtensions
 		services.AddSingleton<IAudioCaptureClient, NAudioCaptureClient>();
 		services.AddSingleton<IAudioSource, WasapiAudioSource>();
 
+		// Audio feedback (WHISPER-21): plays a distinct synthesized tone per dictation cue. Constructing
+		// it touches no device — playback happens fire-and-forget in Play and swallows any failure.
+		services.AddSingleton<IAudioFeedback, AudioFeedbackPlayer>();
+
 		// Voice-activity detection (WHISPER-31): the Silero adapter over the on-device ONNX session.
 		// The session loads its model lazily, so resolving the port never requires the asset present.
 		services.AddSingleton<IVadSession>(_ => new OnnxVadSession(

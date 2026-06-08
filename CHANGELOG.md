@@ -8,6 +8,13 @@ All notable changes to this project are documented here. The format is based on
 
 ### Added
 
+- **Audio feedback sounds.** The pipeline can play a short, distinct sound at each dictation event —
+  recording start, recording stop, and transcription complete — behind a new `IAudioFeedback` port. The
+  orchestrator fires the cue at each transition; playback is fire-and-forget and never blocks or fails
+  dictation (a playback failure is logged and swallowed). Feedback is configurable on/off (`AudioFeedback`
+  section, on by default); when disabled, no sound plays and no playback resource is allocated. The
+  Infrastructure player synthesizes the tones in-process, so they ship with the app and need no on-disk
+  asset path. (WHISPER-21)
 - **Continuous dictation mode.** The orchestrator gained a continuous mode: once entered, each delivered
   utterance auto-restarts recording for the next one instead of returning to rest, so a long passage can
   be dictated hands-free. Pressing **Esc** exits the mode and returns the pipeline to idle without
