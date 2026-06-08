@@ -1,20 +1,28 @@
-// IShellPresenter for the WPF shell (WHISPER-18): shows — or focuses, if already open — the single
-// settings window, marshaled onto the UI thread. Both the tray "Open Settings" action and (WHISPER-25)
-// single-instance activation surface the window through this one seam.
+// IShellPresenter for the WPF shell (WHISPER-18, dashboard shell in WHISPER-19): shows — or focuses, if
+// already open — the single dashboard window, marshaled onto the UI thread. Both the tray "Open
+// Settings" action and (WHISPER-25) single-instance activation surface the window through this one seam.
+// The shell view-model graph depends on the scoped Mediator, so the presenter owns one long-lived UI
+// scope it resolves the view-model from — mirroring how the orchestrator runs inside a single host
+// scope — and disposes it on shutdown.
 
+using System;
 using System.Linq;
 using System.Windows;
 using Application.Ports;
+using Logic.AppManagement.Shell;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Presentation.Shell;
 
-public sealed class WpfShellPresenter : IShellPresenter
+public sealed class WpfShellPresenter(IServiceScopeFactory scopeFactory) : IShellPresenter, IDisposable
 {
+	private IServiceScope? _uiScope;
+
 	public void ShowSettings() =>
 		System.Windows.Application.Current.Dispatcher.Invoke(() =>
 		{
 			System.Windows.Application application = System.Windows.Application.Current;
-			SettingsWindow window = application.Windows.OfType<SettingsWindow>().FirstOrDefault() ?? new SettingsWindow();
+			ShellWindow window = application.Windows.OfType<ShellWindow>().FirstOrDefault() ?? CreateWindow();
 
 			window.Show();
 			if (window.WindowState == WindowState.Minimized)
@@ -24,4 +32,14 @@ public sealed class WpfShellPresenter : IShellPresenter
 
 			window.Activate();
 		});
+
+	private ShellWindow CreateWindow()
+	{
+		// One long-lived UI scope owns the shell view-model graph (and the scoped Mediator the feature
+		// view-models depend on), so the dashboard never resolves a scoped service from the root provider.
+		_uiScope ??= scopeFactory.CreateScope();
+		return new ShellWindow(_uiScope.ServiceProvider.GetRequiredService<ShellViewModel>());
+	}
+
+	public void Dispose() => _uiScope?.Dispose();
 }

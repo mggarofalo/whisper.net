@@ -16,6 +16,13 @@
     <PackageReference Include="Mediator.Abstractions" />
     <!-- ILogger<T> for the orchestrator's structural transition/duration logging (WHISPER-14). -->
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+    <!--
+      MVVM primitives for the dashboard shell view-models (WHISPER-19). CommunityToolkit.Mvvm is a
+      UI-framework-agnostic library (ObservableObject / [ObservableProperty] / [RelayCommand]) with no
+      WPF dependency, so the shell + feature view-models live here — WPF-free and unit-testable — while
+      the thin WPF views in Presentation merely bind to them.
+    -->
+    <PackageReference Include="CommunityToolkit.Mvvm" />
   </ItemGroup>
 
   <ItemGroup>
