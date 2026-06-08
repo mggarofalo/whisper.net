@@ -145,6 +145,13 @@ public static class TestDependencies
 		// dashboard's totals are genuinely computed by the Application layer.
 		services.AddScoped<StatsDashboardDriver>();
 
+		// First-run onboarding (WHISPER-51): the real OnboardingViewModel over the real Mediator pipeline
+		// (GetSettings/UpdateSettings/SwitchActiveModel/DownloadModel/CompleteOnboarding) and faked ports —
+		// the settings store (round-tripped so completion is remembered), the model downloader, and the
+		// permission probe (substituted so the deny-then-grant re-attempt can be driven).
+		services.AddScoped(_ => Substitute.For<IPermissionProbe>());
+		services.AddScoped<OnboardingDriver>();
+
 		// Host bootstrapping (WHISPER-12): the driver builds its own real Generic Host internally over a
 		// fake hook seam, so it is registered plainly and owns the hosted-service lifecycle it asserts.
 		services.AddScoped<AppLifecycleDriver>();

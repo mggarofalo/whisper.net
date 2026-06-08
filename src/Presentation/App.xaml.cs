@@ -12,10 +12,12 @@ using Application.Ports;
 using Infrastructure.DependencyInjection;
 using Logic.AppManagement;
 using Logic.AppManagement.Lifecycle;
+using Logic.AppManagement.Shell;
 using Logic.AppManagement.Tray;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Presentation.Onboarding;
 using Presentation.Overlay;
 using Presentation.Shell;
 using Presentation.Tray;
@@ -27,6 +29,8 @@ public partial class App
 	private IHost? _host;
 	private TrayIcon? _trayIcon;
 	private LevelOverlay? _levelOverlay;
+	private OnboardingWindow? _onboardingWindow;
+	private IServiceScope? _onboardingScope;
 	private bool _hostStarted;
 	private bool _shuttingDown;
 
@@ -90,10 +94,34 @@ public partial class App
 		_levelOverlay = new LevelOverlay(_host.Services.GetRequiredService<LevelOverlayViewModel>());
 
 		logger.LogInformation("Whisper host started; running tray-resident with no startup window.");
+
+		// First-run onboarding (WHISPER-51): on a fresh install (setup not completed), guide the user
+		// through model/audio/hotkey setup and permissions before the tray app takes over. The flow's
+		// view-models depend on the scoped Mediator, so it runs inside a dedicated UI scope kept alive
+		// until the window closes. Skipped silently once setup has been completed.
+		ShowOnboardingIfRequired(logger);
+	}
+
+	private void ShowOnboardingIfRequired(ILogger<App> logger)
+	{
+		_onboardingScope = _host!.Services.CreateScope();
+		OnboardingViewModel onboarding = _onboardingScope.ServiceProvider.GetRequiredService<OnboardingViewModel>();
+
+		if (!onboarding.IsRequiredAsync().GetAwaiter().GetResult())
+		{
+			_onboardingScope.Dispose();
+			_onboardingScope = null;
+			return;
+		}
+
+		logger.LogInformation("First run detected; showing onboarding.");
+		_onboardingWindow = new OnboardingWindow(onboarding);
+		_onboardingWindow.Show();
 	}
 
 	protected override void OnExit(ExitEventArgs e)
 	{
+		_onboardingScope?.Dispose();
 		_levelOverlay?.Dispose();
 		_trayIcon?.Dispose();
 

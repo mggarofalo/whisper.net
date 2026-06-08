@@ -88,6 +88,10 @@ public static class AppManagementServiceCollectionExtensions
 		services.AddTransient<Shell.HistoryViewModel>();
 		services.AddTransient<Shell.StatsViewModel>();
 
+		// First-run onboarding (WHISPER-51): not a nav section — the host shows it instead of the shell on
+		// first launch. Transient so each run starts fresh.
+		services.AddTransient<Shell.OnboardingViewModel>();
+
 		return services;
 	}
 
