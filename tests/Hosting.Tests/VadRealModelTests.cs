@@ -73,38 +73,47 @@ public sealed class VadRealModelTests
 
 	private static string FixturePath(string name) => Path.Combine(AppContext.BaseDirectory, "Audio", name);
 
-	// A minimal reader for the fixture's known shape: 16-bit PCM mono WAV. Walks the RIFF chunks to the
-	// `data` chunk and converts the 16-bit samples to normalized floats — enough for this test, not a
-	// general WAV decoder (NAudio stays out of the test project for one fixture).
+	// A minimal reader for the fixture's known shape: 16-bit PCM mono WAV. Walks the RIFF chunks once,
+	// reading the format fields from the `fmt ` chunk and the samples from the `data` chunk (rather than
+	// from fixed absolute offsets, which only hold when `fmt ` is the first chunk). Converts the 16-bit
+	// samples to normalized floats — enough for this test, not a general WAV decoder (NAudio stays out of
+	// the test project for one fixture).
 	private static AudioClip LoadWav(string path)
 	{
 		byte[] bytes = File.ReadAllBytes(path);
-		int sampleRate = BitConverter.ToInt32(bytes, 24);
-		short bitsPerSample = BitConverter.ToInt16(bytes, 34);
-
-		if (bitsPerSample != 16)
-		{
-			throw new NotSupportedException($"fixture must be 16-bit PCM; was {bitsPerSample}-bit.");
-		}
+		int sampleRate = 0;
+		short bitsPerSample = 0;
 
 		int offset = 12;
 		while (offset + 8 <= bytes.Length)
 		{
 			string chunkId = System.Text.Encoding.ASCII.GetString(bytes, offset, 4);
 			int chunkSize = BitConverter.ToInt32(bytes, offset + 4);
-			if (chunkId == "data")
+			int dataStart = offset + 8;
+
+			if (chunkId == "fmt ")
 			{
+				sampleRate = BitConverter.ToInt32(bytes, dataStart + 4);
+				bitsPerSample = BitConverter.ToInt16(bytes, dataStart + 14);
+			}
+			else if (chunkId == "data")
+			{
+				if (bitsPerSample != 16)
+				{
+					throw new NotSupportedException($"fixture must be 16-bit PCM; was {bitsPerSample}-bit.");
+				}
+
 				int sampleCount = chunkSize / 2;
 				float[] samples = new float[sampleCount];
 				for (int i = 0; i < sampleCount; i++)
 				{
-					samples[i] = BitConverter.ToInt16(bytes, offset + 8 + (i * 2)) / 32768f;
+					samples[i] = BitConverter.ToInt16(bytes, dataStart + (i * 2)) / 32768f;
 				}
 
 				return new AudioClip(samples, sampleRate);
 			}
 
-			offset += 8 + chunkSize + (chunkSize & 1);
+			offset = dataStart + chunkSize + (chunkSize & 1);
 		}
 
 		throw new InvalidDataException("no data chunk found in WAV fixture.");

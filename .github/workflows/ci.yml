@@ -93,7 +93,8 @@ jobs:
       - name: Slow tests (real Silero VAD model)
         # WHISPER-66: exercise the bundled silero_vad.onnx asset for real (load + ONNX inference) on every
         # PR. Kept separate from the gate above because it loads the ~1.8 MB model and runs inference.
-        run: dotnet test Whisper.slnx --no-build --filter "Category=slow"
+        # @wip is excluded here too, so an in-progress slow test never breaks the gate.
+        run: dotnet test Whisper.slnx --no-build --filter "Category=slow&Category!=wip"
 
       - name: Merge coverage report
         if: always()
