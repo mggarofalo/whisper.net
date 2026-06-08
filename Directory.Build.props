@@ -15,9 +15,11 @@
     <!--
       Versioning is derived from git tags by MinVer. Pushing a `vX.Y.Z` tag IS the release;
       untagged builds produce a pre-release version (e.g. 0.1.0-alpha.0.N). No static <Version>
-      is set here.
+      is set here. The 0.1 floor keeps the pre-release core at 0.1.0 so Velopack (which requires a
+      package version >= 0.0.1) can pack an untagged build (WHISPER-20); a real `vX.Y.Z` tag overrides it.
     -->
     <MinVerTagPrefix>v</MinVerTagPrefix>
+    <MinVerMinimumMajorMinor>0.1</MinVerMinimumMajorMinor>
   </PropertyGroup>
 
 </Project>

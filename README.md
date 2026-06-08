@@ -35,6 +35,18 @@ dotnet test    Whisper.slnx --filter "Category!=wip"
 npm install    # one-time: installs the commitlint commit-msg hook
 ```
 
+## Packaging
+
+The app ships as a self-contained, single-file Windows build wrapped in a [Velopack](https://velopack.io)
+installer — no separate .NET install required. Build it from a clean clone with one command:
+
+```pwsh
+pwsh ./build/pack.ps1     # -> ./releases/Whisper.Net-win-Setup.exe (+ update package & feed)
+```
+
+The version is derived from git tags by MinVer (never hand-edited). Full details, including the
+install/update hooks and release flow, are in **[docs/packaging.md](docs/packaging.md)**.
+
 ## How we test
 
 Behavior is governed by Gherkin under an outside-in BDD + TDD **double loop**: a failing Reqnroll
@@ -49,3 +61,4 @@ The full strategy is in **[docs/bdd-strategy.md](docs/bdd-strategy.md)**.
 - [docs/coding-standards.md](docs/coding-standards.md) — Mediator, Mapperly, FluentValidation rules.
 - [docs/bdd-strategy.md](docs/bdd-strategy.md) — the BDD/TDD strategy and Definition of Done.
 - [docs/plane.md](docs/plane.md) — the WHISPER issue workflow.
+- [docs/packaging.md](docs/packaging.md) — self-contained build + Velopack installer & releases.
