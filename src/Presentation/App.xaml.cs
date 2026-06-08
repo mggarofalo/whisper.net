@@ -10,11 +10,13 @@ using System.Threading.Tasks;
 using System.Windows;
 using Application.Ports;
 using Infrastructure.DependencyInjection;
+using Logic.AppManagement;
 using Logic.AppManagement.Lifecycle;
 using Logic.AppManagement.Tray;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Presentation.Overlay;
 using Presentation.Shell;
 using Presentation.Tray;
 
@@ -24,6 +26,7 @@ public partial class App
 {
 	private IHost? _host;
 	private TrayIcon? _trayIcon;
+	private LevelOverlay? _levelOverlay;
 	private bool _hostStarted;
 	private bool _shuttingDown;
 
@@ -41,6 +44,12 @@ public partial class App
 		builder.Services.AddSingleton<IShellPresenter, WpfShellPresenter>();
 		builder.Services.AddSingleton<TrayController>();
 		builder.Services.AddSingleton<TrayIconViewModel>();
+
+		// Level overlay (WHISPER-26): the recording-state-driven mini-recorder. The controller (Logic) and
+		// its view-model are composed here in the Presentation root; the window itself is created after the
+		// host starts so it lives on the UI thread.
+		builder.Services.AddSingleton<LevelOverlayController>();
+		builder.Services.AddSingleton<LevelOverlayViewModel>();
 
 		// Single-instance coordination (WHISPER-25): resolves the Infrastructure lock + signal and the
 		// shell presenter to surface the running instance on a second launch.
@@ -77,11 +86,15 @@ public partial class App
 		// the app's lifetime and is disposed on exit.
 		_trayIcon = new TrayIcon(_host.Services.GetRequiredService<TrayIconViewModel>());
 
+		// The level overlay lives for the app's lifetime, hidden until recording starts (WHISPER-26).
+		_levelOverlay = new LevelOverlay(_host.Services.GetRequiredService<LevelOverlayViewModel>());
+
 		logger.LogInformation("Whisper host started; running tray-resident with no startup window.");
 	}
 
 	protected override void OnExit(ExitEventArgs e)
 	{
+		_levelOverlay?.Dispose();
 		_trayIcon?.Dispose();
 
 		if (_host is not null)

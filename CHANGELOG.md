@@ -8,6 +8,12 @@ All notable changes to this project are documented here. The format is based on
 
 ### Added
 
+- **Live recording level overlay.** A small, frameless, top-most, click-through-tolerant WPF overlay
+  (mini-recorder) appears while recording and shows a live, smoothed microphone-level meter, then hides
+  when recording stops. Its coordination logic lives in a WPF-free, unit-testable `LevelOverlayController`
+  (observes the recording state the orchestrator drives and turns captured frames into a 0–1 level); a
+  thin CommunityToolkit.Mvvm view-model and code-built window bind to it. The level math only reads the
+  frames capture already raises, so it never blocks or stalls the dictation pipeline. (WHISPER-26)
 - **Audio feedback sounds.** The pipeline can play a short, distinct sound at each dictation event —
   recording start, recording stop, and transcription complete — behind a new `IAudioFeedback` port. The
   orchestrator fires the cue at each transition; playback is fire-and-forget and never blocks or fails
