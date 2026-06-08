@@ -27,4 +27,11 @@ public enum DeliveryBlock
 	Uipi,
 }
 
-public sealed record DeliveryResult(bool Delivered, string Text, DeliveryBlock Block = DeliveryBlock.None);
+// MatchedCommand names the voice command a transcript was routed to (WHISPER-35): when set, the
+// transcript was recognized as a command and routed to the command branch instead of being typed, so
+// Delivered is false and Text holds the (undelivered) transcript. Null whenever no command matched.
+public sealed record DeliveryResult(
+	bool Delivered,
+	string Text,
+	DeliveryBlock Block = DeliveryBlock.None,
+	string? MatchedCommand = null);

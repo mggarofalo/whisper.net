@@ -3,6 +3,7 @@
 // it. Crucially this calls the SAME per-layer registration extensions the production host uses, so
 // the specs exercise production composition — only the Infrastructure ports are substituted.
 
+using Application.Commands;
 using Application.Configuration;
 using Application.Delivery;
 using Application.DependencyInjection;
@@ -87,6 +88,17 @@ public static class TestDependencies
 		services.AddScoped<RecordingLogger<DictationOrchestrator>>();
 		services.AddScoped<ILogger<DictationOrchestrator>>(sp => sp.GetRequiredService<RecordingLogger<DictationOrchestrator>>());
 		services.AddScoped<DictationOrchestratorDriver>();
+
+		// Command-mode hook (WHISPER-35): substitute the matcher (default: no match) so the command-mode
+		// driver can make it recognize a command, while every other delivery scenario behaves exactly as
+		// before. Overrides the production NoOpCommandMatcher registered by AddAppManagement.
+		services.AddScoped(_ =>
+		{
+			ICommandMatcher matcher = Substitute.For<ICommandMatcher>();
+			matcher.Match(Arg.Any<string>()).Returns(CommandMatch.None);
+			return matcher;
+		});
+		services.AddScoped<CommandModeDriver>();
 
 		// Host bootstrapping (WHISPER-12): the driver builds its own real Generic Host internally over a
 		// fake hook seam, so it is registered plainly and owns the hosted-service lifecycle it asserts.
