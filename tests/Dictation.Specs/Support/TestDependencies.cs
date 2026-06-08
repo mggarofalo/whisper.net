@@ -299,6 +299,9 @@ public static class TestDependencies
 		// version policy, packaging script, icon, tool manifest) directly, like the repo-guidance driver.
 		services.AddScoped<PackagingDriver>();
 
+		// Tag-driven release workflow (WHISPER-39): inspects .github/workflows/release.yml directly.
+		services.AddScoped<ReleaseWorkflowDriver>();
+
 		return services;
 	}
 }
