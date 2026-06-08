@@ -106,6 +106,10 @@ public static class InfrastructureServiceCollectionExtensions
 		// foreground window and surface that synthetic input would be dropped, instead of failing silently.
 		services.AddSingleton<IForegroundIntegrityProbe, Win32ForegroundIntegrityProbe>();
 
+		// Input permissions (WHISPER-51): onboarding checks that the OS allows synthetic input + the global
+		// hook. On Windows these need no separate grant, so the probe reports them present.
+		services.AddSingleton<IPermissionProbe, Permissions.InputPermissionProbe>();
+
 		// Global hotkeys (WHISPER-10): the SharpHook event-loop hook behind the IHotkeyListener port,
 		// pumped on its own dedicated thread. Singleton so the single OS hook lives for the app's run.
 		services.AddSingleton<IGlobalKeyHook, SharpHookGlobalKeyHook>();

@@ -13,4 +13,5 @@ public sealed record AppSettingsDto(
 	int SilenceThresholdMs,
 	bool FillerWordRemovalEnabled,
 	string CaptureDeviceId = AudioDevice.SystemDefault,
-	bool AuditLogEnabled = false);
+	bool AuditLogEnabled = false,
+	bool SetupCompleted = false);

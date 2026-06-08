@@ -23,13 +23,18 @@ public sealed record AppSettings
 	// written to the audit log unless the user explicitly enables it. Defaulted so existing sites need not change.
 	public bool AuditLogEnabled { get; }
 
+	// Whether first-run onboarding has been completed (WHISPER-51). False on a fresh install, so the
+	// onboarding flow is shown until the user finishes it. Defaulted so existing sites need not change.
+	public bool SetupCompleted { get; }
+
 	public AppSettings(
 		string modelId,
 		HotkeyBinding hotkey,
 		int silenceThresholdMs,
 		bool fillerWordRemovalEnabled,
 		string captureDeviceId = AudioDevice.SystemDefault,
-		bool auditLogEnabled = false)
+		bool auditLogEnabled = false,
+		bool setupCompleted = false)
 	{
 		if (string.IsNullOrWhiteSpace(modelId))
 		{
@@ -57,6 +62,7 @@ public sealed record AppSettings
 		FillerWordRemovalEnabled = fillerWordRemovalEnabled;
 		CaptureDeviceId = captureDeviceId;
 		AuditLogEnabled = auditLogEnabled;
+		SetupCompleted = setupCompleted;
 	}
 
 	// The settings a fresh install starts from.
