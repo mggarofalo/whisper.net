@@ -62,6 +62,45 @@ public sealed class DictationOrchestrator
 	public event EventHandler<DictationStageChangedEventArgs>? StageChanged;
 
 	/// <summary>
+	/// Whether continuous dictation mode is active (WHISPER-28). While active, each completed utterance
+	/// auto-restarts recording instead of returning to rest; Esc (<see cref="ExitContinuousMode"/>) turns
+	/// it off. When inactive the pipeline is single-shot: one capture -> deliver -> idle.
+	/// </summary>
+	public bool ContinuousMode { get; private set; }
+
+	/// <summary>
+	/// Enter continuous dictation mode: after each delivery the orchestrator restarts recording for the
+	/// next utterance until the user exits. Idempotent — entering while already active is a no-op.
+	/// </summary>
+	public void EnableContinuousMode()
+	{
+		if (ContinuousMode)
+		{
+			return;
+		}
+
+		ContinuousMode = true;
+		_logger.LogInformation("Continuous dictation mode entered.");
+	}
+
+	/// <summary>
+	/// Esc: exit continuous dictation mode and return the pipeline to Idle without auto-restarting. Any
+	/// in-flight capture is discarded; an utterance already transcribing/delivering completes (it just
+	/// won't restart). A no-op when continuous mode is already off, beyond discarding an active capture.
+	/// </summary>
+	public void ExitContinuousMode()
+	{
+		if (ContinuousMode)
+		{
+			ContinuousMode = false;
+			_logger.LogInformation("Continuous dictation mode exited.");
+		}
+
+		// Discard an in-flight capture so the pipeline returns to Idle; a no-op if not currently recording.
+		Cancel();
+	}
+
+	/// <summary>
 	/// Start signal (hotkey press): Idle -> Recording, beginning capture through the audio port. Ignored
 	/// unless currently Idle, so a repeated start (e.g. key auto-repeat) can never open a second capture.
 	/// </summary>
@@ -129,6 +168,16 @@ public sealed class DictationOrchestrator
 		{
 			_stateMachine.CompleteTranscription();
 			Advance(DictationStage.Idle);
+		}
+
+		// Continuous dictation (WHISPER-28): keep the pipeline live across utterances. Once the cycle has
+		// returned to Idle, if continuous mode is still active (Esc did not exit it during the utterance),
+		// automatically begin the next recording instead of resting. Each restart needs a fresh stop signal
+		// to advance, so the loop cannot spin — it waits in Recording until the next release / VAD silence.
+		if (ContinuousMode)
+		{
+			_logger.LogInformation("Continuous dictation mode active; auto-restarting recording for the next utterance.");
+			Start();
 		}
 	}
 

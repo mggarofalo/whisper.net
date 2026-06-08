@@ -9,6 +9,7 @@
 // listener to the controller, and tears the bridge and scope down on graceful shutdown.
 
 using Application.Ports;
+using Domain.Input;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -19,6 +20,7 @@ public sealed class DictationOrchestratorHostedService(IServiceScopeFactory scop
 	private IServiceScope? _scope;
 	private IHotkeyListener? _listener;
 	private HotkeyActivationController? _controller;
+	private DictationOrchestrator? _orchestrator;
 
 	public Task StartAsync(CancellationToken cancellationToken)
 	{
@@ -27,7 +29,7 @@ public sealed class DictationOrchestratorHostedService(IServiceScopeFactory scop
 
 		// Resolving the orchestrator wires its controller -> capture -> deliver subscriptions for the app
 		// lifetime; it then reacts to the controller's high-level start/stop requests.
-		_ = services.GetRequiredService<DictationOrchestrator>();
+		_orchestrator = services.GetRequiredService<DictationOrchestrator>();
 
 		// Bridge the raw key edges into the activation controller so a real hotkey drives the pipeline.
 		_listener = services.GetRequiredService<IHotkeyListener>();
@@ -48,12 +50,24 @@ public sealed class DictationOrchestratorHostedService(IServiceScopeFactory scop
 		}
 
 		_controller = null;
+		_orchestrator = null;
 		_scope?.Dispose();
 		_scope = null;
 		return Task.CompletedTask;
 	}
 
-	private void OnKeyDown(object? sender, KeyboardKeyEventArgs e) => _controller?.HandleKeyDown(e.Key, e.Modifiers);
+	private void OnKeyDown(object? sender, KeyboardKeyEventArgs e)
+	{
+		// Esc exits continuous dictation mode and returns the pipeline to Idle (WHISPER-28); it is not a
+		// recording chord, so it is handled here rather than forwarded to the activation controller.
+		if (e.Key == KeyboardKey.Escape)
+		{
+			_orchestrator?.ExitContinuousMode();
+			return;
+		}
+
+		_controller?.HandleKeyDown(e.Key, e.Modifiers);
+	}
 
 	private void OnKeyUp(object? sender, KeyboardKeyEventArgs e) => _controller?.HandleKeyUp(e.Key, e.Modifiers);
 }

@@ -8,6 +8,12 @@ All notable changes to this project are documented here. The format is based on
 
 ### Added
 
+- **Continuous dictation mode.** The orchestrator gained a continuous mode: once entered, each delivered
+  utterance auto-restarts recording for the next one instead of returning to rest, so a long passage can
+  be dictated hands-free. Pressing **Esc** exits the mode and returns the pipeline to idle without
+  restarting (any in-flight capture is discarded). With the mode off the pipeline stays single-shot
+  (one capture → deliver → idle); each entry, exit, and auto-restart is logged, and the loop is bounded
+  (a restart waits in `Recording` for the next stop, so it cannot spin). (WHISPER-28)
 - **Command-mode hook (scaffolding).** The delivery pipeline now consults an `ICommandMatcher` port
   after transcription/clean-up and before text delivery: a matched transcript is routed to the command
   branch (reported as `DeliveryResult.MatchedCommand`) instead of being typed, while unmatched speech
