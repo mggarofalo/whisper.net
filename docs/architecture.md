@@ -139,6 +139,13 @@ the Logic `UsageStatsCalculator` and Mapperly-projected to a DTO. Because the me
 the totals survive a restart; a recording failure is logged and swallowed by the store, so it never blocks
 the transcription pipeline.
 
+Transcript text is kept in history by design, but a verbose **audit log** is privacy-sensitive and is
+**off by default** (WHISPER-34). The gate is the Logic `AuditLogger`, which reads the live settings holder
+on every call, so `AuditLogEnabled` can be toggled without a restart; only when it is on does a record
+reach the local `IAuditLog` (`SqliteAuditLog`, a separate table). The audit log is **local-only** — its
+adapter has no network dependency (enforced by an architecture test) — and a user-initiated
+`PurgeUserDataCommand` clears both the transcript history and the audit log from disk.
+
 The tray icon (WHISPER-18) follows the same seam discipline: the coordination — mapping the recording
 status to the icon/tooltip, and the Open Settings / Quit actions — lives in `Logic.AppManagement`'s
 `TrayController`, so it is driven for real in the specs. The thin H.NotifyIcon view and its

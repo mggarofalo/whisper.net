@@ -37,6 +37,10 @@ public static class AppManagementServiceCollectionExtensions
 		// Singleton so every consumer shares one live view of the settings.
 		services.AddSingleton<SettingsHolder>();
 
+		// Opt-in audit log gate (WHISPER-34): reads the live settings holder so enabling/disabling auditing
+		// takes effect without a restart; writes go to the local IAuditLog only when the user has opted in.
+		services.AddSingleton<Audit.AuditLogger>();
+
 		// Output transforms (WHISPER-37): the registry of named transforms (the built-in formats) and the
 		// service that applies one by name via the rephrase port. A pure framework — the AI execution stays
 		// behind IRephraseClient, so no Infrastructure/network type leaks into this layer.

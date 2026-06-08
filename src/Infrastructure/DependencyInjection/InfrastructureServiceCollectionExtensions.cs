@@ -132,6 +132,7 @@ public static class InfrastructureServiceCollectionExtensions
 		services.AddSingleton<SqliteDatabase>();
 		services.AddSingleton<ISettingsStore, SqliteSettingsStore>();
 		services.AddSingleton<IHistoryStore, SqliteHistoryStore>();
+		services.AddSingleton<IAuditLog, SqliteAuditLog>();
 
 		// Opt-in localhost AI rephrase (WHISPER-40): the single disclosed transcript-bearing network seam.
 		// Disabled by default; when enabled the endpoint must be loopback, enforced by a validator that

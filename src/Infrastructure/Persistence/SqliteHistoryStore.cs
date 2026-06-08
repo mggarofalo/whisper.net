@@ -71,6 +71,21 @@ public sealed class SqliteHistoryStore(SqliteDatabase database, ILogger<SqliteHi
 		}
 	}
 
+	public async ValueTask ClearAsync(CancellationToken cancellationToken)
+	{
+		try
+		{
+			await using SqliteConnection connection = await database.OpenConnectionAsync(cancellationToken);
+			await using SqliteCommand command = connection.CreateCommand();
+			command.CommandText = "DELETE FROM history;";
+			await command.ExecuteNonQueryAsync(cancellationToken);
+		}
+		catch (SqliteException ex)
+		{
+			logger.LogError(ex, "Failed to clear transcript history.");
+		}
+	}
+
 	public async ValueTask<IReadOnlyList<TranscriptEntry>> GetEntriesAsync(
 		DateTimeOffset? from,
 		DateTimeOffset? to,

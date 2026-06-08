@@ -21,6 +21,9 @@ public sealed class DependencyRuleTests
 	// Persistence technology must stay behind the Infrastructure ports — no core project may touch SQLite.
 	private const string SqliteNs = "Microsoft.Data.Sqlite";
 
+	// The opt-in audit log must be local-only — its storage adapter may not touch the network (WHISPER-34).
+	private const string NetworkNs = "System.Net";
+
 	private static Assembly Load(string assemblyName) => Assembly.Load(new AssemblyName(assemblyName));
 
 	private static readonly Assembly[] LogicAssemblies =
@@ -93,6 +96,20 @@ public sealed class DependencyRuleTests
 		{
 			AssertNoDependency(logic, SqliteNs);
 		}
+	}
+
+	// WHISPER-34 AC4: audit data is local-only — the SQLite audit-log adapter has no network dependency.
+	[Fact]
+	public void The_audit_log_adapter_has_no_network_dependency()
+	{
+		var result = Types.InAssembly(Load(InfrastructureNs))
+			.That()
+			.HaveName("SqliteAuditLog")
+			.Should()
+			.NotHaveDependencyOnAny(NetworkNs)
+			.GetResult();
+
+		Assert.True(result.IsSuccessful, "the SQLite audit log must be local-only (no System.Net dependency).");
 	}
 
 	[Fact]

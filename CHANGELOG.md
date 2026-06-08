@@ -8,6 +8,22 @@ All notable changes to this project are documented here. The format is based on
 
 ### Added
 
+- **Privacy-gated audit log + data purge.** Transcript history is stored locally as before; a separate,
+  more verbose **audit log** is **disabled by default** and is written only after an explicit opt-in
+  (`AuditLogEnabled`). The gate (`AuditLogger`) reads the live settings, so enabling/disabling it takes
+  effect without a restart. The audit log is **local-only** — its SQLite adapter has no network dependency
+  (enforced by an architecture test) — and a user-initiated `PurgeUserDataCommand` clears both the
+  transcript history and the audit log from disk. (WHISPER-34)
+- **Usage statistics recording and aggregation.** Each transcription now records its captured audio
+  duration (persisted via a schema migration); `GetUsageSummaryQuery` aggregates history into totals
+  (transcriptions, characters, audio duration) plus a per-day breakdown, so the measures survive a restart
+  and a recording failure never blocks the pipeline. (WHISPER-24)
+- **History retention + paged browse.** History is capped at a configurable limit (`History:MaxEntries`,
+  default 1000) by pruning the oldest entries after each write, and is read back through a paged,
+  most-recent-first `BrowseHistoryQuery` with optional text/date filtering and validated paging. (WHISPER-17)
+- **SQLite persistence.** A single local SQLite database backs the settings and history ports behind a
+  versioned, idempotent migration runner (WAL mode), replacing the JSON settings file; a corrupt database
+  recovers to defaults rather than crashing the host. (WHISPER-11)
 - **Post-process pipeline configuration + hot-reload.** A single `PostProcess` configuration section
   exposes filler removal on/off, the custom vocabulary, the default output transform, and rephrase
   enable + endpoint. The ordered pipeline (normalize → optional transform; vocabulary-conditioned decode
