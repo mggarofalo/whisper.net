@@ -8,6 +8,17 @@ All notable changes to this project are documented here. The format is based on
 
 ### Added
 
+- **End-to-end dictation orchestrator.** A new `DictationOrchestrator` (`Logic.AppManagement`) is the
+  coordination hub that runs one utterance end to end: a hotkey press begins microphone capture through
+  the `IAudioSource` port, a release/stop finalizes the captured audio into a clip and drives it through
+  the existing delivery pipeline (`DeliverTranscriptionCommand` via Mediator) — trim → transcribe →
+  post-process → inject — with no manual step in between. It owns an explicit pipeline state machine
+  (`Idle → Recording → Transcribing → Delivering → Idle`) guarded against concurrent transitions, keeps
+  the shared `RecordingStateMachine` in step for the tray/UI, and logs every transition and stage duration
+  structurally. Any stage error (a failed transcription/delivery or a capture-device failure) is logged
+  and returns the pipeline to a safe `Idle` so it can never get stuck. The host activates it for the app
+  lifetime and bridges the global hotkey listener into the activation controller, closing the
+  hotkey → capture → transcribe → deliver path. (WHISPER-14)
 - **Privacy-gated audit log + data purge.** Transcript history is stored locally as before; a separate,
   more verbose **audit log** is **disabled by default** and is written only after an explicit opt-in
   (`AuditLogEnabled`). The gate (`AuditLogger`) reads the live settings, so enabling/disabling it takes

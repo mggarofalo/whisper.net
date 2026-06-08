@@ -2,19 +2,26 @@
 
   <!--
     Logic.AppManagement: application-lifecycle behaviors (profiles, app rules, command mode,
-    continuous-dictation policy). Pure logic over Application ports + Domain types — no OS or
-    Infrastructure concerns. Depends only on Application and Domain.
+    continuous-dictation policy) and the dictation orchestrator that wires the end-to-end pipeline
+    (WHISPER-14). Pure logic over Application ports + Domain types — no OS or Infrastructure concerns.
+    Depends on Application and Domain, plus the sibling Logic.AudioManagement for capture normalization
+    (CaptureBuffer); the architecture tests forbid only Infrastructure/Presentation references here.
   -->
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" />
     <!-- IHostedService + AddHostedService for the host-owned background components (WHISPER-12). -->
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
+    <!-- IMediator: the orchestrator dispatches the delivery pipeline through Mediator (WHISPER-14). -->
+    <PackageReference Include="Mediator.Abstractions" />
+    <!-- ILogger<T> for the orchestrator's structural transition/duration logging (WHISPER-14). -->
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Application\Application.csproj" />
     <ProjectReference Include="..\Domain\Domain.csproj" />
+    <ProjectReference Include="..\Logic.AudioManagement\Logic.AudioManagement.csproj" />
   </ItemGroup>
 
 </Project>
