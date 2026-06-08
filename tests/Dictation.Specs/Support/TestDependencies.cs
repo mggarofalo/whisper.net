@@ -140,6 +140,11 @@ public static class TestDependencies
 		services.AddScoped(_ => Substitute.For<IClipboard>());
 		services.AddScoped<HistoryBrowserDriver>();
 
+		// Stats dashboard (WHISPER-53): the real StatsViewModel over the real Mediator pipeline
+		// (GetUsageStats + the real Logic usage-stats calculator) and the faked IHistoryStore, so the
+		// dashboard's totals are genuinely computed by the Application layer.
+		services.AddScoped<StatsDashboardDriver>();
+
 		// Host bootstrapping (WHISPER-12): the driver builds its own real Generic Host internally over a
 		// fake hook seam, so it is registered plainly and owns the hosted-service lifecycle it asserts.
 		services.AddScoped<AppLifecycleDriver>();
