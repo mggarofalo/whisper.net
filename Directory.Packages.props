@@ -64,6 +64,15 @@
     <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.0" />
   </ItemGroup>
 
+  <!--
+    Packaging + auto-update (Velopack, WHISPER-20/29). Presentation-only: provides the in-app install/
+    update hooks (VelopackApp) and the UpdateManager. The matching `vpk` CLI builds the installer in the
+    packaging script and the release CI; keep the two versions in lockstep.
+  -->
+  <ItemGroup>
+    <PackageVersion Include="Velopack" Version="1.2.0" />
+  </ItemGroup>
+
   <!-- Validation -->
   <ItemGroup>
     <PackageVersion Include="FluentValidation" Version="12.1.1" />

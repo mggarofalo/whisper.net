@@ -295,6 +295,10 @@ public static class TestDependencies
 		// permission probe, raw GPU probe). The driver configures those fakes per subsystem.
 		services.AddScoped<DiagnosticsDriver>();
 
+		// Velopack packaging configuration (WHISPER-20): inspects repository artifacts (the project file,
+		// version policy, packaging script, icon, tool manifest) directly, like the repo-guidance driver.
+		services.AddScoped<PackagingDriver>();
+
 		return services;
 	}
 }

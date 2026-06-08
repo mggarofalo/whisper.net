@@ -9,12 +9,32 @@
     <TargetFramework>net10.0-windows</TargetFramework>
     <OutputType>WinExe</OutputType>
     <UseWPF>true</UseWPF>
+    <!-- The installer + the in-exe icon (WHISPER-20). One asset, shared by the build and `vpk pack`. -->
+    <ApplicationIcon>..\..\assets\whisper.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <!--
+    Velopack packaging (WHISPER-20): when a runtime identifier is supplied (the packaging script and the
+    release CI publish with `-r win-x64`), publish a self-contained, single-file build with the .NET 10
+    runtime and the native assets (Whisper.net + Vulkan, ONNX Runtime, SharpHook) bundled, so an end user
+    installs without a separate .NET install. Native libraries are self-extracted next to the single file
+    because some cannot be loaded from inside the bundle. A normal dev build supplies no RID, so this group
+    is inert and `dotnet build` / the specs are unaffected.
+  -->
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Hosting" />
     <PackageReference Include="H.NotifyIcon.Wpf" />
     <PackageReference Include="CommunityToolkit.Mvvm" />
+    <!-- In-app install/update hooks (WHISPER-20); the UpdateManager auto-update flow follows in WHISPER-29. -->
+    <PackageReference Include="Velopack" />
   </ItemGroup>
 
   <ItemGroup>

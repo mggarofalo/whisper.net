@@ -25,6 +25,7 @@ using Presentation.Onboarding;
 using Presentation.Overlay;
 using Presentation.Shell;
 using Presentation.Tray;
+using Velopack;
 
 namespace Presentation;
 
@@ -40,6 +41,12 @@ public partial class App
 
 	protected override void OnStartup(StartupEventArgs e)
 	{
+		// Velopack install/update hooks (WHISPER-20): must run before anything else so that, when the
+		// installer or updater launches the app with a hook argument (first-install, update, uninstall), it
+		// performs the hook and exits instead of starting the tray app. On a normal launch this is a no-op.
+		// The in-app auto-update check that consumes this is wired in WHISPER-29.
+		VelopackApp.Build().Run();
+
 		base.OnStartup(e);
 
 		// Doctor / selftest (WHISPER-50): when launched with --doctor, run the environment checks, print the
