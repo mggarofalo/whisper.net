@@ -15,12 +15,14 @@ focused field.
 dotnet restore Whisper.slnx
 dotnet build   Whisper.slnx -p:TreatWarningsAsErrors=true     # build clean (warnings are errors)
 dotnet format  Whisper.slnx --verify-no-changes               # formatting gate (.editorconfig)
-dotnet test    Whisper.slnx --filter "Category!=wip"          # unit + Reqnroll specs; @wip excluded
+dotnet test    Whisper.slnx --filter "Category!=wip&Category!=slow"   # unit + Reqnroll specs (fast gate)
+dotnet test    Whisper.slnx --filter "Category=slow"                  # @slow real-model tests (opt-in)
 ```
 
 `dotnet test` runs the xUnit unit projects and the Reqnroll acceptance project (`tests/Dictation.Specs`)
-together. The same three commands are what CI runs (`.github/workflows/ci.yml`, `windows-latest` — WPF
-requires Windows).
+together. The fast gate excludes `@wip` (unfinished scenarios) and `@slow` (tests that load the real
+Silero VAD model and run ONNX inference); CI runs the `@slow` tests in their own step. The same commands
+are what CI runs (`.github/workflows/ci.yml`, `windows-latest` — WPF requires Windows).
 
 First-time setup also installs the Git commit hooks (see [Commit conventions](#commit-conventions)):
 

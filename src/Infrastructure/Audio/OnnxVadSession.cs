@@ -1,11 +1,12 @@
 // The real Silero VAD session: runs the model fully on-device via ONNX Runtime (no network egress).
 // It holds the model's recurrent state (h/c) across windows and reloads it on Reset. The model is
 // loaded lazily on first use so composing the object graph never requires the asset to be present —
-// only actual inference does. This class is verified by manual real-device/real-model smoke; the
-// headless specs drive SileroVad over a fake session instead.
+// only actual inference does.
 //
-// NOTE: the Silero VAD ONNX asset itself is not yet bundled (tracked as a follow-up); until then the
-// real path throws on first inference if the model file is absent.
+// The Silero VAD ONNX asset (MIT, ~1.8 MB) ships with the app as a content asset — never downloaded —
+// resolved at AppContext.BaseDirectory/assets/silero_vad.onnx (WHISPER-66). Real inference over the
+// bundled model is covered by the @slow VadRealModelTests; the headless specs drive SileroVad over a
+// fake session instead.
 
 using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;

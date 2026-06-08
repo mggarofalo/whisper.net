@@ -31,6 +31,28 @@ under a `'$(RuntimeIdentifier)' != ''` group, so they apply only when publishing
 normal `dotnet build` is unaffected. The app id, title, and icon (`assets/whisper.ico`) are passed to
 `vpk pack`.
 
+## Bundled model assets (WHISPER-66)
+
+The Silero **voice-activity-detection** model ships with the app as a committed content asset — there is
+**no runtime download** (satisfies WHISPER-31 AC6):
+
+| | |
+|---|---|
+| File | `assets/silero_vad.onnx` |
+| Source | [`snakers4/silero-vad`](https://github.com/snakers4/silero-vad) tag `v4.0` (`files/silero_vad.onnx`) |
+| License | MIT |
+| Size | 1,807,522 bytes (~1.8 MB) |
+| SHA-256 | `A35EBF52FD3CE5F1469B2A36158DBA761BC47B973EA3382B3186CA15B1F5AF28` |
+
+The asset is declared once as `Content` in
+[`src/Infrastructure/Infrastructure.csproj`](../src/Infrastructure/Infrastructure.csproj); MSBuild copies
+it to `assets/silero_vad.onnx` in the build output of every referencing project and into the Velopack
+single-file publish (next to the exe), which is where `OnnxVadSession` resolves it
+(`AppContext.BaseDirectory/assets`). `OnnxVadSession` loads it lazily and runs inference fully on-device.
+The `v4.0` model is required: it exposes the `h`/`c` recurrent-state I/O the session is built against; the
+newer v5 single-`state` model would not load. Real inference over the bundled asset is covered by the
+`@slow` `VadRealModelTests` (run in CI by the dedicated slow-tests step).
+
 ### Useful options
 
 ```pwsh
