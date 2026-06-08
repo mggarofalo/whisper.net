@@ -260,6 +260,12 @@ public static class TestDependencies
 		services.AddScoped<FakeDefaultDeviceWatcher>();
 		services.AddScoped<AudioDeviceDriver>();
 
+		// Audio device + hotkey configuration (WHISPER-33): bind the device-enumerator port to the fake so
+		// the ListCaptureDevices handler resolves it, and drive the real audio/hotkey settings view-models
+		// over the real Mediator pipeline (GetSettings/UpdateSettings + validation) and faked store.
+		services.AddScoped<IAudioDeviceEnumerator>(sp => sp.GetRequiredService<FakeAudioDeviceEnumerator>());
+		services.AddScoped<AudioHotkeyConfigDriver>();
+
 		return services;
 	}
 }

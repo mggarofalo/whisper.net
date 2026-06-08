@@ -77,8 +77,12 @@ public static class AppManagementServiceCollectionExtensions
 		services.AddScoped<Shell.ShellViewModel>();
 		services.AddSingleton(new Shell.NavigationSection("Home", typeof(Shell.HomeViewModel)));
 		services.AddSingleton(new Shell.NavigationSection("Model", typeof(Shell.ModelViewModel)));
+		services.AddSingleton(new Shell.NavigationSection("Audio", typeof(Shell.AudioDeviceViewModel)));
+		services.AddSingleton(new Shell.NavigationSection("Hotkey", typeof(Shell.HotkeyViewModel)));
 		services.AddTransient<Shell.HomeViewModel>();
 		services.AddTransient<Shell.ModelViewModel>();
+		services.AddTransient<Shell.AudioDeviceViewModel>();
+		services.AddTransient<Shell.HotkeyViewModel>();
 
 		return services;
 	}

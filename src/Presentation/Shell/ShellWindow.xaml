@@ -15,6 +15,12 @@
         <DataTemplate DataType="{x:Type vm:ModelViewModel}">
             <views:ModelView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:AudioDeviceViewModel}">
+            <views:AudioDeviceView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:HotkeyViewModel}">
+            <views:HotkeyView />
+        </DataTemplate>
     </Window.Resources>
 
     <DockPanel>

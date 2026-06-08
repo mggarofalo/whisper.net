@@ -1,0 +1,43 @@
+<UserControl x:Class="Presentation.Shell.Views.AudioDeviceView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DockPanel Margin="24">
+        <StackPanel DockPanel.Dock="Top"
+                    Orientation="Horizontal"
+                    Margin="0,0,0,12">
+            <TextBlock Text="Input device"
+                       FontSize="18"
+                       FontWeight="SemiBold"
+                       VerticalAlignment="Center" />
+            <TextBlock Text="{Binding SelectedDeviceId, StringFormat='Selected: {0}'}"
+                       Margin="16,0,0,0"
+                       Opacity="0.8"
+                       VerticalAlignment="Center" />
+            <Button Content="Refresh"
+                    Command="{Binding LoadCommand}"
+                    Margin="16,0,0,0"
+                    Padding="12,4" />
+        </StackPanel>
+
+        <ItemsControl ItemsSource="{Binding Devices}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Grid Margin="0,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0"
+                                   Text="{Binding Name}"
+                                   VerticalAlignment="Center" />
+                        <Button Grid.Column="1"
+                                Content="Use"
+                                Command="{Binding DataContext.SelectCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                CommandParameter="{Binding Id}"
+                                Padding="12,4" />
+                    </Grid>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </DockPanel>
+</UserControl>
