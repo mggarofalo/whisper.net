@@ -5,15 +5,18 @@
 // failure) that must log and return the pipeline to a safe Idle. Every port is an NSubstitute fake, so
 // the orchestration is exercised with no real audio, model, or delivery.
 
+using Application.Configuration;
 using Application.Ports;
 using Application.Transcription;
 using AwesomeAssertions;
+using Domain.Feedback;
 using Domain.Input;
 using Domain.Recording;
 using Domain.Settings;
 using Logic.AudioManagement;
 using Mediator;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using NSubstitute;
 using Xunit;
 
@@ -25,6 +28,8 @@ public sealed class DictationOrchestratorTests
 	private readonly IMediator _mediator = Substitute.For<IMediator>();
 	private readonly RecordingStateMachine _stateMachine = new();
 	private readonly HotkeyActivationController _activation = new();
+	private readonly IAudioFeedback _feedback = Substitute.For<IAudioFeedback>();
+	private readonly AudioFeedbackOptions _feedbackOptions = new();
 	private readonly CapturingLogger<DictationOrchestrator> _logger = new();
 
 	public DictationOrchestratorTests() =>
@@ -34,7 +39,8 @@ public sealed class DictationOrchestratorTests
 			.Returns(new DeliveryResult(Delivered: true, Text: "the result"));
 
 	private DictationOrchestrator CreateSut() =>
-		new(_audio, _stateMachine, _activation, new AudioResampler(), new AudioBufferingOptions(), _mediator, _logger);
+		new(_audio, _stateMachine, _activation, new AudioResampler(), new AudioBufferingOptions(), _mediator,
+			_feedback, Options.Create(_feedbackOptions), _logger);
 
 	[Fact]
 	public void Starts_idle()
@@ -215,6 +221,47 @@ public sealed class DictationOrchestratorTests
 
 		sut.Stage.Should().Be(DictationStage.Idle);
 		_stateMachine.State.Should().Be(RecordingState.Idle);
+		_logger.Entries.Should().Contain(entry => entry.Level == LogLevel.Error);
+	}
+
+	[Fact]
+	public async Task Feedback_is_played_at_each_pipeline_transition_when_enabled()
+	{
+		DictationOrchestrator sut = CreateSut();
+
+		sut.Start();
+		await sut.StopAsync(TestContext.Current.CancellationToken);
+
+		_feedback.Received(1).Play(FeedbackSound.RecordingStarted);
+		_feedback.Received(1).Play(FeedbackSound.RecordingStopped);
+		_feedback.Received(1).Play(FeedbackSound.TranscriptionComplete);
+	}
+
+	[Fact]
+	public async Task No_feedback_is_played_when_it_is_disabled()
+	{
+		_feedbackOptions.Enabled = false;
+		DictationOrchestrator sut = CreateSut();
+
+		sut.Start();
+		await sut.StopAsync(TestContext.Current.CancellationToken);
+
+		_feedback.DidNotReceive().Play(Arg.Any<FeedbackSound>());
+	}
+
+	[Fact]
+	public async Task A_feedback_failure_does_not_break_dictation()
+	{
+		_feedback.When(f => f.Play(Arg.Any<FeedbackSound>()))
+			.Do(_ => throw new InvalidOperationException("no output device"));
+		DictationOrchestrator sut = CreateSut();
+
+		sut.Start();
+		await sut.StopAsync(TestContext.Current.CancellationToken);
+
+		// The pipeline still ran to completion despite feedback throwing, and the failure was logged.
+		await _mediator.Received(1).Send(Arg.Any<DeliverTranscriptionCommand>(), Arg.Any<CancellationToken>());
+		sut.Stage.Should().Be(DictationStage.Idle);
 		_logger.Entries.Should().Contain(entry => entry.Level == LogLevel.Error);
 	}
 

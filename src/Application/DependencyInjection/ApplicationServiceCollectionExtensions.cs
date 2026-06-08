@@ -42,11 +42,16 @@ public static class ApplicationServiceCollectionExtensions
 		// History retention (WHISPER-17): always resolvable so the record handler can enforce the limit;
 		// the default cap applies when nothing is configured.
 		services.AddOptions<RetentionOptions>();
+
+		// Audio feedback (WHISPER-21): always resolvable so the orchestrator can read the on/off switch;
+		// feedback is on by default until configuration says otherwise.
+		services.AddOptions<AudioFeedbackOptions>();
 		if (configuration is not null)
 		{
 			services.Configure<GeneralOptions>(configuration.GetSection(GeneralOptions.SectionName));
 			services.Configure<DeliveryOptions>(configuration.GetSection(DeliveryOptions.SectionName));
 			services.Configure<RetentionOptions>(configuration.GetSection(RetentionOptions.SectionName));
+			services.Configure<AudioFeedbackOptions>(configuration.GetSection(AudioFeedbackOptions.SectionName));
 		}
 
 		// Post-process configuration (WHISPER-41): a single live holder, seeded from the "PostProcess"
