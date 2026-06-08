@@ -80,11 +80,13 @@ public static class AppManagementServiceCollectionExtensions
 		services.AddSingleton(new Shell.NavigationSection("Audio", typeof(Shell.AudioDeviceViewModel)));
 		services.AddSingleton(new Shell.NavigationSection("Hotkey", typeof(Shell.HotkeyViewModel)));
 		services.AddSingleton(new Shell.NavigationSection("History", typeof(Shell.HistoryViewModel)));
+		services.AddSingleton(new Shell.NavigationSection("Stats", typeof(Shell.StatsViewModel)));
 		services.AddTransient<Shell.HomeViewModel>();
 		services.AddTransient<Shell.ModelViewModel>();
 		services.AddTransient<Shell.AudioDeviceViewModel>();
 		services.AddTransient<Shell.HotkeyViewModel>();
 		services.AddTransient<Shell.HistoryViewModel>();
+		services.AddTransient<Shell.StatsViewModel>();
 
 		return services;
 	}
