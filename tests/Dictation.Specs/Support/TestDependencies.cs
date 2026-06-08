@@ -112,6 +112,10 @@ public static class TestDependencies
 		services.AddScoped<IOptions<AudioFeedbackOptions>>(sp => Options.Create(sp.GetRequiredService<AudioFeedbackOptions>()));
 		services.AddScoped<AudioFeedbackDriver>();
 
+		// Level overlay (WHISPER-26): the driver builds the real LevelOverlayController (the WPF-free
+		// view-model logic) over a real state machine and a faked audio source, so it owns its own wiring.
+		services.AddScoped<LevelOverlayDriver>();
+
 		// Host bootstrapping (WHISPER-12): the driver builds its own real Generic Host internally over a
 		// fake hook seam, so it is registered plainly and owns the hosted-service lifecycle it asserts.
 		services.AddScoped<AppLifecycleDriver>();
