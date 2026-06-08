@@ -46,6 +46,7 @@ public static class TestDependencies
 		services.AddScoped(_ => Substitute.For<ITranscriber>());
 		services.AddScoped(_ => Substitute.For<ISettingsStore>());
 		services.AddScoped(_ => Substitute.For<IHistoryStore>());
+		services.AddScoped(_ => Substitute.For<IAuditLog>());
 		services.AddScoped(_ => Substitute.For<IGpuProbe>());
 
 		// Foreground integrity (WHISPER-6): default substitute returns Same (the enum's default), so the
@@ -98,6 +99,11 @@ public static class TestDependencies
 		// and Logic aggregator over the real SQLite store against a private temp database, so a restart truly
 		// reloads persisted measures from disk.
 		services.AddScoped<UsageStatsRecordingDriver>();
+
+		// Opt-in audit log (WHISPER-34): the driver builds its own composition — the real AuditLogger gate +
+		// real SQLite history/audit stores against a private temp database — so the default-off, opt-in,
+		// hot-toggle, and purge behaviours are proven end to end against the local store.
+		services.AddScoped<AuditLogDriver>();
 
 		// Run on login (WHISPER-32): drive the real command/query handlers through IMediator over an
 		// in-memory startup registration, the single OS seam this feature controls.

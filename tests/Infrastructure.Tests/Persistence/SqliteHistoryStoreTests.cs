@@ -159,5 +159,19 @@ public sealed class SqliteHistoryStoreTests : IDisposable
 		remaining.Should().ContainSingle();
 	}
 
+	[Fact]
+	public async Task Clear_removes_all_entries()
+	{
+		IHistoryStore store = NewStore();
+		await store.AddAsync(TranscriptEntry.Create("newest", Newest), CancellationToken.None);
+		await store.AddAsync(TranscriptEntry.Create("oldest", Oldest), CancellationToken.None);
+
+		await NewStore().ClearAsync(CancellationToken.None);
+
+		IReadOnlyList<TranscriptEntry> remaining =
+			await NewStore().GetEntriesAsync(from: null, to: null, limit: null, CancellationToken.None);
+		remaining.Should().BeEmpty();
+	}
+
 	public void Dispose() => _fixture.Dispose();
 }

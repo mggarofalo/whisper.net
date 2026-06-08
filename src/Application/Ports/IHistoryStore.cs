@@ -31,4 +31,7 @@ public interface IHistoryStore
 	/// preference to older ones. A non-positive <paramref name="maxEntries"/> is a no-op (unbounded).
 	/// </summary>
 	ValueTask<int> PruneToMostRecentAsync(int maxEntries, CancellationToken cancellationToken);
+
+	/// <summary>Removes every transcript entry from disk (used by the user-initiated purge, WHISPER-34).</summary>
+	ValueTask ClearAsync(CancellationToken cancellationToken);
 }

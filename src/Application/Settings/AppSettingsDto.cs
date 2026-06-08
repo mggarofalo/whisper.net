@@ -12,4 +12,5 @@ public sealed record AppSettingsDto(
 	string Hotkey,
 	int SilenceThresholdMs,
 	bool FillerWordRemovalEnabled,
-	string CaptureDeviceId = AudioDevice.SystemDefault);
+	string CaptureDeviceId = AudioDevice.SystemDefault,
+	bool AuditLogEnabled = false);

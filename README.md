@@ -20,6 +20,11 @@ focus. It is a ground-up rewrite of the Python [`whisper-local`](https://github.
 > **loopback** endpoint (`localhost`/`127.0.0.1`/`[::1]`); a remote endpoint is rejected at startup, so
 > transcript text never leaves your machine. If the local model is unavailable the original text is kept
 > unchanged. This is the only transcript-bearing network seam in the app.
+>
+> **History &amp; audit log (local-only):** your transcription history is stored in a local SQLite
+> database. A more verbose **audit log** is **off by default** and is written only after you explicitly
+> enable it; it never leaves the device. You can clear both your history and the audit log from disk at
+> any time with a one-click purge.
 
 ## Build and run
 

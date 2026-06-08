@@ -110,6 +110,7 @@ public sealed class HostCompositionTests
 
 		Assert.IsType<SqliteSettingsStore>(host.Services.GetRequiredService<ISettingsStore>());
 		Assert.IsType<SqliteHistoryStore>(host.Services.GetRequiredService<IHistoryStore>());
+		Assert.IsType<SqliteAuditLog>(host.Services.GetRequiredService<IAuditLog>());
 	}
 
 	// WHISPER-11 AC2: the database file defaults to a per-user application-data path when not configured.

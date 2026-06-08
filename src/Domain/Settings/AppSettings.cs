@@ -19,12 +19,17 @@ public sealed record AppSettings
 	// follow the OS default. Defaulted so existing construction sites need not change.
 	public string CaptureDeviceId { get; }
 
+	// Opt-in verbose audit logging (WHISPER-34). Privacy-sensitive, so it is OFF by default; nothing is
+	// written to the audit log unless the user explicitly enables it. Defaulted so existing sites need not change.
+	public bool AuditLogEnabled { get; }
+
 	public AppSettings(
 		string modelId,
 		HotkeyBinding hotkey,
 		int silenceThresholdMs,
 		bool fillerWordRemovalEnabled,
-		string captureDeviceId = AudioDevice.SystemDefault)
+		string captureDeviceId = AudioDevice.SystemDefault,
+		bool auditLogEnabled = false)
 	{
 		if (string.IsNullOrWhiteSpace(modelId))
 		{
@@ -51,6 +56,7 @@ public sealed record AppSettings
 		SilenceThresholdMs = silenceThresholdMs;
 		FillerWordRemovalEnabled = fillerWordRemovalEnabled;
 		CaptureDeviceId = captureDeviceId;
+		AuditLogEnabled = auditLogEnabled;
 	}
 
 	// The settings a fresh install starts from.
