@@ -134,6 +134,12 @@ public static class TestDependencies
 		// download / switch handlers) and the real catalog, faking only the device-facing model ports.
 		services.AddScoped<ModelPickerDriver>();
 
+		// History browser (WHISPER-45): the real HistoryViewModel over the real Mediator pipeline
+		// (BrowseHistory + CopyToClipboard) and the faked IHistoryStore + IClipboard. The clipboard
+		// substitute backs the re-copy command (no real clipboard is touched in specs).
+		services.AddScoped(_ => Substitute.For<IClipboard>());
+		services.AddScoped<HistoryBrowserDriver>();
+
 		// Host bootstrapping (WHISPER-12): the driver builds its own real Generic Host internally over a
 		// fake hook seam, so it is registered plainly and owns the hosted-service lifecycle it asserts.
 		services.AddScoped<AppLifecycleDriver>();

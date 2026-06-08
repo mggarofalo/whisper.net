@@ -21,6 +21,9 @@
         <DataTemplate DataType="{x:Type vm:HotkeyViewModel}">
             <views:HotkeyView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:HistoryViewModel}">
+            <views:HistoryView />
+        </DataTemplate>
     </Window.Resources>
 
     <DockPanel>
