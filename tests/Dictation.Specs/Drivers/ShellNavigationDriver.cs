@@ -1,22 +1,23 @@
 // Drives the @WHISPER-19 MVVM shell navigation scenarios. It owns HOW the shell is exercised so the
 // steps stay one-liners: it resolves the REAL ShellViewModel (which composes the real NavigationService
 // and feature view-models from the scenario's DI scope), navigates between sections, runs a feature
-// view-model's Mediator-backed command over the faked ISettingsStore, and asserts at the view-model
+// view-model's Mediator-backed command over the faked model ports, and asserts at the view-model
 // boundary. The thin WPF window that binds to ShellViewModel is Presentation glue verified by smoke.
 
 using System.Reflection;
 using Application.Ports;
 using AwesomeAssertions;
-using Domain.Settings;
+using Domain.Models;
 using Logic.AppManagement.Shell;
 using NSubstitute;
 
 namespace Dictation.Specs.Drivers;
 
-public sealed class ShellNavigationDriver(ShellViewModel shell, ISettingsStore store)
+public sealed class ShellNavigationDriver(ShellViewModel shell, IModelLifecycle lifecycle)
 {
-	// The active model id the faked store reports, so the Model section's Mediator round-trip returns
-	// something only the real GetSettingsQuery pipeline could have supplied.
+	// The active model id the faked lifecycle reports, so the Model section's Mediator round-trip (the
+	// ListModelsQuery pipeline reading the lifecycle status) surfaces something the view-model could only
+	// have learned by going through Mediator.
 	private const string ActiveModel = "small.en";
 
 	private object? _previous;
@@ -34,12 +35,11 @@ public sealed class ShellNavigationDriver(ShellViewModel shell, ISettingsStore s
 		shell.NavigateCommand.Execute(section);
 	}
 
-	// "Given a feature view model is active": set up the store the Model section's query reads, then make
-	// the Model section the shell's active content.
+	// "Given a feature view model is active": set up the lifecycle the Model section's query reads, then
+	// make the Model section the shell's active content.
 	public void ActivateModelSection()
 	{
-		store.LoadAsync(Arg.Any<CancellationToken>())
-			.Returns(new AppSettings(ActiveModel, HotkeyBinding.Parse("Ctrl+Shift+D"), silenceThresholdMs: 700, fillerWordRemovalEnabled: false));
+		lifecycle.Status.Returns(new ModelStatus(ActiveModel, ModelState.Ready));
 		shell.NavigateCommand.Execute("Model");
 	}
 
@@ -62,8 +62,9 @@ public sealed class ShellNavigationDriver(ShellViewModel shell, ISettingsStore s
 		mediator.Should().NotBeNull("a container-resolved view-model has its IMediator dependency injected");
 	}
 
-	// The command learned the active model id only the real Mediator pipeline (handler + mapper over the
-	// store) could have produced — so the request went through Mediator, not a direct port call.
+	// The command learned the active model id only the real Mediator pipeline (the ListModels handler
+	// reading the lifecycle status) could have produced — so the request went through Mediator, not a
+	// direct port call.
 	public void AssertRequestWentThroughMediator() =>
 		Active<ModelViewModel>().ActiveModelId.Should().Be(ActiveModel);
 

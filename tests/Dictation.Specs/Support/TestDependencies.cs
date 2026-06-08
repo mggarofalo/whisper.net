@@ -116,10 +116,23 @@ public static class TestDependencies
 		// view-model logic) over a real state machine and a faked audio source, so it owns its own wiring.
 		services.AddScoped<LevelOverlayDriver>();
 
+		// Model picker ports (WHISPER-27): the catalog + model lifecycle are the real ones from
+		// AddModelManagement, but the device-facing seams — the filesystem cache, the network downloader,
+		// and the lifecycle (whose runtime is not composed in specs) — are substituted so the picker's
+		// list/download/switch flow runs over fakes. The IModelLifecycle scoped substitute overrides the
+		// real singleton from AddModelManagement for the scenarios that resolve it.
+		services.AddScoped(_ => Substitute.For<IModelCache>());
+		services.AddScoped(_ => Substitute.For<IModelDownloader>());
+		services.AddScoped(_ => Substitute.For<IModelLifecycle>());
+
 		// MVVM shell navigation (WHISPER-19): the real ShellViewModel + NavigationService + feature
 		// view-models (registered by AddAppManagement) resolved from the scenario scope, so navigation and
-		// the Model section's Mediator round-trip run for real over the faked ISettingsStore.
+		// the Model section's Mediator round-trip run for real over the faked model lifecycle.
 		services.AddScoped<ShellNavigationDriver>();
+
+		// Model picker (WHISPER-27): the real ModelViewModel over the real Mediator pipeline (list /
+		// download / switch handlers) and the real catalog, faking only the device-facing model ports.
+		services.AddScoped<ModelPickerDriver>();
 
 		// Host bootstrapping (WHISPER-12): the driver builds its own real Generic Host internally over a
 		// fake hook seam, so it is registered plainly and owns the hosted-service lifecycle it asserts.
