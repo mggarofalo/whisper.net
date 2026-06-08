@@ -8,6 +8,12 @@ All notable changes to this project are documented here. The format is based on
 
 ### Added
 
+- **Command-mode hook (scaffolding).** The delivery pipeline now consults an `ICommandMatcher` port
+  after transcription/clean-up and before text delivery: a matched transcript is routed to the command
+  branch (reported as `DeliveryResult.MatchedCommand`) instead of being typed, while unmatched speech
+  falls through to normal delivery. The default `NoOpCommandMatcher` recognizes nothing, so dictation is
+  unchanged until a real matcher exists. This is the hook + abstraction only — no command catalogue or
+  execution engine is built here. (WHISPER-35)
 - **End-to-end dictation orchestrator.** A new `DictationOrchestrator` (`Logic.AppManagement`) is the
   coordination hub that runs one utterance end to end: a hotkey press begins microphone capture through
   the `IAudioSource` port, a release/stop finalizes the captured audio into a clip and drives it through

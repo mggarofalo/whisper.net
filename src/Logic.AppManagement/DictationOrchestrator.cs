@@ -103,6 +103,14 @@ public sealed class DictationOrchestrator
 			// observable without forking the proven delivery handler.
 			DeliveryResult result = await _mediator.Send(new DeliverTranscriptionCommand(clip), cancellationToken);
 			Advance(DictationStage.Delivering);
+
+			// Command-mode hook (WHISPER-35): a matched transcript was routed to the command branch instead
+			// of being typed. Execution is out of scope here; the orchestrator records the routing.
+			if (result.MatchedCommand is { } command)
+			{
+				_logger.LogInformation("Dictation routed transcript to command branch: {Command}.", command);
+			}
+
 			_logger.LogInformation(
 				"Dictation delivered={Delivered} block={Block} text-length={Length} in {ElapsedMs:F1}ms.",
 				result.Delivered,

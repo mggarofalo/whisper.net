@@ -1,9 +1,11 @@
 // Orchestrates the push-to-talk delivery pipeline: trim trailing silence (Logic), transcribe the
-// clip (Infrastructure port), clean disfluencies (Logic), check the focused window is reachable, choose
-// the delivery strategy (Logic), and inject the result into the focused field (Infrastructure port).
-// Pure orchestration — every step's behavior lives behind a port, which is what lets the BDD specs
-// drive this for real while faking only the Infrastructure boundary.
+// clip (Infrastructure port), clean disfluencies (Logic), match the transcript against voice commands
+// (the command-mode hook), check the focused window is reachable, choose the delivery strategy (Logic),
+// and inject the result into the focused field (Infrastructure port). Pure orchestration — every step's
+// behavior lives behind a port, which is what lets the BDD specs drive this for real while faking only
+// the Infrastructure boundary.
 
+using Application.Commands;
 using Application.Configuration;
 using Application.Delivery;
 using Application.Interfaces;
@@ -17,6 +19,7 @@ public sealed class DeliverTranscriptionHandler(
 	ISilenceTrimmer silenceTrimmer,
 	ITranscriber transcriber,
 	IPostProcessor postProcessor,
+	ICommandMatcher commandMatcher,
 	IForegroundIntegrityProbe integrityProbe,
 	IDeliveryStrategySelector strategySelector,
 	IOptions<DeliveryOptions> deliveryOptions,
@@ -36,6 +39,16 @@ public sealed class DeliverTranscriptionHandler(
 		if (string.IsNullOrWhiteSpace(cleaned))
 		{
 			return new DeliveryResult(Delivered: false, Text: string.Empty);
+		}
+
+		// Command-mode hook (WHISPER-35): consult the matcher after transcription/clean-up and before
+		// delivery. On a match the transcript is routed to the command branch instead of being typed —
+		// execution is out of scope here (scaffolding only), so we report the matched command and deliver
+		// no text. The default matcher never matches, so normal dictation is unchanged.
+		CommandMatch match = commandMatcher.Match(cleaned);
+		if (match.IsMatch)
+		{
+			return new DeliveryResult(Delivered: false, Text: cleaned, MatchedCommand: match.Command);
 		}
 
 		// UIPI: synthetic input from our (unelevated) process into a higher-integrity window is silently

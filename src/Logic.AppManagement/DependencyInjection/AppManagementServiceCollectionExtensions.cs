@@ -39,6 +39,10 @@ public static class AppManagementServiceCollectionExtensions
 		// service below, and the BDD specs resolve it per scenario from the same scope as the faked ports.
 		services.AddScoped<DictationOrchestrator>();
 
+		// Command-mode hook (WHISPER-35): the default matcher recognizes nothing, so every transcript falls
+		// through to normal text delivery until a real command catalogue/execution is implemented.
+		services.AddSingleton<Application.Ports.ICommandMatcher, NoOpCommandMatcher>();
+
 		// Hotkey capture + rebinding (WHISPER-30): the one-shot capture-next-key helper that rebinds the
 		// activation controller atomically. Singleton so it shares the live controller it rebinds.
 		services.AddSingleton<HotkeyCaptureService>();

@@ -1,8 +1,10 @@
 // Unit coverage for the delivery orchestration's branching: deliver normally, deliver nothing when
-// there is no speech, withhold and surface a UIPI block for a higher-integrity window (WHISPER-6), and
-// route the delivery through the strategy the selector resolves (WHISPER-8). The Logic and
-// Infrastructure ports are substituted so this pins the handler's decisions, not their implementations.
+// there is no speech, route a matched transcript to the command branch instead of typing it
+// (WHISPER-35), withhold and surface a UIPI block for a higher-integrity window (WHISPER-6), and route
+// the delivery through the strategy the selector resolves (WHISPER-8). The Logic and Infrastructure
+// ports are substituted so this pins the handler's decisions, not their implementations.
 
+using Application.Commands;
 using Application.Configuration;
 using Application.Delivery;
 using Application.Ports;
@@ -20,6 +22,7 @@ public sealed class DeliverTranscriptionHandlerTests
 	private readonly ISilenceTrimmer _silenceTrimmer = Substitute.For<ISilenceTrimmer>();
 	private readonly ITranscriber _transcriber = Substitute.For<ITranscriber>();
 	private readonly IPostProcessor _postProcessor = Substitute.For<IPostProcessor>();
+	private readonly ICommandMatcher _commandMatcher = Substitute.For<ICommandMatcher>();
 	private readonly IForegroundIntegrityProbe _integrityProbe = Substitute.For<IForegroundIntegrityProbe>();
 	private readonly IDeliveryStrategySelector _strategySelector = Substitute.For<IDeliveryStrategySelector>();
 	private readonly ITextInjectorFactory _textInjectorFactory = Substitute.For<ITextInjectorFactory>();
@@ -34,10 +37,12 @@ public sealed class DeliverTranscriptionHandlerTests
 		// Default: pass the resolved strategy straight through (override wins over the configured default).
 		_strategySelector.Resolve(Arg.Any<DeliveryStrategy>(), Arg.Any<DeliveryStrategy?>())
 			.Returns(ci => ci.ArgAt<DeliveryStrategy?>(1) ?? ci.ArgAt<DeliveryStrategy>(0));
+		// Default: no command matches, so transcripts fall through to normal delivery.
+		_commandMatcher.Match(Arg.Any<string>()).Returns(CommandMatch.None);
 	}
 
 	private DeliverTranscriptionHandler CreateHandler() =>
-		new(_silenceTrimmer, _transcriber, _postProcessor, _integrityProbe, _strategySelector,
+		new(_silenceTrimmer, _transcriber, _postProcessor, _commandMatcher, _integrityProbe, _strategySelector,
 			Options.Create(_deliveryOptions), _textInjectorFactory);
 
 	private void ModelTranscribesTo(string text)
@@ -104,6 +109,22 @@ public sealed class DeliverTranscriptionHandlerTests
 
 		Assert.True(result.Delivered);
 		_typingInjector.Received(1).Inject("ship it");
+	}
+
+	[Fact]
+	public async Task Routes_a_matched_transcript_to_the_command_branch_instead_of_typing_it()
+	{
+		ModelTranscribesTo("open settings");
+		_commandMatcher.Match("open settings").Returns(CommandMatch.For("open settings"));
+
+		DeliveryResult result = await Deliver();
+
+		Assert.False(result.Delivered);
+		Assert.Equal("open settings", result.MatchedCommand);
+		_typingInjector.DidNotReceive().Inject(Arg.Any<string>());
+		_pasteInjector.DidNotReceive().Inject(Arg.Any<string>());
+		// The command branch supersedes delivery, so the focused-window integrity is never probed.
+		_integrityProbe.DidNotReceive().CompareForegroundToCurrent();
 	}
 
 	[Fact]
