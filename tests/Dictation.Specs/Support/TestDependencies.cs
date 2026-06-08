@@ -302,6 +302,12 @@ public static class TestDependencies
 		// Tag-driven release workflow (WHISPER-39): inspects .github/workflows/release.yml directly.
 		services.AddScoped<ReleaseWorkflowDriver>();
 
+		// Signed auto-update (WHISPER-29): the real AutoUpdateService policy over a faked update source, so
+		// the check/download/apply, opt-in gating, and graceful-degradation behaviour run without Velopack
+		// or network. The driver builds the service itself, so only the faked source needs registering.
+		services.AddScoped(_ => Substitute.For<IUpdateSource>());
+		services.AddScoped<AutoUpdateDriver>();
+
 		return services;
 	}
 }

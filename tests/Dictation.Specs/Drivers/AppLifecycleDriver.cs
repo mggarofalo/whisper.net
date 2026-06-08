@@ -59,6 +59,10 @@ public sealed class AppLifecycleDriver : IDisposable
 		builder.Services.AddSingleton(Substitute.For<IAudioSource>());
 		builder.Services.AddSingleton(Substitute.For<IAudioFeedback>());
 
+		// The host also runs the auto-update check hosted service (WHISPER-29); supply a stub source so the
+		// host composes without any network. This driver asserts the hosted-service lifecycle, not updates.
+		builder.Services.AddSingleton(Substitute.For<IUpdateSource>());
+
 		// The host-owned background components under test (WHISPER-12).
 		builder.Services.AddAppManagementHostedServices();
 

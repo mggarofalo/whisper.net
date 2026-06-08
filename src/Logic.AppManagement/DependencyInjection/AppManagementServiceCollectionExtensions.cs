@@ -102,6 +102,10 @@ public static class AppManagementServiceCollectionExtensions
 		services.AddScoped<Application.Diagnostics.IDiagnosticCheck, Diagnostics.HotkeyCheck>();
 		services.AddScoped<Application.Diagnostics.IDiagnosticCheck, Diagnostics.GpuCheck>();
 
+		// Auto-update policy (WHISPER-29): decides check/download/apply and degrades gracefully on failure.
+		// Pure policy over the IUpdateSource port; the startup hosted service below drives it.
+		services.AddSingleton<Updates.AutoUpdateService>();
+
 		return services;
 	}
 
@@ -123,6 +127,10 @@ public static class AppManagementServiceCollectionExtensions
 		// open one long-lived scope, resolve the scoped orchestrator, and bridge the hotkey listener into
 		// the activation controller so a real key press drives capture -> transcribe -> deliver.
 		services.AddHostedService<DictationOrchestratorHostedService>();
+
+		// Auto-update check (WHISPER-29): on launch, check the release channel in the background (when the
+		// user has opted in). Production-only — the specs drive the update policy directly.
+		services.AddHostedService<AutoUpdateHostedService>();
 
 		return services;
 	}

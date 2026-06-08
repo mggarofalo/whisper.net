@@ -115,6 +115,10 @@ public static class InfrastructureServiceCollectionExtensions
 		services.AddSingleton<IGlobalKeyHook, SharpHookGlobalKeyHook>();
 		services.AddSingleton<IHotkeyListener, EventLoopHotkeyListener>();
 
+		// In-app auto-update (WHISPER-29): Velopack UpdateManager over the configured GitHub Releases feed.
+		// Constructing it touches no network; the update policy only calls it when the user has opted in.
+		services.AddSingleton<IUpdateSource, Updates.VelopackUpdateSource>();
+
 		// Persistence (WHISPER-11): a single SQLite database backs both the settings and history ports. The
 		// migration runner brings the schema to the latest version on first use (WAL mode, idempotent); the
 		// database file defaults to a per-user application-data path when not configured, so a fresh install
