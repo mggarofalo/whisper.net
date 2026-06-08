@@ -302,6 +302,10 @@ public static class TestDependencies
 		// Tag-driven release workflow (WHISPER-39): inspects .github/workflows/release.yml directly.
 		services.AddScoped<ReleaseWorkflowDriver>();
 
+		// Self-signed code signing for personal builds (WHISPER-72): inspects the signing-cert helper
+		// script, the build-and-run guide, and the README directly, like the packaging driver.
+		services.AddScoped<SelfSignedSigningDriver>();
+
 		// Signed auto-update (WHISPER-29): the real AutoUpdateService policy over a faked update source, so
 		// the check/download/apply, opt-in gating, and graceful-degradation behaviour run without Velopack
 		// or network. The driver builds the service itself, so only the faked source needs registering.

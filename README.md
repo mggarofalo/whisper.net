@@ -43,6 +43,9 @@ dotnet test    Whisper.slnx --filter "Category!=wip"
 npm install    # one-time: installs the commitlint commit-msg hook
 ```
 
+The full maintainer path — build from source, **self-signed** code signing for personal builds, packaging,
+and running — is in **[docs/build-and-run.md](docs/build-and-run.md)**.
+
 ## Packaging
 
 The app ships as a self-contained, single-file Windows build wrapped in a [Velopack](https://velopack.io)
@@ -70,3 +73,4 @@ The full strategy is in **[docs/bdd-strategy.md](docs/bdd-strategy.md)**.
 - [docs/bdd-strategy.md](docs/bdd-strategy.md) — the BDD/TDD strategy and Definition of Done.
 - [docs/plane.md](docs/plane.md) — the WHISPER issue workflow.
 - [docs/packaging.md](docs/packaging.md) — self-contained build + Velopack installer & releases.
+- [docs/build-and-run.md](docs/build-and-run.md) — build from source, self-signed signing, and running.

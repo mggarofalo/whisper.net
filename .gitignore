@@ -31,6 +31,13 @@ artifacts/
 # Velopack packaging output (WHISPER-20): the local installer + release feed, never committed.
 releases/
 
+# Code-signing secrets (WHISPER-72): self-signed certs / exported keys are generated on demand by
+# build/new-self-signed-cert.ps1 and must never be committed.
+*.pfx
+*.p12
+*.pem
+*.snk
+
 # ASP.NET Scaffolding
 ScaffoldingReadMe.txt
 
