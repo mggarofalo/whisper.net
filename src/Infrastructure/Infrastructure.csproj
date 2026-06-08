@@ -23,6 +23,8 @@
     <PackageReference Include="Whisper.net" />
     <PackageReference Include="Whisper.net.Runtime" />
     <PackageReference Include="Whisper.net.Runtime.Vulkan" />
+    <!-- In-app auto-update over the release channel (WHISPER-29): the UpdateManager adapter. -->
+    <PackageReference Include="Velopack" />
   </ItemGroup>
 
   <ItemGroup>

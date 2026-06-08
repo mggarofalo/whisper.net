@@ -21,6 +21,14 @@ focus. It is a ground-up rewrite of the Python [`whisper-local`](https://github.
 > transcript text never leaves your machine. If the local model is unavailable the original text is kept
 > unchanged. This is the only transcript-bearing network seam in the app.
 >
+> **Automatic updates (opt-in, off by default):** the app can check for a newer **signed** version and
+> update itself via [Velopack](https://velopack.io). This is **disabled by default** and makes **no
+> network call** unless you enable it (`AutoUpdate` settings). When enabled, the **only** egress is the
+> release feed — the project's GitHub Releases
+> (`https://github.com/mggarofalo/whisper.net`) — and **no user data is ever sent**; it only fetches the
+> update. A failed or unreachable update is logged and ignored, and the app keeps running on the current
+> version.
+>
 > **History &amp; audit log (local-only):** your transcription history is stored in a local SQLite
 > database. A more verbose **audit log** is **off by default** and is written only after you explicitly
 > enable it; it never leaves the device. You can clear both your history and the audit log from disk at

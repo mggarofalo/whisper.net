@@ -40,9 +40,27 @@ pwsh ./build/pack.ps1 -OutputDir ./releases -PublishDir ./artifacts/publish
 ## Velopack install/update hooks
 
 `App.OnStartup` calls `VelopackApp.Build().Run()` first, so when the installer or updater launches the
-app with a hook argument it performs the hook and exits instead of starting the tray. The in-app
-**auto-update** check and **code signing** are added in WHISPER-29; **tag-driven release CI** in
-WHISPER-39.
+app with a hook argument it performs the hook and exits instead of starting the tray.
+
+## Auto-update (WHISPER-29)
+
+When the user opts in (`AutoUpdate` settings — **off by default**, so there is no network egress
+otherwise), a startup background check asks the release feed for a newer version and stages it to apply on
+the next restart. The policy (`AutoUpdateService`) keeps the app running on the current version if the
+channel is unreachable. See the network disclosure in [README](../README.md) and [CHANGELOG](../CHANGELOG.md).
+
+## Code signing (WHISPER-29)
+
+`build/pack.ps1` Authenticode-signs the app and installer through `signtool` (via `vpk --signParams`)
+**when** a signing certificate is supplied from the environment — a base64 PFX in
+`VELOPACK_SIGN_CERTIFICATE` plus `VELOPACK_SIGN_PASSWORD`. The release CI injects these from GitHub
+Actions secrets; they are never committed and never echoed. Absent the secret, the build is unsigned.
+
+## Tag-driven release CI (WHISPER-39)
+
+`.github/workflows/release.yml` runs on a `vX.Y.Z` tag: it builds (`-warnaserror`), tests, packages, and
+publishes the installer + update package + feed to a GitHub Release for the tag. A failing build or test
+fails the job before anything is published.
 
 ## Verifying a build
 

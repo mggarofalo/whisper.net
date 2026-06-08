@@ -46,12 +46,17 @@ public static class ApplicationServiceCollectionExtensions
 		// Audio feedback (WHISPER-21): always resolvable so the orchestrator can read the on/off switch;
 		// feedback is on by default until configuration says otherwise.
 		services.AddOptions<AudioFeedbackOptions>();
+
+		// Auto-update (WHISPER-29): always resolvable so the update policy can read the opt-in switch and
+		// the feed; disabled by default, so nothing is checked or downloaded until the user opts in.
+		services.AddOptions<AutoUpdateOptions>();
 		if (configuration is not null)
 		{
 			services.Configure<GeneralOptions>(configuration.GetSection(GeneralOptions.SectionName));
 			services.Configure<DeliveryOptions>(configuration.GetSection(DeliveryOptions.SectionName));
 			services.Configure<RetentionOptions>(configuration.GetSection(RetentionOptions.SectionName));
 			services.Configure<AudioFeedbackOptions>(configuration.GetSection(AudioFeedbackOptions.SectionName));
+			services.Configure<AutoUpdateOptions>(configuration.GetSection(AutoUpdateOptions.SectionName));
 		}
 
 		// Post-process configuration (WHISPER-41): a single live holder, seeded from the "PostProcess"

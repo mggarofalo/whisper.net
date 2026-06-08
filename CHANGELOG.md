@@ -8,6 +8,26 @@ All notable changes to this project are documented here. The format is based on
 
 ### Added
 
+- **Signed auto-update (opt-in).** The app can update itself from its release channel via Velopack: it
+  checks GitHub Releases for a newer version, downloads it, and stages it to apply on the next restart.
+  This is **outbound network access** and is therefore **off by default** — nothing is checked or
+  downloaded unless you enable it (`AutoUpdate` settings); when enabled the release feed
+  (`https://github.com/mggarofalo/whisper.net`) is the **only** egress and no user data is sent. A failed
+  or unreachable update is logged via Serilog and ignored — the app keeps running on the current version,
+  never crashing. The update policy (`AutoUpdateService`) is WPF/Velopack-free and unit/BDD-tested over a
+  faked update source; the installer and app are Authenticode code-signed in the release pipeline when a
+  signing certificate is supplied from a secret (never committed). (WHISPER-29)
+
+- **Self-contained Velopack installer.** The WPF tray app is packaged as a self-contained, single-file
+  `win-x64` build (the .NET 10 runtime and native assets bundled) wrapped in a Velopack installer, built
+  reproducibly from a clean clone with `pwsh ./build/pack.ps1`. The version is derived from git tags by
+  MinVer (never hand-edited). A tag-driven GitHub Actions workflow builds, tests, packages, and publishes
+  the installer + update package to a GitHub Release on a `vX.Y.Z` tag. (WHISPER-20, WHISPER-39)
+
+- **Doctor / selftest diagnostics.** A `--doctor` launch runs environment self-checks (audio capture,
+  model cache, hotkey registration, GPU/Vulkan) through the existing ports and prints a clear
+  pass/warn/fail report, exiting non-zero when any check fails — what to attach to a bug report. (WHISPER-50)
+
 - **Live recording level overlay.** A small, frameless, top-most, click-through-tolerant WPF overlay
   (mini-recorder) appears while recording and shows a live, smoothed microphone-level meter, then hides
   when recording stops. Its coordination logic lives in a WPF-free, unit-testable `LevelOverlayController`

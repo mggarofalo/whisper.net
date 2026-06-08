@@ -58,18 +58,42 @@ try {
     dotnet publish $project -c $Configuration -r $Runtime -o $PublishDir --nologo
     if ($LASTEXITCODE -ne 0) { throw 'dotnet publish failed.' }
 
-    # 3. Velopack release: installer (*-Setup.exe) + update package + feed, stamped with the MinVer version
-    #    and the app id, title, and icon.
+    # 3. Code signing (WHISPER-29): when a signing certificate is supplied via the environment — a
+    #    base64-encoded PFX in VELOPACK_SIGN_CERTIFICATE plus VELOPACK_SIGN_PASSWORD, injected by CI from
+    #    GitHub Actions secrets — Authenticode-sign the app and installer through signtool. The certificate
+    #    is never committed; absent the secret, the build is simply unsigned. The PFX is written to a temp
+    #    file deleted in the finally block, and the password is passed to signtool, never echoed.
+    $signArgs = @()
+    $pfxPath = $null
+    if ($env:VELOPACK_SIGN_CERTIFICATE -and $env:VELOPACK_SIGN_PASSWORD) {
+        Write-Host 'Code-signing enabled (certificate supplied from a secret).' -ForegroundColor Cyan
+        $pfxPath = Join-Path ([System.IO.Path]::GetTempPath()) ("whisper-sign-" + [System.Guid]::NewGuid().ToString('N') + '.pfx')
+        [System.IO.File]::WriteAllBytes($pfxPath, [System.Convert]::FromBase64String($env:VELOPACK_SIGN_CERTIFICATE))
+        $signParams = "/fd sha256 /f `"$pfxPath`" /p `"$($env:VELOPACK_SIGN_PASSWORD)`" /tr http://timestamp.digicert.com /td sha256"
+        $signArgs = @('--signParams', $signParams)
+    }
+    else {
+        Write-Host 'No signing certificate supplied; producing an unsigned build.' -ForegroundColor Yellow
+    }
+
+    # 4. Velopack release: installer (*-Setup.exe) + update package + feed, stamped with the MinVer version
+    #    and the app id, title, and icon (signed when a certificate was supplied above).
     New-Item -ItemType Directory -Force $OutputDir | Out-Null
-    dotnet vpk pack `
-        --packId $PackId `
-        --packTitle $PackTitle `
-        --packVersion $packVersion `
-        --packDir $PublishDir `
-        --mainExe 'Presentation.exe' `
-        --icon $icon `
-        --outputDir $OutputDir
-    if ($LASTEXITCODE -ne 0) { throw 'vpk pack failed.' }
+    try {
+        dotnet vpk pack `
+            --packId $PackId `
+            --packTitle $PackTitle `
+            --packVersion $packVersion `
+            --packDir $PublishDir `
+            --mainExe 'Presentation.exe' `
+            --icon $icon `
+            --outputDir $OutputDir `
+            @signArgs
+        if ($LASTEXITCODE -ne 0) { throw 'vpk pack failed.' }
+    }
+    finally {
+        if ($pfxPath -and (Test-Path $pfxPath)) { Remove-Item -Force $pfxPath }
+    }
 
     Write-Host "Release artifacts written to $OutputDir" -ForegroundColor Green
     Get-ChildItem $OutputDir | Select-Object Name, Length | Format-Table -AutoSize
