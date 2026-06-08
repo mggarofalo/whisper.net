@@ -153,6 +153,58 @@ public sealed class DictationOrchestratorTests
 	}
 
 	[Fact]
+	public async Task Continuous_mode_auto_restarts_recording_after_a_delivery()
+	{
+		DictationOrchestrator sut = CreateSut();
+		sut.EnableContinuousMode();
+
+		sut.Start();
+		await sut.StopAsync(TestContext.Current.CancellationToken);
+
+		sut.Stage.Should().Be(DictationStage.Recording);
+		sut.ContinuousMode.Should().BeTrue();
+		// Exactly one restart per delivered utterance (initial Start + one auto-restart) — the loop is bounded.
+		_audio.Received(2).Start();
+	}
+
+	[Fact]
+	public async Task A_single_shot_cycle_returns_to_idle_when_continuous_mode_is_off()
+	{
+		DictationOrchestrator sut = CreateSut();
+
+		sut.Start();
+		await sut.StopAsync(TestContext.Current.CancellationToken);
+
+		sut.Stage.Should().Be(DictationStage.Idle);
+		_audio.Received(1).Start();
+	}
+
+	[Fact]
+	public void Esc_exits_continuous_mode_and_returns_to_idle_without_restarting()
+	{
+		DictationOrchestrator sut = CreateSut();
+		sut.EnableContinuousMode();
+		sut.Start();
+
+		sut.ExitContinuousMode();
+
+		sut.ContinuousMode.Should().BeFalse();
+		sut.Stage.Should().Be(DictationStage.Idle);
+		_stateMachine.State.Should().Be(RecordingState.Idle);
+	}
+
+	[Fact]
+	public void Entering_continuous_mode_is_idempotent()
+	{
+		DictationOrchestrator sut = CreateSut();
+
+		sut.EnableContinuousMode();
+		sut.EnableContinuousMode();
+
+		sut.ContinuousMode.Should().BeTrue();
+	}
+
+	[Fact]
 	public void A_capture_device_failure_is_logged_and_returns_to_idle()
 	{
 		DictationOrchestrator sut = CreateSut();

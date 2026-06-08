@@ -100,6 +100,10 @@ public static class TestDependencies
 		});
 		services.AddScoped<CommandModeDriver>();
 
+		// Continuous dictation mode (WHISPER-28): the REAL orchestrator over the real audio + delivery
+		// composition; the driver enters the mode, runs an utterance, and asserts the auto-restart / Esc exit.
+		services.AddScoped<ContinuousDictationDriver>();
+
 		// Host bootstrapping (WHISPER-12): the driver builds its own real Generic Host internally over a
 		// fake hook seam, so it is registered plainly and owns the hosted-service lifecycle it asserts.
 		services.AddScoped<AppLifecycleDriver>();
