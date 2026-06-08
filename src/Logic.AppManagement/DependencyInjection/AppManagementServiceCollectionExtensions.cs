@@ -67,6 +67,19 @@ public static class AppManagementServiceCollectionExtensions
 		// the IPostProcessor port, reading the live PostProcessSettingsHolder so edits apply next call.
 		services.AddSingleton<Application.Ports.IPostProcessor, PostProcessing.PostProcessPipeline>();
 
+		// Dashboard shell + navigation (WHISPER-19): the navigation service, the shell view-model, and the
+		// feature view-models it hosts — all WPF-free so the specs drive the real MVVM + Mediator behavior.
+		// Scoped (not singleton) because the feature view-models depend on the scoped Mediator, so the shell
+		// runs inside one UI scope — like the orchestrator — never the root. Feature view-models are
+		// transient: each navigation resolves a fresh instance and the previous is deactivated/disposed.
+		// Sections are registered in display order; the shell opens on the first (Home).
+		services.AddScoped<Shell.INavigationService, Shell.NavigationService>();
+		services.AddScoped<Shell.ShellViewModel>();
+		services.AddSingleton(new Shell.NavigationSection("Home", typeof(Shell.HomeViewModel)));
+		services.AddSingleton(new Shell.NavigationSection("Model", typeof(Shell.ModelViewModel)));
+		services.AddTransient<Shell.HomeViewModel>();
+		services.AddTransient<Shell.ModelViewModel>();
+
 		return services;
 	}
 

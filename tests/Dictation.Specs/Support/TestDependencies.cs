@@ -116,6 +116,11 @@ public static class TestDependencies
 		// view-model logic) over a real state machine and a faked audio source, so it owns its own wiring.
 		services.AddScoped<LevelOverlayDriver>();
 
+		// MVVM shell navigation (WHISPER-19): the real ShellViewModel + NavigationService + feature
+		// view-models (registered by AddAppManagement) resolved from the scenario scope, so navigation and
+		// the Model section's Mediator round-trip run for real over the faked ISettingsStore.
+		services.AddScoped<ShellNavigationDriver>();
+
 		// Host bootstrapping (WHISPER-12): the driver builds its own real Generic Host internally over a
 		// fake hook seam, so it is registered plainly and owns the hosted-service lifecycle it asserts.
 		services.AddScoped<AppLifecycleDriver>();

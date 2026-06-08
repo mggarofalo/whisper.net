@@ -19,8 +19,9 @@
     <PackageVersion Include="Riok.Mapperly" Version="4.3.1" />
   </ItemGroup>
 
-  <!-- Presentation (WPF): tray icon (H.NotifyIcon) + MVVM source generators (CommunityToolkit.Mvvm).
-       Presentation-only; both are Windows/WPF concerns. -->
+  <!-- Tray icon (H.NotifyIcon) is Presentation-only (Windows/WPF). MVVM source generators
+       (CommunityToolkit.Mvvm) are UI-framework-agnostic: the shell + feature view-models live in
+       Logic.AppManagement (WPF-free, unit-testable) and the thin WPF views bind to them (WHISPER-19). -->
   <ItemGroup>
     <PackageVersion Include="H.NotifyIcon.Wpf" Version="2.4.1" />
     <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />

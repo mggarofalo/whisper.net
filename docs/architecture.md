@@ -82,6 +82,15 @@ WPF + MVVM (the tray app, settings, overlays). It is the **only** layer permitte
 Infrastructure, where it composes the object graph at startup. The WPF project targets
 `net10.0-windows`, which is why CI runs on `windows-latest`.
 
+The **view-models are WPF-free and live in `Logic.AppManagement`** (e.g. the dashboard `ShellViewModel`
+and its feature view-models, the `TrayController`, the `LevelOverlayController`), built on
+`CommunityToolkit.Mvvm` — a UI-framework-agnostic library with no WPF dependency. They depend only on
+`IMediator` (and Logic/Domain types), never on ports or Infrastructure. The WPF project holds only the
+thin views that bind to them, so the MVVM behavior (navigation, commands dispatching through Mediator)
+is driven for real in the Reqnroll specs while the views are verified by manual smoke. The dashboard
+shell (`WHISPER-19`) resolves each section's view-model from the DI container through an
+`INavigationService`, so feature views plug in without the shell knowing them.
+
 ## CQRS via source-generated Mediator
 
 All application requests flow through the **source-generated Mediator** (martinothamar,

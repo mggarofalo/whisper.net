@@ -1,0 +1,43 @@
+<Window x:Class="Presentation.Shell.ShellWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:Logic.AppManagement.Shell;assembly=Logic.AppManagement"
+        xmlns:views="clr-namespace:Presentation.Shell.Views"
+        Title="Whisper"
+        Width="720"
+        Height="480"
+        WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <!-- Map each feature view-model to its view so the content region renders the active section. -->
+        <DataTemplate DataType="{x:Type vm:HomeViewModel}">
+            <views:HomeView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ModelViewModel}">
+            <views:ModelView />
+        </DataTemplate>
+    </Window.Resources>
+
+    <DockPanel>
+        <!-- Navigation region: one button per registered section, dispatching the shell's NavigateCommand. -->
+        <Border DockPanel.Dock="Left"
+                Width="160"
+                Background="#F3F3F3">
+            <ItemsControl ItemsSource="{Binding Sections}"
+                          Margin="8">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Button Content="{Binding}"
+                                Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                CommandParameter="{Binding}"
+                                Margin="0,2"
+                                Padding="10,6"
+                                HorizontalContentAlignment="Left" />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Border>
+
+        <!-- Content region: the active feature view-model, rendered via the data templates above. -->
+        <ContentControl Content="{Binding CurrentViewModel}" />
+    </DockPanel>
+</Window>
