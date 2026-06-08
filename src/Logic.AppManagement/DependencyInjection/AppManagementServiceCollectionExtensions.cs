@@ -29,6 +29,16 @@ public static class AppManagementServiceCollectionExtensions
 		// the Esc cancel. Singleton so the tray/UI and orchestration share one observable state.
 		services.AddSingleton<RecordingStateMachine>();
 
+		// Capture buffering options (WHISPER-14): the per-app preroll / max-duration / target-rate the
+		// orchestrator builds its CaptureBuffer from. A plain default today; bound from configuration later.
+		services.AddSingleton(new Logic.AudioManagement.AudioBufferingOptions());
+
+		// Dictation orchestrator (WHISPER-14): the coordination hub that runs capture -> transcribe ->
+		// deliver end to end. Scoped so it shares one Mediator scope with the handlers it dispatches (the
+		// source-generated Mediator is scoped); the host activates it for the app lifetime via the hosted
+		// service below, and the BDD specs resolve it per scenario from the same scope as the faked ports.
+		services.AddScoped<DictationOrchestrator>();
+
 		// Hotkey capture + rebinding (WHISPER-30): the one-shot capture-next-key helper that rebinds the
 		// activation controller atomically. Singleton so it shares the live controller it rebinds.
 		services.AddSingleton<HotkeyCaptureService>();
@@ -69,6 +79,11 @@ public static class AppManagementServiceCollectionExtensions
 		// Settings persistence (WHISPER-43): load the persisted settings into the holder on startup and
 		// write them back on graceful shutdown, around the host lifetime.
 		services.AddHostedService<SettingsLifecycleService>();
+
+		// Dictation orchestration (WHISPER-14): activate the end-to-end pipeline for the app lifetime —
+		// open one long-lived scope, resolve the scoped orchestrator, and bridge the hotkey listener into
+		// the activation controller so a real key press drives capture -> transcribe -> deliver.
+		services.AddHostedService<DictationOrchestratorHostedService>();
 
 		return services;
 	}

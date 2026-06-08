@@ -79,6 +79,15 @@ public static class TestDependencies
 		services.AddScoped<TranscriptionDriver>();
 		services.AddScoped<HotkeyListenerDriver>();
 
+		// End-to-end dictation orchestration (WHISPER-14): the REAL DictationOrchestrator (scoped via
+		// AddAppManagement) drives the real WasapiAudioSource over the fake capture client and the real
+		// delivery pipeline through Mediator, faking only the Infrastructure ports. A RecordingLogger backs
+		// ILogger<DictationOrchestrator> so the failure scenario can assert the structured error log; it is
+		// registered after AddLogging so this closed-generic wins over the no-op open-generic logger.
+		services.AddScoped<RecordingLogger<DictationOrchestrator>>();
+		services.AddScoped<ILogger<DictationOrchestrator>>(sp => sp.GetRequiredService<RecordingLogger<DictationOrchestrator>>());
+		services.AddScoped<DictationOrchestratorDriver>();
+
 		// Host bootstrapping (WHISPER-12): the driver builds its own real Generic Host internally over a
 		// fake hook seam, so it is registered plainly and owns the hosted-service lifecycle it asserts.
 		services.AddScoped<AppLifecycleDriver>();

@@ -53,6 +53,11 @@ public sealed class AppLifecycleDriver : IDisposable
 		settingsStore.LoadAsync(Arg.Any<CancellationToken>()).Returns(AppSettings.Default);
 		builder.Services.AddSingleton(settingsStore);
 
+		// The dictation orchestrator activated by the host (WHISPER-14) needs the audio capture port; this
+		// driver asserts the hosted-service lifecycle, not capture, so a substitute that opens no device is
+		// enough for the orchestrator to compose and the host to start.
+		builder.Services.AddSingleton(Substitute.For<IAudioSource>());
+
 		// The host-owned background components under test (WHISPER-12).
 		builder.Services.AddAppManagementHostedServices();
 
