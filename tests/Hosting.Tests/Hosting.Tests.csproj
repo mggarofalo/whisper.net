@@ -23,6 +23,13 @@
     <PackageReference Include="coverlet.collector" />
   </ItemGroup>
 
+  <!-- Speech fixture for the @slow real-model VAD test (WHISPER-66): 16 kHz mono 16-bit PCM. -->
+  <ItemGroup>
+    <Content Include="Audio\speech.wav">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\src\Infrastructure\Infrastructure.csproj" />
   </ItemGroup>

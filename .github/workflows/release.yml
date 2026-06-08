@@ -40,8 +40,9 @@ jobs:
 
       - name: Test (unit + Reqnroll specs)
         # A failing build or test fails the job here — before packaging and publishing — so a broken
-        # build never produces a release. @wip scenarios are excluded from the gate.
-        run: dotnet test Whisper.slnx --no-build --filter "Category!=wip"
+        # build never produces a release. @wip and @slow scenarios are excluded from the gate; the @slow
+        # real-model VAD test is validated on every PR by ci.yml.
+        run: dotnet test Whisper.slnx --no-build --filter "Category!=wip&Category!=slow"
 
       - name: Package installer (Velopack)
         # build/pack.ps1 derives the version from the pushed tag via MinVer and runs `vpk pack`, stamping

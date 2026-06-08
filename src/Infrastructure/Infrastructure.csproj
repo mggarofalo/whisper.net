@@ -27,6 +27,19 @@
     <PackageReference Include="Velopack" />
   </ItemGroup>
 
+  <!--
+    Voice-activity detection model (WHISPER-31/66): the Silero VAD ONNX asset (MIT, ~1.8 MB) ships with
+    the app — no runtime download. It copies to `assets/silero_vad.onnx` in the build output, which is
+    where OnnxVadSession resolves it (AppContext.BaseDirectory/assets). Declared once here: Content with
+    CopyToOutputDirectory flows transitively to every referencing project (Presentation, the test
+    projects) and into the Velopack single-file publish, where it lands next to the exe.
+  -->
+  <ItemGroup>
+    <Content Include="..\..\assets\silero_vad.onnx" Link="assets\silero_vad.onnx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Application\Application.csproj" />
     <ProjectReference Include="..\Domain\Domain.csproj" />
