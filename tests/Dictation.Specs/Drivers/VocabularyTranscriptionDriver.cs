@@ -32,7 +32,9 @@ public sealed class VocabularyTranscriptionDriver : IDisposable
 		backendSelector.SelectBackendAsync(Arg.Any<CancellationToken>())
 			.Returns(new BackendSelection(ComputeBackend.Cpu, "test"));
 
-		_transcriber = new WhisperTranscriber(_factory, backendSelector, new VocabularyConditioner(), Options.Create(_options));
+		_transcriber = new WhisperTranscriber(_factory, backendSelector, new VocabularyConditioner(),
+			Substitute.For<ISettingsStore>(), Substitute.For<IModelCatalog>(), Substitute.For<IModelCache>(),
+			Options.Create(_options));
 	}
 
 	public void StartWithVocabulary(string term) => _options.CustomVocabulary = [term];
