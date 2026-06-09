@@ -40,6 +40,9 @@ public sealed class ModelPickerSteps(ModelPickerDriver driver)
 	[Then(@"a switch-active-model request is dispatched for ""(.*)""")]
 	public void ThenASwitchRequestIsDispatched(string id) => driver.AssertSwitchDispatched(id);
 
+	[Then(@"the selected model is persisted as the active model ""(.*)""")]
+	public void ThenTheSelectedModelIsPersisted(string id) => driver.AssertActiveModelPersisted(id);
+
 	[Then(@"the view shows ""(.*)"" as active")]
 	public void ThenTheViewShowsActive(string id) => driver.AssertViewShowsActive(id);
 

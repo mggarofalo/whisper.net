@@ -1,19 +1,52 @@
-// Handles SwitchActiveModelCommand (WHISPER-27): switches the model lifecycle to the requested model,
-// which releases the currently loaded model and loads the new one. The id has already passed the
-// validator (a known catalog model), and the picker guarantees it is downloaded, so this is pure
-// delegation to the lifecycle policy.
+// Handles SwitchActiveModelCommand (WHISPER-27): switches the model lifecycle to the requested model
+// (releasing the currently loaded model and loading the new one) AND persists the choice as
+// settings.ModelId (WHISPER-98). The persistence is essential: WhisperTranscriber resolves the model to
+// load from settings.ModelId, so without saving it the user's selection would never reach transcription
+// — dictation would keep loading the default model. The change is broadcast (like UpdateSettings) so the
+// in-memory settings holder stays in sync and a graceful shutdown does not clobber the new value. The id
+// has already passed the validator (a known catalog model) and the picker guarantees it is downloaded.
 
 using Application.Interfaces;
 using Application.Ports;
+using Application.Settings;
+using Domain.Settings;
 
 namespace Application.Models;
 
-public sealed class SwitchActiveModelHandler(IModelLifecycle lifecycle)
+public sealed class SwitchActiveModelHandler(
+	IModelLifecycle lifecycle,
+	ISettingsStore settingsStore,
+	SettingsChangeBroadcaster broadcaster)
 	: ICommandHandler<SwitchActiveModelCommand, Mediator.Unit>
 {
 	public async ValueTask<Mediator.Unit> Handle(SwitchActiveModelCommand command, CancellationToken cancellationToken)
 	{
+		// Switch the runtime lifecycle first: it loads (and warms) the model and drives the UI status. If
+		// the load fails we never persist a model the transcriber could not load.
 		await lifecycle.SwitchAsync(command.ModelId, cancellationToken);
+
+		// Persist the selection so WhisperTranscriber (which loads settings.ModelId) and the next launch use
+		// it. AppSettings is an immutable record with get-only members, so the updated copy is rebuilt
+		// through its constructor (mirroring CompleteOnboardingHandler).
+		AppSettings current = await settingsStore.LoadAsync(cancellationToken);
+		if (!string.Equals(current.ModelId, command.ModelId, StringComparison.Ordinal))
+		{
+			AppSettings updated = new(
+				command.ModelId,
+				current.Hotkey,
+				current.SilenceThresholdMs,
+				current.FillerWordRemovalEnabled,
+				current.CaptureDeviceId,
+				current.AuditLogEnabled,
+				current.SetupCompleted);
+
+			await settingsStore.SaveAsync(updated, cancellationToken);
+
+			// Signal the change so running services apply it live and the in-memory holder is kept current,
+			// so a graceful shutdown persists the new model rather than overwriting it with a stale value.
+			broadcaster.Raise(updated);
+		}
+
 		return Mediator.Unit.Value;
 	}
 }

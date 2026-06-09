@@ -21,6 +21,14 @@ Feature: Model selection
     Then a switch-active-model request is dispatched for "small.en"
     And the view shows "small.en" as active
 
+  # WHISPER-98: the picker switched the in-memory lifecycle but never persisted settings.ModelId, the
+  # value WhisperTranscriber loads — so dictation kept loading the default model. Pin the persistence.
+  @WHISPER-98
+  Scenario: Switching the active model persists it as the model transcription loads
+    Given the model picker lists a downloaded model "small.en"
+    When the user selects model "small.en"
+    Then the selected model is persisted as the active model "small.en"
+
   Scenario: Downloading shows progress
     Given the user selects a model "base.en" that is not yet downloaded
     When the download proceeds

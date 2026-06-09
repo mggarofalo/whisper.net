@@ -8,6 +8,14 @@ All notable changes to this project are documented here. The format is based on
 
 ### Fixed
 
+- **Selecting a model now actually changes the model dictation uses.** Switching the active model (from
+  the picker or onboarding) only updated the in-memory lifecycle/UI status; it never persisted
+  `settings.ModelId`, which is the value the transcriber loads. So picking, say, `large-v3` left
+  dictation trying to load the default `base.en` (`ModelNotFoundException`, nothing typed). The switch
+  now persists the selection, and the in-memory settings holder is kept in sync with every change so a
+  graceful shutdown no longer reverts the model, hotkey, or capture device to the value loaded at
+  startup. (WHISPER-98)
+
 - **Dashboard tabs keep their state when you switch away and back.** Feature view-models are now cached
   one-per-section within the shell UI scope and navigation toggles activate/deactivate instead of
   recreating them. Previously they were registered transient, so every navigation resolved a fresh

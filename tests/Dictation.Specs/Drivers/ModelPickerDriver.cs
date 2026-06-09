@@ -9,6 +9,7 @@
 using Application.Ports;
 using AwesomeAssertions;
 using Domain.Models;
+using Domain.Settings;
 using Logic.AppManagement.Shell;
 using Mediator;
 using NSubstitute;
@@ -23,19 +24,28 @@ public sealed class ModelPickerDriver
 	private readonly IModelCache _cache;
 	private readonly IModelDownloader _downloader;
 	private readonly IModelLifecycle _lifecycle;
+	private readonly ISettingsStore _store;
 
 	private readonly List<double> _observedProgress = [];
 	private string? _targetId;
+	private AppSettings _persisted = AppSettings.Default;
 
-	public ModelPickerDriver(IMediator mediator, IModelCatalog catalog, IModelCache cache, IModelDownloader downloader, IModelLifecycle lifecycle)
+	public ModelPickerDriver(IMediator mediator, IModelCatalog catalog, IModelCache cache, IModelDownloader downloader, IModelLifecycle lifecycle, ISettingsStore store)
 	{
 		_catalog = catalog;
 		_cache = cache;
 		_downloader = downloader;
 		_lifecycle = lifecycle;
+		_store = store;
 
 		// Nothing loaded by default, so ListModels can read a non-null status and mark nothing active.
 		_lifecycle.Status.Returns(ModelStatus.Unloaded);
+
+		// The settings store round-trips a save into the next load, so switching the active model can be
+		// observed as a persisted settings.ModelId — the value the transcriber loads (WHISPER-98).
+		_store.LoadAsync(Arg.Any<CancellationToken>()).Returns(_ => _persisted);
+		_store.When(s => s.SaveAsync(Arg.Any<AppSettings>(), Arg.Any<CancellationToken>()))
+			.Do(call => _persisted = call.Arg<AppSettings>());
 
 		_viewModel = new ModelViewModel(mediator);
 	}
@@ -99,6 +109,11 @@ public sealed class ModelPickerDriver
 		_viewModel.ActiveModelId.Should().Be(id);
 		Item(id).IsActive.Should().BeTrue();
 	}
+
+	// The selected model was persisted as settings.ModelId — the value WhisperTranscriber loads — so the
+	// choice actually drives transcription and survives a restart, not just the in-memory lifecycle status.
+	public void AssertActiveModelPersisted(string id) =>
+		_persisted.ModelId.Should().Be(id, "switching the active model must persist settings.ModelId");
 
 	public void AssertProgressShown()
 	{
