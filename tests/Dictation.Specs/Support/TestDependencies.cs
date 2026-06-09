@@ -310,7 +310,7 @@ public static class TestDependencies
 		// directory and asserts the event lands in a rolling log file on disk.
 		services.AddScoped<LoggingDriver>();
 
-		// Hotkey reassignment (WHISPER-76): drives the real HotkeyConfigurationHostedService + activation
+		// Hotkey reassignment (WHISPER-75): drives the real HotkeyConfigurationHostedService + activation
 		// controller over the Mediator pipeline, proving startup config and live rebind on a settings change.
 		services.AddScoped<HotkeyConfigurationDriver>();
 

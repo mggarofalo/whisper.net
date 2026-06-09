@@ -1,4 +1,4 @@
-// Keeps the live hotkey matcher in sync with the persisted settings (WHISPER-76). The
+// Keeps the live hotkey matcher in sync with the persisted settings (WHISPER-75). The
 // HotkeyActivationController starts on the compile-time default binding and is never otherwise told what
 // the user actually chose; this service closes that gap. On startup it configures the controller from the
 // persisted hotkey (so a changed binding survives a restart), and it subscribes to the

@@ -6,7 +6,7 @@
 #  AC3 decoupled via a settings-change broadcaster the update handler raises -> exercised by both
 #         scenarios going through the real UpdateSettingsCommand pipeline
 
-@WHISPER-76
+@WHISPER-75
 Feature: Hotkey reassignment takes effect
   As a user who customizes the dictation hotkey
   I want a newly assigned hotkey to actually drive recording

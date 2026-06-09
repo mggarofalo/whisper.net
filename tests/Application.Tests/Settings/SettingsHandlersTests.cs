@@ -49,7 +49,7 @@ public sealed class SettingsHandlersTests
 				s.FillerWordRemovalEnabled),
 			Arg.Any<CancellationToken>());
 
-		// The change is broadcast (after the save) so live services can rebind without a restart (WHISPER-76).
+		// The change is broadcast (after the save) so live services can rebind without a restart (WHISPER-75).
 		Assert.NotNull(broadcast);
 		Assert.Equal("Ctrl+Win", broadcast!.Hotkey.Chord);
 	}

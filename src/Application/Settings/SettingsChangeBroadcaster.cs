@@ -1,4 +1,4 @@
-// A tiny in-process signal that the persisted settings changed (WHISPER-76). UpdateSettingsHandler
+// A tiny in-process signal that the persisted settings changed (WHISPER-75). UpdateSettingsHandler
 // raises it after a successful save; higher layers (Logic.AppManagement) subscribe to apply a change to
 // running services WITHOUT a restart — e.g. rebinding the live hotkey matcher. It lives in Application
 // (which the settings handler and the subscriber both reference) rather than using a Mediator
