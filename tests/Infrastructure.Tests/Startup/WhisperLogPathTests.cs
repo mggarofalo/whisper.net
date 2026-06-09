@@ -1,6 +1,8 @@
 // Inner TDD loop for the WHISPER-73 log-path helper. The installed tray app must write its logs to a
 // single, well-known per-user location so a bug report can attach them; these pin that contract: logs
-// live under LocalApplicationData\whisper.net\logs, beside the model cache, with a daily-rolling name.
+// live under LocalApplicationData\whisper-net\logs, beside the model cache, with a daily-rolling name.
+// (The folder is "whisper-net", not "whisper.net": see WHISPER-86 — the old name collided with the
+// Velopack install root.)
 
 using AwesomeAssertions;
 using Infrastructure.DependencyInjection;
@@ -15,7 +17,7 @@ public sealed class WhisperLogPathTests
 	{
 		string expected = Path.Combine(
 			Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-			"whisper.net",
+			"whisper-net",
 			"logs");
 
 		WhisperLogPath.DefaultDirectory.Should().Be(expected);

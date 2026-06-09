@@ -1,16 +1,15 @@
 // The on-disk location of the application's log files (WHISPER-73). Logs live beside the model cache under
 // LocalApplicationData (machine-local, not roaming) so a bug report from an installed tray app has a single
 // well-known place to attach. Kept tiny and free of Serilog so it is trivially unit-testable and reusable.
+// The directory itself comes from WhisperAppData, the single source of truth for per-user data locations
+// (WHISPER-86) — so logs never sit inside the Velopack install root.
 
 namespace Infrastructure.DependencyInjection;
 
 public static class WhisperLogPath
 {
-	/// <summary>The per-user logs directory: <c>%LOCALAPPDATA%\whisper.net\logs</c>.</summary>
-	public static string DefaultDirectory => Path.Combine(
-		Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-		"whisper.net",
-		"logs");
+	/// <summary>The per-user logs directory: <c>%LOCALAPPDATA%\whisper-net\logs</c>.</summary>
+	public static string DefaultDirectory => WhisperAppData.LogsDirectory;
 
 	/// <summary>The rolling log-file name template Serilog rolls daily (e.g. <c>whisper-20260608.log</c>).</summary>
 	public const string FileNameTemplate = "whisper-.log";
