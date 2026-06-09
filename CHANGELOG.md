@@ -6,6 +6,18 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+### Fixed
+
+- **App data no longer collides with the Velopack install directory.** Per-user data (model cache, logs,
+  settings database) moved out of `%LOCALAPPDATA%\whisper.net`, which on case-insensitive Windows was the
+  Velopack install root (`%LOCALAPPDATA%\Whisper.Net`, the PackId). The collision made the installer fail
+  with "Failed to remove existing application directory" and blocked updates while the app ran (its open
+  rolling-log handle was locked inside the install dir). Data now lives under `whisper-net` (logs +
+  model cache under `%LOCALAPPDATA%\whisper-net\`, the settings DB under `%APPDATA%\whisper-net\`), a name
+  that can never equal the PackId — pinned by a test. Existing local data is not migrated (a dev machine
+  re-downloads its model on next use); the locations are documented in
+  [`docs/packaging.md`](docs/packaging.md). (WHISPER-86)
+
 ### Added
 
 - **Signed auto-update (opt-in).** The app can update itself from its release channel via Velopack: it

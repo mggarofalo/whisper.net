@@ -83,10 +83,7 @@ public static class InfrastructureServiceCollectionExtensions
 		{
 			if (string.IsNullOrWhiteSpace(cacheOptions.CacheDirectory))
 			{
-				cacheOptions.CacheDirectory = Path.Combine(
-					Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-					"whisper.net",
-					"models");
+				cacheOptions.CacheDirectory = WhisperAppData.ModelCacheDirectory;
 			}
 		});
 
@@ -137,10 +134,7 @@ public static class InfrastructureServiceCollectionExtensions
 		{
 			if (string.IsNullOrWhiteSpace(persistenceOptions.DatabasePath))
 			{
-				persistenceOptions.DatabasePath = Path.Combine(
-					Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-					"whisper.net",
-					"whisper.db");
+				persistenceOptions.DatabasePath = WhisperAppData.DatabasePath;
 			}
 		});
 

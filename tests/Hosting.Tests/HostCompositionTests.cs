@@ -122,7 +122,7 @@ public sealed class HostCompositionTests
 		string databasePath = host.Services.GetRequiredService<IOptions<SqlitePersistenceOptions>>().Value.DatabasePath;
 
 		string expected = Path.Combine(
-			Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "whisper.net", "whisper.db");
+			Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "whisper-net", "whisper.db");
 		Assert.Equal(expected, databasePath);
 	}
 

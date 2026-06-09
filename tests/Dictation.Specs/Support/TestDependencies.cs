@@ -311,6 +311,11 @@ public static class TestDependencies
 		// directory and asserts the event lands in a rolling log file on disk.
 		services.AddScoped<LoggingDriver>();
 
+		// App-data location (WHISPER-86): drives the real AddInfrastructure composition to resolve the model
+		// cache + settings DB defaults (plus the logs path) and asserts none collide with the Velopack
+		// install root, so installing/updating over a running app never touches or locks user data.
+		services.AddScoped<AppDataLocationDriver>();
+
 		// Hotkey reassignment (WHISPER-75): drives the real HotkeyConfigurationHostedService + activation
 		// controller over the Mediator pipeline, proving startup config and live rebind on a settings change.
 		services.AddScoped<HotkeyConfigurationDriver>();

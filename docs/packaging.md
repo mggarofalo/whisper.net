@@ -59,6 +59,30 @@ newer v5 single-`state` model would not load. Real inference over the bundled as
 pwsh ./build/pack.ps1 -OutputDir ./releases -PublishDir ./artifacts/publish
 ```
 
+## Per-user data locations (WHISPER-86)
+
+The app's **install directory** and its **mutable user data** are deliberately kept apart. Velopack
+installs the app to `%LOCALAPPDATA%\Whisper.Net` (the `PackId`); user data lives under a separate
+`whisper-net` folder whose name can never equal the `PackId`, even case-insensitively:
+
+| Data | Location | Root |
+|---|---|---|
+| Logs | `%LOCALAPPDATA%\whisper-net\logs\` | machine-local (not roaming) |
+| Model cache | `%LOCALAPPDATA%\whisper-net\models\` | machine-local (not roaming) |
+| Settings + history DB | `%APPDATA%\whisper-net\whisper.db` | roaming |
+
+All three are resolved from one source of truth — `WhisperAppData` in
+[`src/Infrastructure/DependencyInjection`](../src/Infrastructure/DependencyInjection/WhisperAppData.cs) —
+and that resolution is pinned by `WhisperAppDataTests` so data can never again land inside the install
+root. **Why this matters:** the data folder used to be `whisper.net`, which on case-insensitive Windows
+*is* the install root `Whisper.Net`. The installer then failed with "Failed to remove existing
+application directory" (it was trying to remove a directory holding user data), and updates could not
+apply while the app ran because its open rolling-log handle was locked inside the install dir.
+
+There is no automatic migration of data from the old `whisper.net` location: a dev machine simply
+re-downloads its model on next use, and settings/history reset to defaults. The old folder is the
+install root, so Velopack reclaims it on the next install/update anyway.
+
 ## Velopack install/update hooks
 
 `App.OnStartup` calls `VelopackApp.Build().Run()` first, so when the installer or updater launches the
