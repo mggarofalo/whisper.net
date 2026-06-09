@@ -1,4 +1,4 @@
-// Drives the @WHISPER-76 hotkey-reassignment scenarios. It builds the REAL HotkeyConfigurationHostedService
+// Drives the @WHISPER-75 hotkey-reassignment scenarios. It builds the REAL HotkeyConfigurationHostedService
 // over the REAL HotkeyActivationController and the REAL Mediator pipeline (GetSettings / UpdateSettings,
 // whose handler raises the SettingsChangeBroadcaster), faking only the settings store with a round-trip so
 // a save is reflected in the next load. It proves the two halves of the fix: the controller is configured

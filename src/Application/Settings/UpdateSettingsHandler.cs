@@ -16,7 +16,7 @@ public sealed class UpdateSettingsHandler(ISettingsStore store, SettingsMapper m
 		AppSettings settings = mapper.ToDomain(command.Settings);
 		await store.SaveAsync(settings, cancellationToken);
 
-		// Signal the change so running services apply it live (WHISPER-76) — e.g. the hotkey matcher rebinds
+		// Signal the change so running services apply it live (WHISPER-75) — e.g. the hotkey matcher rebinds
 		// without a restart. Raised after the save so subscribers never see a binding that failed to persist.
 		broadcaster.Raise(settings);
 		return Mediator.Unit.Value;
