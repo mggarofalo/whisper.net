@@ -21,6 +21,7 @@ public sealed class ShellNavigationDriver(ShellViewModel shell, IModelLifecycle 
 	private const string ActiveModel = "small.en";
 
 	private object? _previous;
+	private object? _remembered;
 
 	// The shell view-model navigates to its first section (Home) on construction, so resolving it has
 	// already "opened" the shell; this just makes the Given explicit.
@@ -44,6 +45,34 @@ public sealed class ShellNavigationDriver(ShellViewModel shell, IModelLifecycle 
 	}
 
 	public async Task TriggerModelCommand() => await Active<ModelViewModel>().LoadCommand.ExecuteAsync(null);
+
+	// Make the Model section active, load its list through the real Mediator pipeline (so ActiveModelId and
+	// the Models collection are populated), then remember the instance so the round-trip can prove identity.
+	public async Task LoadModelSectionAndRemember()
+	{
+		lifecycle.Status.Returns(new ModelStatus(ActiveModel, ModelState.Ready));
+		shell.NavigateCommand.Execute("Model");
+		await Active<ModelViewModel>().LoadCommand.ExecuteAsync(null);
+		_remembered = shell.CurrentViewModel;
+	}
+
+	public void NavigateAwayAndBack(string away, string back)
+	{
+		shell.NavigateCommand.Execute(away);
+		shell.NavigateCommand.Execute(back);
+	}
+
+	// The cached view-model is returned on the way back — not a freshly resolved one.
+	public void AssertActiveIsRememberedInstance() =>
+		shell.CurrentViewModel.Should().BeSameAs(_remembered, "navigating back must return the cached instance, not a new one");
+
+	// The state the section held before navigating away is intact: the loaded list and the active selection.
+	public void AssertModelSelectionSurvived()
+	{
+		ModelViewModel model = Active<ModelViewModel>();
+		model.ActiveModelId.Should().Be(ActiveModel, "the active selection must survive a navigation round-trip");
+		model.Models.Should().NotBeEmpty("the loaded model list must survive a navigation round-trip");
+	}
 
 	// --- assertions ---
 
