@@ -119,6 +119,10 @@ public static class AppManagementServiceCollectionExtensions
 		// graceful shutdown. Registered as IHostedService so the Generic Host owns its lifecycle.
 		services.AddHostedService<HotkeyListenerHostedService>();
 
+		// Hotkey configuration (WHISPER-76): bind the live matcher to the persisted hotkey at startup and
+		// rebind it immediately whenever the setting changes, so assigning a hotkey actually takes effect.
+		services.AddHostedService<HotkeyConfigurationHostedService>();
+
 		// Settings persistence (WHISPER-43): load the persisted settings into the holder on startup and
 		// write them back on graceful shutdown, around the host lifetime.
 		services.AddHostedService<SettingsLifecycleService>();

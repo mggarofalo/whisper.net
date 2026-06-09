@@ -310,6 +310,10 @@ public static class TestDependencies
 		// directory and asserts the event lands in a rolling log file on disk.
 		services.AddScoped<LoggingDriver>();
 
+		// Hotkey reassignment (WHISPER-76): drives the real HotkeyConfigurationHostedService + activation
+		// controller over the Mediator pipeline, proving startup config and live rebind on a settings change.
+		services.AddScoped<HotkeyConfigurationDriver>();
+
 		// Signed auto-update (WHISPER-29): the real AutoUpdateService policy over a faked update source, so
 		// the check/download/apply, opt-in gating, and graceful-degradation behaviour run without Velopack
 		// or network. The driver builds the service itself, so only the faked source needs registering.

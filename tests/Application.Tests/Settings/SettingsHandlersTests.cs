@@ -31,9 +31,12 @@ public sealed class SettingsHandlersTests
 	}
 
 	[Fact]
-	public async Task Update_persists_the_mapped_domain_settings()
+	public async Task Update_persists_the_mapped_domain_settings_and_broadcasts_the_change()
 	{
-		UpdateSettingsHandler handler = new(_store, _mapper);
+		SettingsChangeBroadcaster broadcaster = new();
+		AppSettings? broadcast = null;
+		broadcaster.Changed += (_, settings) => broadcast = settings;
+		UpdateSettingsHandler handler = new(_store, _mapper, broadcaster);
 		AppSettingsDto dto = new("small.en", "Win+Ctrl", 500, true);
 
 		await handler.Handle(new UpdateSettingsCommand(dto), CancellationToken.None);
@@ -45,5 +48,9 @@ public sealed class SettingsHandlersTests
 				s.SilenceThresholdMs == 500 &&
 				s.FillerWordRemovalEnabled),
 			Arg.Any<CancellationToken>());
+
+		// The change is broadcast (after the save) so live services can rebind without a restart (WHISPER-76).
+		Assert.NotNull(broadcast);
+		Assert.Equal("Ctrl+Win", broadcast!.Hotkey.Chord);
 	}
 }

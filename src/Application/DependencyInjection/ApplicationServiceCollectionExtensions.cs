@@ -28,6 +28,10 @@ public static class ApplicationServiceCollectionExtensions
 
 		services.AddValidatorsFromAssembly(typeof(ICommand<>).Assembly, includeInternalTypes: true);
 
+		// Settings-change signal (WHISPER-76): one shared instance so the update handler can raise a change
+		// and higher layers can subscribe to apply it live (e.g. rebinding the hotkey matcher).
+		services.AddSingleton<Settings.SettingsChangeBroadcaster>();
+
 		// Mapperly mappers are stateless; register them as singletons so handlers can inject them.
 		services.AddSingleton<Settings.SettingsMapper>();
 		services.AddSingleton<History.HistoryMapper>();
