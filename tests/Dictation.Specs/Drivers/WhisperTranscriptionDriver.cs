@@ -44,7 +44,9 @@ public sealed class WhisperTranscriptionDriver
 
 		WhisperOptions options = new() { ModelPath = _modelPath, Language = "en" };
 		await using WhisperTranscriber transcriber =
-			new(_factory, backendSelector, new VocabularyConditioner(), Options.Create(options));
+			new(_factory, backendSelector, new VocabularyConditioner(),
+				Substitute.For<ISettingsStore>(), Substitute.For<IModelCatalog>(), Substitute.For<IModelCache>(),
+				Options.Create(options));
 
 		try
 		{

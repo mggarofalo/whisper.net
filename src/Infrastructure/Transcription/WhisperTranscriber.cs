@@ -10,6 +10,7 @@ using System.Text;
 using Application.Ports;
 using Domain.Audio;
 using Domain.Models;
+using Domain.Settings;
 using Logic.ModelManagement;
 using Microsoft.Extensions.Options;
 
@@ -19,11 +20,15 @@ public sealed class WhisperTranscriber(
 	IWhisperEngineFactory engineFactory,
 	IBackendSelector backendSelector,
 	VocabularyConditioner vocabularyConditioner,
+	ISettingsStore settingsStore,
+	IModelCatalog catalog,
+	IModelCache cache,
 	IOptions<WhisperOptions> options) : ITranscriber, IAsyncDisposable
 {
 	private readonly WhisperOptions _options = options.Value;
 	private readonly SemaphoreSlim _loadGate = new(1, 1);
 	private IWhisperEngine? _engine;
+	private string? _loadedModelPath;
 
 	public async ValueTask<TranscriptionResult> TranscribeAsync(AudioClip clip, CancellationToken cancellationToken)
 	{
@@ -47,11 +52,13 @@ public sealed class WhisperTranscriber(
 		return new TranscriptionResult(text.ToString().Trim(), segments);
 	}
 
-	// Loads the model on first use and caches it; the gate makes a concurrent first call wait for the
-	// single load rather than racing two factory loads of the same model.
+	// Loads the ACTIVE model on first use and caches the engine; reloads when the active model changes. The
+	// gate makes a concurrent first call wait for the single load rather than racing two factory loads.
 	private async ValueTask<IWhisperEngine> EnsureEngineLoadedAsync(CancellationToken cancellationToken)
 	{
-		if (_engine is not null)
+		string modelPath = await ResolveModelPathAsync(cancellationToken).ConfigureAwait(false);
+
+		if (_engine is not null && string.Equals(_loadedModelPath, modelPath, StringComparison.OrdinalIgnoreCase))
 		{
 			return _engine;
 		}
@@ -59,23 +66,48 @@ public sealed class WhisperTranscriber(
 		await _loadGate.WaitAsync(cancellationToken).ConfigureAwait(false);
 		try
 		{
-			if (_engine is null)
+			if (_engine is not null && string.Equals(_loadedModelPath, modelPath, StringComparison.OrdinalIgnoreCase))
 			{
-				if (string.IsNullOrWhiteSpace(_options.ModelPath) || !File.Exists(_options.ModelPath))
-				{
-					throw new ModelNotFoundException(_options.ModelPath);
-				}
-
-				BackendSelection backend = await backendSelector.SelectBackendAsync(cancellationToken).ConfigureAwait(false);
-				_engine = engineFactory.Create(_options.ModelPath, backend.Backend, _options.Language);
+				return _engine;
 			}
 
+			if (string.IsNullOrWhiteSpace(modelPath) || !File.Exists(modelPath))
+			{
+				throw new ModelNotFoundException(modelPath);
+			}
+
+			// The active model changed (e.g. the user switched models): release the old engine before loading.
+			if (_engine is not null)
+			{
+				await _engine.DisposeAsync().ConfigureAwait(false);
+				_engine = null;
+			}
+
+			BackendSelection backend = await backendSelector.SelectBackendAsync(cancellationToken).ConfigureAwait(false);
+			_engine = engineFactory.Create(modelPath, backend.Backend, _options.Language);
+			_loadedModelPath = modelPath;
 			return _engine;
 		}
 		finally
 		{
 			_loadGate.Release();
 		}
+	}
+
+	// Resolves the model file to load. An explicit WhisperOptions.ModelPath (config override) wins; otherwise
+	// the ACTIVE model from settings is resolved through the catalog + cache — the same resolution the doctor's
+	// model check uses — so the model the user downloaded and selected is the one transcription loads
+	// (WHISPER-87). Returns an empty path when there is no active/known model, surfaced as ModelNotFound above.
+	private async ValueTask<string> ResolveModelPathAsync(CancellationToken cancellationToken)
+	{
+		if (!string.IsNullOrWhiteSpace(_options.ModelPath))
+		{
+			return _options.ModelPath;
+		}
+
+		AppSettings settings = await settingsStore.LoadAsync(cancellationToken).ConfigureAwait(false);
+		WhisperModelCatalogEntry? entry = catalog.Find(settings.ModelId);
+		return entry is null ? string.Empty : cache.GetCachedPath(entry);
 	}
 
 	public async ValueTask DisposeAsync()

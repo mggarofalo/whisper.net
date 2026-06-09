@@ -7,6 +7,7 @@ using Application.Ports;
 using AwesomeAssertions;
 using Domain.Audio;
 using Domain.Models;
+using Domain.Settings;
 using Infrastructure.Transcription;
 using Logic.ModelManagement;
 using Microsoft.Extensions.Options;
@@ -18,11 +19,20 @@ namespace Infrastructure.Tests.Transcription;
 public sealed class WhisperTranscriberTests : IDisposable
 {
 	private readonly IBackendSelector _backendSelector = Substitute.For<IBackendSelector>();
+	private readonly ISettingsStore _settings = Substitute.For<ISettingsStore>();
+	private readonly IModelCatalog _catalog = Substitute.For<IModelCatalog>();
+	private readonly IModelCache _cache = Substitute.For<IModelCache>();
 	private readonly List<string> _tempFiles = [];
 
-	public WhisperTranscriberTests() =>
+	public WhisperTranscriberTests()
+	{
 		_backendSelector.SelectBackendAsync(Arg.Any<CancellationToken>())
 			.Returns(new BackendSelection(ComputeBackend.Cpu, "test"));
+
+		// Default: a valid (but unresolved) active model, so the override-path tests don't touch the
+		// active-model resolution and the "no active model" path yields an empty path (ModelNotFound).
+		_settings.LoadAsync(Arg.Any<CancellationToken>()).Returns(AppSettings.Default);
+	}
 
 	private WhisperTranscriber CreateTranscriber(
 		FakeWhisperEngineFactory factory,
@@ -33,6 +43,9 @@ public sealed class WhisperTranscriberTests : IDisposable
 			factory,
 			_backendSelector,
 			new VocabularyConditioner(),
+			_settings,
+			_catalog,
+			_cache,
 			Options.Create(new WhisperOptions { ModelPath = modelPath, Language = language, CustomVocabulary = vocabulary ?? [] }));
 
 	private string ExistingModelFile()
@@ -140,7 +153,7 @@ public sealed class WhisperTranscriberTests : IDisposable
 		FakeWhisperEngineFactory factory = new(new WhisperSegment("x", TimeSpan.Zero, TimeSpan.Zero, 1f));
 		WhisperOptions options = new() { ModelPath = ExistingModelFile(), Language = "en", CustomVocabulary = ["Reqnroll"] };
 		await using WhisperTranscriber transcriber =
-			new(factory, _backendSelector, new VocabularyConditioner(), Options.Create(options));
+			new(factory, _backendSelector, new VocabularyConditioner(), _settings, _catalog, _cache, Options.Create(options));
 
 		await transcriber.TranscribeAsync(Clip(), CancellationToken.None);
 		factory.LastDecodingOptions!.InitialPrompt.Should().Contain("Reqnroll");
@@ -150,6 +163,53 @@ public sealed class WhisperTranscriberTests : IDisposable
 
 		factory.LastDecodingOptions!.InitialPrompt.Should().Contain("Velopack");
 		factory.CreateCount.Should().Be(1);
+	}
+
+	[Fact]
+	public async Task Resolves_the_active_model_from_settings_when_no_explicit_path_is_configured()
+	{
+		// WHISPER-87: with no config override, the transcriber loads the model the user actually selected,
+		// resolved through settings -> catalog -> cache (the same path the doctor's model check resolves).
+		string modelFile = ExistingModelFile();
+		WhisperModelCatalogEntry entry = new("base.en", "Base (English)", "q5", "ggml-base.en.bin", 1);
+		_settings.LoadAsync(Arg.Any<CancellationToken>())
+			.Returns(new AppSettings("base.en", HotkeyBinding.Parse("Ctrl+Win"), 500, false));
+		_catalog.Find("base.en").Returns(entry);
+		_cache.GetCachedPath(entry).Returns(modelFile);
+		FakeWhisperEngineFactory factory = new(new WhisperSegment("hi", TimeSpan.Zero, TimeSpan.Zero, 1f));
+		await using WhisperTranscriber transcriber = CreateTranscriber(factory, modelPath: string.Empty);
+
+		TranscriptionResult result = await transcriber.TranscribeAsync(Clip(), CancellationToken.None);
+
+		factory.LastModelPath.Should().Be(modelFile);
+		result.Text.Should().Be("hi");
+	}
+
+	[Fact]
+	public async Task Reloads_the_engine_when_the_active_model_changes()
+	{
+		// WHISPER-87: switching the active model makes the next transcription load the new model.
+		string firstFile = ExistingModelFile();
+		string secondFile = ExistingModelFile();
+		WhisperModelCatalogEntry first = new("base.en", "Base", "q5", "ggml-base.en.bin", 1);
+		WhisperModelCatalogEntry second = new("small.en", "Small", "q5", "ggml-small.en.bin", 1);
+		_catalog.Find("base.en").Returns(first);
+		_catalog.Find("small.en").Returns(second);
+		_cache.GetCachedPath(first).Returns(firstFile);
+		_cache.GetCachedPath(second).Returns(secondFile);
+		FakeWhisperEngineFactory factory = new(new WhisperSegment("x", TimeSpan.Zero, TimeSpan.Zero, 1f));
+		await using WhisperTranscriber transcriber = CreateTranscriber(factory, modelPath: string.Empty);
+
+		_settings.LoadAsync(Arg.Any<CancellationToken>())
+			.Returns(new AppSettings("base.en", HotkeyBinding.Parse("Ctrl+Win"), 500, false));
+		await transcriber.TranscribeAsync(Clip(), CancellationToken.None);
+
+		_settings.LoadAsync(Arg.Any<CancellationToken>())
+			.Returns(new AppSettings("small.en", HotkeyBinding.Parse("Ctrl+Win"), 500, false));
+		await transcriber.TranscribeAsync(Clip(), CancellationToken.None);
+
+		factory.LastModelPath.Should().Be(secondFile);
+		factory.CreateCount.Should().Be(2);
 	}
 
 	[Fact]
