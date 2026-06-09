@@ -8,6 +8,13 @@ All notable changes to this project are documented here. The format is based on
 
 ### Fixed
 
+- **Dashboard tabs keep their state when you switch away and back.** Feature view-models are now cached
+  one-per-section within the shell UI scope and navigation toggles activate/deactivate instead of
+  recreating them. Previously they were registered transient, so every navigation resolved a fresh
+  instance and disposed the outgoing one — silently throwing away the selected model, history page, and
+  scroll position on each visit. The navigation service no longer disposes the outgoing view-model; the
+  cached instances are disposed once, by the UI scope, when the shell closes. (WHISPER-89)
+
 - **App data no longer collides with the Velopack install directory.** Per-user data (model cache, logs,
   settings database) moved out of `%LOCALAPPDATA%\whisper.net`, which on case-insensitive Windows was the
   Velopack install root (`%LOCALAPPDATA%\Whisper.Net`, the PackId). The collision made the installer fail

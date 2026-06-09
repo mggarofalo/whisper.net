@@ -70,9 +70,12 @@ public static class AppManagementServiceCollectionExtensions
 		// Dashboard shell + navigation (WHISPER-19): the navigation service, the shell view-model, and the
 		// feature view-models it hosts — all WPF-free so the specs drive the real MVVM + Mediator behavior.
 		// Scoped (not singleton) because the feature view-models depend on the scoped Mediator, so the shell
-		// runs inside one UI scope — like the orchestrator — never the root. Feature view-models are
-		// transient: each navigation resolves a fresh instance and the previous is deactivated/disposed.
-		// Sections are registered in display order; the shell opens on the first (Home).
+		// runs inside one UI scope — like the orchestrator — never the root. Feature view-models are SCOPED,
+		// not transient (WHISPER-89): the navigation service resolves each section once per shell UI scope
+		// and toggles activate/deactivate on navigation, so a section keeps its state (selection, page,
+		// scroll) when the user switches tabs and comes back. The cached instances are disposed once, by the
+		// UI scope, when the shell closes. Sections are registered in display order; the shell opens on the
+		// first (Home).
 		services.AddScoped<Shell.INavigationService, Shell.NavigationService>();
 		services.AddScoped<Shell.ShellViewModel>();
 		services.AddSingleton(new Shell.NavigationSection("Home", typeof(Shell.HomeViewModel)));
@@ -81,12 +84,12 @@ public static class AppManagementServiceCollectionExtensions
 		services.AddSingleton(new Shell.NavigationSection("Hotkey", typeof(Shell.HotkeyViewModel)));
 		services.AddSingleton(new Shell.NavigationSection("History", typeof(Shell.HistoryViewModel)));
 		services.AddSingleton(new Shell.NavigationSection("Stats", typeof(Shell.StatsViewModel)));
-		services.AddTransient<Shell.HomeViewModel>();
-		services.AddTransient<Shell.ModelViewModel>();
-		services.AddTransient<Shell.AudioDeviceViewModel>();
-		services.AddTransient<Shell.HotkeyViewModel>();
-		services.AddTransient<Shell.HistoryViewModel>();
-		services.AddTransient<Shell.StatsViewModel>();
+		services.AddScoped<Shell.HomeViewModel>();
+		services.AddScoped<Shell.ModelViewModel>();
+		services.AddScoped<Shell.AudioDeviceViewModel>();
+		services.AddScoped<Shell.HotkeyViewModel>();
+		services.AddScoped<Shell.HistoryViewModel>();
+		services.AddScoped<Shell.StatsViewModel>();
 
 		// First-run onboarding (WHISPER-51): not a nav section — the host shows it instead of the shell on
 		// first launch. Transient so each run starts fresh.
