@@ -46,4 +46,29 @@ public sealed class OnboardingSteps(OnboardingDriver driver)
 
 	[Then(@"the permissions are reported as granted")]
 	public void ThenPermissionsGranted() => driver.AssertPermissionsGranted();
+
+	// --- @WHISPER-74: onboarding overhaul ---
+
+	[When(@"onboarding loads its choices")]
+	[Given(@"onboarding has loaded its choices")]
+	[When(@"onboarding has loaded its choices")]
+	public async Task WhenOnboardingLoadsChoices() => await driver.LoadChoices();
+
+	[Then(@"the available capture devices are listed")]
+	public void ThenDevicesListed() => driver.AssertDevicesListed();
+
+	[Then(@"the catalog models are listed")]
+	public void ThenModelsListed() => driver.AssertModelsListed();
+
+	[When(@"the user uses a model that is not yet downloaded")]
+	public async Task WhenUserUsesUndownloadedModel() => await driver.UseUndownloadedModel();
+
+	[Then(@"the model download reports progress and the model becomes active")]
+	public void ThenModelDownloadedWithProgress() => driver.AssertModelDownloadedWithProgressAndActive();
+
+	[Then(@"onboarding cannot be completed yet")]
+	public void ThenCannotCompleteYet() => driver.AssertCannotCompleteYet();
+
+	[Then(@"once a model and a device are chosen onboarding can be completed")]
+	public async Task ThenCanCompleteOnceChosen() => await driver.AssertCanCompleteOnceModelAndDeviceChosen();
 }

@@ -18,6 +18,10 @@ public partial class OnboardingWindow : System.Windows.Window
 		InitializeComponent();
 		DataContext = viewModel;
 		_viewModel.PropertyChanged += OnViewModelPropertyChanged;
+
+		// Populate the model and device lists once the window is up (WHISPER-74); the command awaits the
+		// ListModels/ListCaptureDevices queries off the UI thread and marshals the results back.
+		Loaded += (_, _) => _viewModel.LoadChoicesCommand.Execute(null);
 	}
 
 	private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
