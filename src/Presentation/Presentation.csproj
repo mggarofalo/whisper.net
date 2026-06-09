@@ -16,15 +16,20 @@
   <!--
     Velopack packaging (WHISPER-20): when a runtime identifier is supplied (the packaging script and the
     release CI publish with `-r win-x64`), publish a self-contained, single-file build with the .NET 10
-    runtime and the native assets (Whisper.net + Vulkan, ONNX Runtime, SharpHook) bundled, so an end user
-    installs without a separate .NET install. Native libraries are self-extracted next to the single file
-    because some cannot be loaded from inside the bundle. A normal dev build supplies no RID, so this group
-    is inert and `dotnet build` / the specs are unaffected.
+    runtime bundled, so an end user installs without a separate .NET install. A normal dev build supplies
+    no RID, so this group is inert and `dotnet build` / the specs are unaffected.
+
+    Native libraries are deliberately NOT embedded for self-extract (WHISPER-85): Whisper.net's
+    NativeLibraryLoader resolves whisper.dll/ggml relative to AppContext.BaseDirectory and cannot find them
+    when they are packed into the single file and self-extracted to a temp dir — which silently broke ALL
+    transcription in the installed app. With IncludeNativeLibrariesForSelfExtract=false the managed code
+    still bundles into the single exe, but the native libraries stay as loose files in runtimes/win-x64/
+    native next to the exe, where the loader finds them. Velopack packages the whole folder anyway.
   -->
   <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
     <SelfContained>true</SelfContained>
     <PublishSingleFile>true</PublishSingleFile>
-    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <IncludeNativeLibrariesForSelfExtract>false</IncludeNativeLibrariesForSelfExtract>
     <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
   </PropertyGroup>

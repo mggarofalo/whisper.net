@@ -18,8 +18,8 @@ public sealed class PackagingSteps(PackagingDriver driver)
 	[Then(@"the Presentation project publishes self-contained for win-x64 as a single file")]
 	public void ThenPublishesSelfContainedSingleFile() => driver.AssertPublishesSelfContainedSingleFileWinX64();
 
-	[Then(@"the bundled native assets are extracted for the runtime to load")]
-	public void ThenNativeAssetsBundled() => driver.AssertNativeAssetsBundled();
+	[Then(@"the native assets are kept loose for the runtime loader to find")]
+	public void ThenNativeAssetsLoose() => driver.AssertNativeAssetsLooseForTheLoader();
 
 	[Then(@"no static assembly version is committed")]
 	public void ThenNoStaticVersion() => driver.AssertNoStaticAssemblyVersionCommitted();

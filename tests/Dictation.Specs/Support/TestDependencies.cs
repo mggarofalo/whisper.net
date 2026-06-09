@@ -45,6 +45,7 @@ public static class TestDependencies
 
 		// Substitute ONLY the Infrastructure ports — the seams the specs control.
 		services.AddScoped(_ => Substitute.For<ITranscriber>());
+		services.AddScoped(_ => Substitute.For<IWhisperRuntimeProbe>());
 		services.AddScoped(_ => Substitute.For<ISettingsStore>());
 		services.AddScoped(_ => Substitute.For<IHistoryStore>());
 		services.AddScoped(_ => Substitute.For<IAuditLog>());

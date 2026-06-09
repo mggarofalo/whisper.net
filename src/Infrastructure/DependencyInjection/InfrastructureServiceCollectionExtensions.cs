@@ -61,6 +61,10 @@ public static class InfrastructureServiceCollectionExtensions
 		services.AddSingleton<IWhisperEngineFactory, WhisperNetEngineFactory>();
 		services.AddSingleton<ITranscriber, WhisperTranscriber>();
 
+		// Whisper native-runtime probe (WHISPER-85): lets the doctor verify the native library actually
+		// loads, catching the packaging defect that silently broke transcription in the installed app.
+		services.AddSingleton<IWhisperRuntimeProbe, WhisperRuntimeProbe>();
+
 		// Model lifecycle runtime (WHISPER-15): the native load/warmup/transcribe/release operations the
 		// lifecycle policy (Logic.ModelManagement) drives, built on the Whisper.net engine seam above.
 		services.AddSingleton<IModelRuntime, WhisperModelRuntime>();

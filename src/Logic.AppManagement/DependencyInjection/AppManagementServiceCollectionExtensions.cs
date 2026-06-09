@@ -99,6 +99,9 @@ public static class AppManagementServiceCollectionExtensions
 		// substitute without a captive-dependency violation.
 		services.AddScoped<Application.Diagnostics.IDiagnosticCheck, Diagnostics.AudioCaptureCheck>();
 		services.AddScoped<Application.Diagnostics.IDiagnosticCheck, Diagnostics.ModelCacheCheck>();
+		// Whisper native runtime (WHISPER-85): right after the model check — a present model is useless if the
+		// native library can't load, the defect that silently killed transcription in the packaged app.
+		services.AddScoped<Application.Diagnostics.IDiagnosticCheck, Diagnostics.WhisperRuntimeCheck>();
 		services.AddScoped<Application.Diagnostics.IDiagnosticCheck, Diagnostics.HotkeyCheck>();
 		services.AddScoped<Application.Diagnostics.IDiagnosticCheck, Diagnostics.GpuCheck>();
 

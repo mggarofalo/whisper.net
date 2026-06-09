@@ -39,8 +39,16 @@ public sealed class PackagingDriver
 		PackScript.Should().Contain("win-x64");
 	}
 
-	public void AssertNativeAssetsBundled() =>
-		PresentationProject.Should().Contain("<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>");
+	public void AssertNativeAssetsLooseForTheLoader()
+	{
+		// WHISPER-85: the native libraries must NOT be embedded for self-extract — Whisper.net's loader
+		// resolves whisper.dll relative to the base directory and cannot find it in the self-extract temp
+		// dir, which silently broke all transcription. They stay loose (runtimes/win-x64/native) next to the
+		// single-file exe, where the loader finds them; the self-contained publish still copies them.
+		string project = PresentationProject;
+		project.Should().Contain("<IncludeNativeLibrariesForSelfExtract>false</IncludeNativeLibrariesForSelfExtract>");
+		project.Should().Contain("<SelfContained>true</SelfContained>");
+	}
 
 	// --- version from MinVer, not hand-edited ---
 

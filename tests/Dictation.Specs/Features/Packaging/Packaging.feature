@@ -24,7 +24,7 @@ Feature: Self-contained installer packaging
   Scenario: The app publishes as a self-contained, single-file Windows build
     Given the packaging configuration
     Then the Presentation project publishes self-contained for win-x64 as a single file
-    And the bundled native assets are extracted for the runtime to load
+    And the native assets are kept loose for the runtime loader to find
 
   Scenario: The package version is derived from MinVer, not hand-edited
     Given the packaging configuration

@@ -21,11 +21,12 @@ public sealed class DiagnosticsDriver
 {
 	// The subsystems the doctor reports on, in report order. Used to assert every check still produced a
 	// result even when one is unavailable.
-	private static readonly string[] ExpectedChecks = ["Audio", "Model", "Hotkey", "GPU"];
+	private static readonly string[] ExpectedChecks = ["Audio", "Model", "Whisper", "Hotkey", "GPU"];
 
 	private readonly IMediator _mediator;
 	private readonly FakeAudioDeviceEnumerator _audioDevices;
 	private readonly IModelCache _modelCache;
+	private readonly IWhisperRuntimeProbe _whisperProbe;
 	private readonly IPermissionProbe _permissions;
 	private readonly IGpuProbe _gpuProbe;
 
@@ -36,12 +37,14 @@ public sealed class DiagnosticsDriver
 		FakeAudioDeviceEnumerator audioDevices,
 		ISettingsStore settings,
 		IModelCache modelCache,
+		IWhisperRuntimeProbe whisperProbe,
 		IPermissionProbe permissions,
 		IGpuProbe gpuProbe)
 	{
 		_mediator = mediator;
 		_audioDevices = audioDevices;
 		_modelCache = modelCache;
+		_whisperProbe = whisperProbe;
 		_permissions = permissions;
 		_gpuProbe = gpuProbe;
 
@@ -52,6 +55,10 @@ public sealed class DiagnosticsDriver
 		// The cache port always reports a path, so a Pass names where the model lives and a Fail names where
 		// it was expected.
 		_modelCache.GetCachedPath(Arg.Any<Domain.Models.WhisperModelCatalogEntry>()).Returns(@"C:\models\ggml-base.en.bin");
+
+		// The Whisper native runtime loads by default so the other checks have a healthy peer; the
+		// "Whisper unavailable" given (WHISPER-85) overrides it with the packaging-failure verdict.
+		_whisperProbe.Probe().Returns(new WhisperRuntimeStatus(true, "Whisper native runtime loaded."));
 	}
 
 	// --- given (each makes one subsystem healthy; Healthy() makes them all so) ---
@@ -87,6 +94,10 @@ public sealed class DiagnosticsDriver
 				break;
 			case "Model":
 				_modelCache.IsCached(Arg.Any<Domain.Models.WhisperModelCatalogEntry>()).Returns(false);
+				break;
+			case "Whisper":
+				_whisperProbe.Probe().Returns(new WhisperRuntimeStatus(
+					false, "Whisper native runtime could not be loaded: Native Library not found in default paths."));
 				break;
 			case "Hotkey":
 				_permissions.HasRequiredInputPermissions().Returns(false);
