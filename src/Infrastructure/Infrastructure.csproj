@@ -7,6 +7,11 @@
     Logic.* project. Only Presentation is allowed to reference Infrastructure in turn.
   -->
   <ItemGroup>
+    <!-- The interop struct-size guard (WHISPER-88) needs to read an internal of Win32KeyboardInput. -->
+    <InternalsVisibleTo Include="Infrastructure.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" />
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
