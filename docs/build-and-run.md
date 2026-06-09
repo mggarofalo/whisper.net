@@ -83,3 +83,15 @@ native assets (NAudio, Vulkan, SharpHook, SQLite) on its own runtime:
 
 Because the build is self-contained, the installed app launches on a machine with **no separate .NET
 runtime** installed.
+
+## Logs & troubleshooting
+
+The app writes a rolling log file (daily, 14 files retained) to:
+
+```
+%LOCALAPPDATA%\whisper.net\logs\whisper-<date>.log
+```
+
+Attach the most recent file to any bug report. Unhandled UI errors are recorded there and no longer take
+the tray app down silently. For a one-shot environment check (audio, model cache, hotkeys, GPU/Vulkan),
+run the published exe with `--doctor` (above).

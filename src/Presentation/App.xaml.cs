@@ -118,8 +118,10 @@ public partial class App
 		// First-run onboarding (WHISPER-51): on a fresh install (setup not completed), guide the user
 		// through model/audio/hotkey setup and permissions before the tray app takes over. The flow's
 		// view-models depend on the scoped Mediator, so it runs inside a dedicated UI scope kept alive
-		// until the window closes. Skipped silently once setup has been completed.
-		ShowOnboardingIfRequired(logger);
+		// until the window closes. Skipped silently once setup has been completed. Fire-and-forget so the
+		// "is onboarding required?" settings read (WHISPER-73) runs off the UI thread instead of blocking
+		// it with sync-over-async; the async continuation resumes on the UI thread to show the window.
+		_ = ShowOnboardingIfRequiredAsync(logger);
 	}
 
 	// Builds the full composition (but never starts the host, so no hotkey hook / tray / hosted services
@@ -144,12 +146,29 @@ public partial class App
 		Shutdown();
 	}
 
-	private void ShowOnboardingIfRequired(ILogger<App> logger)
+	private async Task ShowOnboardingIfRequiredAsync(ILogger<App> logger)
 	{
 		_onboardingScope = _host!.Services.CreateScope();
 		OnboardingViewModel onboarding = _onboardingScope.ServiceProvider.GetRequiredService<OnboardingViewModel>();
 
-		if (!onboarding.IsRequiredAsync().GetAwaiter().GetResult())
+		bool required;
+		try
+		{
+			// Awaited (not GetAwaiter().GetResult()) so the settings read does not block the UI thread; the
+			// continuation resumes on the WPF dispatcher, so the window is still created on the UI thread.
+			required = await onboarding.IsRequiredAsync();
+		}
+		catch (Exception ex)
+		{
+			// A failure deciding whether onboarding is needed must not strand the app; log it (now to the
+			// persistent file sink) and fall through to the normal tray experience.
+			logger.LogError(ex, "Failed to determine whether onboarding is required; continuing without it.");
+			_onboardingScope.Dispose();
+			_onboardingScope = null;
+			return;
+		}
+
+		if (!required)
 		{
 			_onboardingScope.Dispose();
 			_onboardingScope = null;
@@ -200,7 +219,14 @@ public partial class App
 			logger.LogCritical(args.ExceptionObject as Exception, "Unhandled exception; the application is terminating.");
 
 		DispatcherUnhandledException += (_, args) =>
-			logger.LogCritical(args.Exception, "Unhandled dispatcher exception.");
+		{
+			// Record the failure (now to the persistent file sink, WHISPER-73) and keep the tray app alive
+			// instead of letting an error in a single UI callback tear the whole process down with no trace —
+			// which is what made the onboarding window appear to "just close". Marking it handled stops the
+			// default terminate; a genuinely fatal error still surfaces via AppDomain.UnhandledException.
+			logger.LogCritical(args.Exception, "Unhandled dispatcher exception; the UI action was aborted but the app keeps running.");
+			args.Handled = true;
+		};
 
 		TaskScheduler.UnobservedTaskException += (_, args) =>
 		{

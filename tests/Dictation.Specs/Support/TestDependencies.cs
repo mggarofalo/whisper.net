@@ -306,6 +306,10 @@ public static class TestDependencies
 		// script, the build-and-run guide, and the README directly, like the packaging driver.
 		services.AddScoped<SelfSignedSigningDriver>();
 
+		// Diagnosable logging (WHISPER-73): drives the real AddSerilogLogging composition pointed at a temp
+		// directory and asserts the event lands in a rolling log file on disk.
+		services.AddScoped<LoggingDriver>();
+
 		// Signed auto-update (WHISPER-29): the real AutoUpdateService policy over a faked update source, so
 		// the check/download/apply, opt-in gating, and graceful-degradation behaviour run without Velopack
 		// or network. The driver builds the service itself, so only the faked source needs registering.
