@@ -2,8 +2,8 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Welcome to Whisper"
-        Width="520"
-        Height="520"
+        Width="560"
+        Height="600"
         WindowStartupLocation="CenterScreen">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="24">
@@ -15,42 +15,62 @@
                        Opacity="0.8"
                        Margin="0,4,0,16" />
 
-            <!-- Model -->
+            <!-- Model: pick from the catalog; using an un-downloaded model downloads it with live progress. -->
             <TextBlock Text="1. Model"
                        FontWeight="SemiBold" />
-            <StackPanel Orientation="Horizontal"
-                        Margin="0,4,0,16">
-                <TextBox x:Name="ModelBox"
-                         Text="base.en"
-                         Width="160"
-                         Padding="6,4" />
-                <Button Content="Use model"
-                        Command="{Binding ChooseModelCommand}"
-                        CommandParameter="{Binding Text, ElementName=ModelBox}"
-                        Margin="8,0,0,0"
-                        Padding="12,4" />
-                <Button Content="Download"
-                        Command="{Binding ApproveModelDownloadCommand}"
-                        CommandParameter="{Binding Text, ElementName=ModelBox}"
-                        Margin="8,0,0,0"
-                        Padding="12,4" />
-                <Button Content="Skip download"
-                        Command="{Binding DeclineModelDownloadCommand}"
-                        Margin="8,0,0,0"
-                        Padding="12,4" />
-            </StackPanel>
+            <ItemsControl ItemsSource="{Binding Models}"
+                          Margin="0,4,0,16">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border BorderThickness="0,0,0,1"
+                                BorderBrush="#22000000"
+                                Padding="0,6">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0"
+                                            VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding DisplayName}"
+                                               FontWeight="SemiBold" />
+                                    <ProgressBar Height="4"
+                                                 Margin="0,4,8,0"
+                                                 Minimum="0"
+                                                 Maximum="100"
+                                                 Value="{Binding DownloadPercent}" />
+                                </StackPanel>
+                                <TextBlock Grid.Column="1"
+                                           VerticalAlignment="Center"
+                                           Margin="8,0"
+                                           Opacity="0.7"
+                                           Text="{Binding DownloadState}" />
+                                <Button Grid.Column="2"
+                                        Content="Use"
+                                        Padding="12,4"
+                                        Command="{Binding DataContext.UseModelCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                        CommandParameter="{Binding}" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
 
-            <!-- Audio device -->
+            <!-- Input device: chosen from the enumerated capture devices, not typed by hand. -->
             <TextBlock Text="2. Input device"
                        FontWeight="SemiBold" />
             <StackPanel Orientation="Horizontal"
                         Margin="0,4,0,16">
-                <TextBox x:Name="DeviceBox"
-                         Width="220"
-                         Padding="6,4" />
+                <ComboBox x:Name="DeviceCombo"
+                          Width="240"
+                          Padding="6,4"
+                          ItemsSource="{Binding Devices}"
+                          DisplayMemberPath="Name"
+                          SelectedValuePath="Id" />
                 <Button Content="Use device"
                         Command="{Binding ChooseDeviceCommand}"
-                        CommandParameter="{Binding Text, ElementName=DeviceBox}"
+                        CommandParameter="{Binding SelectedValue, ElementName=DeviceCombo}"
                         Margin="8,0,0,0"
                         Padding="12,4" />
             </StackPanel>
@@ -84,8 +104,10 @@
                            VerticalAlignment="Center" />
             </StackPanel>
 
+            <!-- Finish is disabled until a model is active and a device is chosen (CanComplete). -->
             <Button Content="Finish setup"
                     Command="{Binding CompleteCommand}"
+                    IsEnabled="{Binding CanComplete}"
                     HorizontalAlignment="Left"
                     Padding="16,6"
                     Margin="0,8,0,0" />
