@@ -12,6 +12,7 @@ using Dictation.Specs.Support;
 using Domain.Audio;
 using Logic.AppManagement;
 using Logic.AppManagement.Notifications;
+using Logic.AudioManagement;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 
@@ -21,7 +22,9 @@ public sealed class UserNotificationDriver(
 	DictationOrchestrator orchestrator,
 	ITranscriber transcriber,
 	FakeAudioCaptureClient captureClient,
-	RecordingUserNotifier notifier)
+	RecordingUserNotifier notifier,
+	ManualTimeProvider time,
+	AudioBufferingOptions bufferingOptions)
 {
 	private static readonly string RepositoryRoot = FindRepositoryRoot();
 
@@ -41,7 +44,7 @@ public sealed class UserNotificationDriver(
 	{
 		orchestrator.Start();
 		captureClient.ProduceFrame(new float[960]);
-		await orchestrator.StopAsync();
+		await orchestrator.StopAndElapseGraceAsync(time, bufferingOptions);
 	}
 
 	public void StartAndFailDevice()
