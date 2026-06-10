@@ -114,6 +114,25 @@ the `@WHISPER-92` scenarios.
   keyboard capture). Such a control owns no application behavior and exposes everything testable
   through its bound properties.
 
+### Background-thread collection updates (WHISPER-91)
+
+WPF throws a cross-thread exception when a bound `ObservableCollection` is mutated off the UI thread
+unless the collection was registered for synchronization. The sanctioned pattern, which new
+list-bearing view-models adopt by default:
+
+- **Expose a `UiBoundCollection<T>`** (Logic.AppManagement.Shell) instead of a raw
+  `ObservableCollection<T>`. Every mutation automatically takes the collection's `Gate`, so callers
+  cannot forget the lock.
+- **Register it at construction** through the `IUiCollectionSynchronizer` port:
+  `synchronizer.Enable(Entries)`. Construction happens before the view can bind, and the WPF
+  implementation (`WpfCollectionSynchronizer`) calls `BindingOperations.EnableCollectionSynchronization`
+  on the UI thread via the `IUiDispatcher` fast-path, so the binding engine reads the collection under
+  the same gate the mutations take.
+- Specs substitute a recording synchronizer, keeping the view-models WPF-free; the `@WHISPER-91`
+  scenarios pin registration-before-binding, locked mutation, and background-thread loading.
+
+`HistoryViewModel.Entries` is the reference implementation of the pattern.
+
 ## CQRS via source-generated Mediator
 
 All application requests flow through the **source-generated Mediator** (martinothamar,

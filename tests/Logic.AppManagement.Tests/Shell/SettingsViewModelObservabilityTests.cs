@@ -6,6 +6,7 @@
 
 using System.ComponentModel;
 using System.Reflection;
+using Application.Ports;
 using AwesomeAssertions;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Logic.AppManagement.Shell;
@@ -71,7 +72,7 @@ public sealed class SettingsViewModelObservabilityTests
 		nameof(ModelViewModel) => new ModelViewModel(Substitute.For<IMediator>()),
 		nameof(AudioDeviceViewModel) => new AudioDeviceViewModel(Substitute.For<IMediator>()),
 		nameof(HotkeyViewModel) => new HotkeyViewModel(Substitute.For<IMediator>()),
-		nameof(HistoryViewModel) => new HistoryViewModel(Substitute.For<IMediator>()),
+		nameof(HistoryViewModel) => new HistoryViewModel(Substitute.For<IMediator>(), Substitute.For<IUiCollectionSynchronizer>()),
 		nameof(StatsViewModel) => new StatsViewModel(Substitute.For<IMediator>()),
 		_ => throw new ArgumentOutOfRangeException(nameof(viewModelName), viewModelName, "unknown view-model"),
 	};

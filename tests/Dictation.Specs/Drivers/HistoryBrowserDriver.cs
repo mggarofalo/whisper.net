@@ -26,11 +26,11 @@ public sealed class HistoryBrowserDriver
 
 	private string? _copiedText;
 
-	public HistoryBrowserDriver(IMediator mediator, IHistoryStore store, IClipboard clipboard)
+	public HistoryBrowserDriver(IMediator mediator, IHistoryStore store, IClipboard clipboard, IUiCollectionSynchronizer synchronizer)
 	{
 		_store = store;
 		_clipboard = clipboard;
-		_viewModel = new HistoryViewModel(mediator);
+		_viewModel = new HistoryViewModel(mediator, synchronizer);
 	}
 
 	// --- given ---
