@@ -1,6 +1,11 @@
 <UserControl x:Class="Presentation.Shell.Views.HistoryView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources>
+        <!-- Declared locally (WHISPER-96) so the view is self-contained: parse-time StaticResource only
+             sees the view's own resources and the Application, and the smoke harness composes without one. -->
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+    </UserControl.Resources>
     <DockPanel Margin="24">
         <StackPanel DockPanel.Dock="Top"
                     Orientation="Horizontal"

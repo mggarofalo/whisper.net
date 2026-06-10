@@ -209,6 +209,11 @@ public static class TestDependencies
 		services.AddScoped<IUserNotifier>(sp => sp.GetRequiredService<RecordingUserNotifier>());
 		services.AddScoped<UserNotificationDriver>();
 
+		// View smoke harness (WHISPER-96): inspects the STA smoke project, the binding-error gate, the
+		// template completeness check, the FlaUI decision, and the CI gate. The smoke tests themselves
+		// are WPF and run in their own project within the same fast gate.
+		services.AddScoped<ViewSmokeDriver>();
+
 		// Model picker (WHISPER-27): the real ModelViewModel over the real Mediator pipeline (list /
 		// download / switch handlers) and the real catalog, faking only the device-facing model ports.
 		services.AddScoped<ModelPickerDriver>();

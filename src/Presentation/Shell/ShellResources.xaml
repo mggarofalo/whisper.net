@@ -1,0 +1,42 @@
+<!-- Shared resources for the settings-shell views (WHISPER-96): the converters and validation chrome
+     the feature views reference by StaticResource. Owned by a standalone dictionary — merged by BOTH
+     App.xaml (app-wide, as before) and ShellWindow.xaml — so the shell window is self-contained:
+     resource lookup succeeds wherever the window is composed, including the STA smoke harness, which
+     instantiates the real window without a live Application. -->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Converters referenced by StaticResource at parse time live IN the consuming views (see
+         HistoryView/ModelView), not here: a UserControl's parse-time lookup sees only its own resources
+         and the Application, and the views must compose without a live Application (WHISPER-96). -->
+
+    <!-- Reusable native validation adorner (WHISPER-77): a red border around the offending control plus
+         the INotifyDataErrorInfo message beside it, and the same message as the control's tooltip. Applied
+         to validated TextBoxes so settings errors surface natively next to the field. -->
+    <ControlTemplate x:Key="ValidationErrorTemplate">
+        <StackPanel Orientation="Horizontal">
+            <Border BorderBrush="#C03030"
+                    BorderThickness="1"
+                    CornerRadius="2">
+                <AdornedElementPlaceholder />
+            </Border>
+            <TextBlock Text="{Binding [0].ErrorContent}"
+                       Foreground="#C03030"
+                       Margin="6,0,0,0"
+                       VerticalAlignment="Center" />
+        </StackPanel>
+    </ControlTemplate>
+
+    <Style TargetType="TextBox">
+        <Setter Property="Validation.ErrorTemplate"
+                Value="{StaticResource ValidationErrorTemplate}" />
+        <Style.Triggers>
+            <Trigger Property="Validation.HasError"
+                     Value="True">
+                <Setter Property="ToolTip"
+                        Value="{Binding (Validation.Errors)[0].ErrorContent, RelativeSource={RelativeSource Self}}" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+</ResourceDictionary>
