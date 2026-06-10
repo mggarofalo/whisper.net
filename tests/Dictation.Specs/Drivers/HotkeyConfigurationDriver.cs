@@ -1,12 +1,14 @@
 // Drives the @WHISPER-75 hotkey-reassignment scenarios. It builds the REAL HotkeyConfigurationHostedService
 // over the REAL HotkeyActivationController and the REAL Mediator pipeline (GetSettings / UpdateSettings,
-// whose handler raises the SettingsChangeBroadcaster), faking only the settings store with a round-trip so
-// a save is reflected in the next load. It proves the two halves of the fix: the controller is configured
-// from the persisted hotkey at startup, and a change pushed through UpdateSettingsCommand rebinds the live
-// matcher immediately — without an app restart. The thin settings/onboarding views are Presentation glue.
+// whose handler publishes on the instant-apply IMessenger channel), faking only the settings store with a
+// round-trip so a save is reflected in the next load. It proves the two halves of the fix: the controller is
+// configured from the persisted hotkey at startup, and a change pushed through UpdateSettingsCommand rebinds
+// the live matcher immediately — without an app restart. The thin settings/onboarding views are Presentation
+// glue. The messenger is the SAME DI-resolved singleton the update handler's channel publishes on.
 
 using Application.Settings;
 using AwesomeAssertions;
+using CommunityToolkit.Mvvm.Messaging;
 using Domain.Settings;
 using Logic.AppManagement;
 using Logic.AppManagement.Lifecycle;
@@ -28,7 +30,7 @@ public sealed class HotkeyConfigurationDriver
 		IMediator mediator,
 		Application.Ports.ISettingsStore store,
 		HotkeyActivationController controller,
-		SettingsChangeBroadcaster broadcaster)
+		IMessenger messenger)
 	{
 		_mediator = mediator;
 		_controller = controller;
@@ -39,19 +41,19 @@ public sealed class HotkeyConfigurationDriver
 			.Do(call => _persisted = call.Arg<AppSettings>());
 
 		_service = new HotkeyConfigurationHostedService(
-			controller, store, broadcaster, NullLogger<HotkeyConfigurationHostedService>.Instance);
+			controller, store, messenger, NullLogger<HotkeyConfigurationHostedService>.Instance);
 	}
 
 	// --- given / when ---
 
-	// Persist a hotkey through the real pipeline (validated, saved, broadcast) before the service starts —
-	// so startup config reads it. The broadcast has no live effect yet because nothing is subscribed.
+	// Persist a hotkey through the real pipeline (validated, saved, published) before the service starts —
+	// so startup config reads it. The published change has no live effect yet because nothing is registered.
 	public async Task PersistHotkey(string chord) => await ChangeHotkey(chord);
 
 	public async Task StartPipeline() => await _service.StartAsync(CancellationToken.None);
 
-	// Change the hotkey through the real UpdateSettingsCommand; its handler raises the broadcaster, which the
-	// started service is subscribed to, so the live controller rebinds.
+	// Change the hotkey through the real UpdateSettingsCommand; its handler publishes on the messenger, which
+	// the started service registered on, so the live controller rebinds.
 	public async Task ChangeHotkey(string chord)
 	{
 		AppSettingsDto current = await _mediator.Send(new GetSettingsQuery());

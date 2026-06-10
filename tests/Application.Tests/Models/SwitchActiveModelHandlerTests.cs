@@ -6,6 +6,7 @@
 using Application.Models;
 using Application.Ports;
 using Application.Settings;
+using CommunityToolkit.Mvvm.Messaging;
 using Domain.Settings;
 using NSubstitute;
 using Xunit;
@@ -16,7 +17,9 @@ public sealed class SwitchActiveModelHandlerTests
 {
 	private readonly IModelLifecycle _lifecycle = Substitute.For<IModelLifecycle>();
 	private readonly ISettingsStore _store = Substitute.For<ISettingsStore>();
-	private readonly SettingsChangeBroadcaster _broadcaster = new();
+	private readonly WeakReferenceMessenger _messenger = new();
+
+	private SettingsChangeChannel NewChannel() => new(_messenger, TimeProvider.System);
 
 	[Fact]
 	public async Task Switches_the_lifecycle_and_persists_the_selected_model_id()
@@ -25,10 +28,11 @@ public sealed class SwitchActiveModelHandlerTests
 			captureDeviceId: "Mic-1", auditLogEnabled: true, setupCompleted: true);
 		_store.LoadAsync(Arg.Any<CancellationToken>()).Returns(current);
 
-		AppSettings? broadcast = null;
-		_broadcaster.Changed += (_, settings) => broadcast = settings;
+		AppSettings? published = null;
+		object recipient = new();
+		_messenger.Register<SettingsChangedMessage>(recipient, (_, message) => published = message.Value);
 
-		SwitchActiveModelHandler handler = new(_lifecycle, _store, _broadcaster);
+		SwitchActiveModelHandler handler = new(_lifecycle, _store, NewChannel());
 		await handler.Handle(new SwitchActiveModelCommand("large-v3"), CancellationToken.None);
 
 		await _lifecycle.Received(1).SwitchAsync("large-v3", Arg.Any<CancellationToken>());
@@ -45,25 +49,28 @@ public sealed class SwitchActiveModelHandlerTests
 				s.SetupCompleted),
 			Arg.Any<CancellationToken>());
 
-		// The change is broadcast so the in-memory holder stays in sync (graceful shutdown won't clobber it).
-		Assert.NotNull(broadcast);
-		Assert.Equal("large-v3", broadcast!.ModelId);
+		// The change is published so the in-memory holder stays in sync (graceful shutdown won't clobber it).
+		Assert.NotNull(published);
+		Assert.Equal("large-v3", published!.ModelId);
+		GC.KeepAlive(recipient);
 	}
 
 	[Fact]
-	public async Task Does_not_resave_or_broadcast_when_the_model_is_already_active()
+	public async Task Does_not_resave_or_publish_when_the_model_is_already_active()
 	{
 		AppSettings current = new("large-v3", HotkeyBinding.Parse("Ctrl+Win"), 500, fillerWordRemovalEnabled: false);
 		_store.LoadAsync(Arg.Any<CancellationToken>()).Returns(current);
 
-		bool broadcast = false;
-		_broadcaster.Changed += (_, _) => broadcast = true;
+		bool published = false;
+		object recipient = new();
+		_messenger.Register<SettingsChangedMessage>(recipient, (_, _) => published = true);
 
-		SwitchActiveModelHandler handler = new(_lifecycle, _store, _broadcaster);
+		SwitchActiveModelHandler handler = new(_lifecycle, _store, NewChannel());
 		await handler.Handle(new SwitchActiveModelCommand("large-v3"), CancellationToken.None);
 
 		await _lifecycle.Received(1).SwitchAsync("large-v3", Arg.Any<CancellationToken>());
 		await _store.DidNotReceive().SaveAsync(Arg.Any<AppSettings>(), Arg.Any<CancellationToken>());
-		Assert.False(broadcast);
+		Assert.False(published);
+		GC.KeepAlive(recipient);
 	}
 }

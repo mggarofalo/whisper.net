@@ -141,6 +141,12 @@ public static class TestDependencies
 		// field error and blocks the save; valid chord persists) is proven at the view-model boundary.
 		services.AddScoped<SettingsValidationDriver>();
 
+		// Instant-apply channel (WHISPER-78): the messenger + channel are singletons in production, but the
+		// specs share one root provider, so a singleton WeakReferenceMessenger would leak recipient
+		// registrations across scenarios. Scope both per scenario so each gets a fresh instant-apply channel.
+		services.AddScoped<CommunityToolkit.Mvvm.Messaging.IMessenger, CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger>();
+		services.AddScoped<Application.Settings.SettingsChangeChannel>();
+
 		// Model picker (WHISPER-27): the real ModelViewModel over the real Mediator pipeline (list /
 		// download / switch handlers) and the real catalog, faking only the device-facing model ports.
 		services.AddScoped<ModelPickerDriver>();

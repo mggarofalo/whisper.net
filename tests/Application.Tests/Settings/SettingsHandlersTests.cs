@@ -4,6 +4,7 @@
 
 using Application.Ports;
 using Application.Settings;
+using CommunityToolkit.Mvvm.Messaging;
 using Domain.Settings;
 using NSubstitute;
 using Xunit;
@@ -31,12 +32,14 @@ public sealed class SettingsHandlersTests
 	}
 
 	[Fact]
-	public async Task Update_persists_the_mapped_domain_settings_and_broadcasts_the_change()
+	public async Task Update_persists_the_mapped_domain_settings_and_publishes_the_change()
 	{
-		SettingsChangeBroadcaster broadcaster = new();
-		AppSettings? broadcast = null;
-		broadcaster.Changed += (_, settings) => broadcast = settings;
-		UpdateSettingsHandler handler = new(_store, _mapper, broadcaster);
+		WeakReferenceMessenger messenger = new();
+		AppSettings? published = null;
+		object recipient = new();
+		messenger.Register<SettingsChangedMessage>(recipient, (_, message) => published = message.Value);
+		SettingsChangeChannel channel = new(messenger, TimeProvider.System);
+		UpdateSettingsHandler handler = new(_store, _mapper, channel);
 		AppSettingsDto dto = new("small.en", "Win+Ctrl", 500, true);
 
 		await handler.Handle(new UpdateSettingsCommand(dto), CancellationToken.None);
@@ -49,8 +52,9 @@ public sealed class SettingsHandlersTests
 				s.FillerWordRemovalEnabled),
 			Arg.Any<CancellationToken>());
 
-		// The change is broadcast (after the save) so live services can rebind without a restart (WHISPER-75).
-		Assert.NotNull(broadcast);
-		Assert.Equal("Ctrl+Win", broadcast!.Hotkey.Chord);
+		// The change is published (after the save) so live services reconfigure without a restart (WHISPER-78).
+		Assert.NotNull(published);
+		Assert.Equal("Ctrl+Win", published!.Hotkey.Chord);
+		GC.KeepAlive(recipient);
 	}
 }

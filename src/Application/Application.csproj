@@ -9,6 +9,9 @@
   <ItemGroup>
     <PackageReference Include="Mediator.Abstractions" />
     <PackageReference Include="Mediator.SourceGenerator" PrivateAssets="all" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <!-- CommunityToolkit.Mvvm is UI-framework-agnostic; used here only for its Messaging primitives
+         (IMessenger / WeakReferenceMessenger) that back the instant-apply settings channel (WHISPER-78). -->
+    <PackageReference Include="CommunityToolkit.Mvvm" />
     <PackageReference Include="FluentValidation" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
     <PackageReference Include="Riok.Mapperly" />

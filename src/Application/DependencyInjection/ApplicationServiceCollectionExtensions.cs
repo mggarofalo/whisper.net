@@ -28,9 +28,14 @@ public static class ApplicationServiceCollectionExtensions
 
 		services.AddValidatorsFromAssembly(typeof(ICommand<>).Assembly, includeInternalTypes: true);
 
-		// Settings-change signal (WHISPER-75): one shared instance so the update handler can raise a change
-		// and higher layers can subscribe to apply it live (e.g. rebinding the hotkey matcher).
-		services.AddSingleton<Settings.SettingsChangeBroadcaster>();
+		// Instant-apply settings channel (WHISPER-78): one shared WeakReferenceMessenger so the update/switch
+		// handlers can publish a committed change and higher layers register weakly to apply it live (e.g.
+		// rebinding the hotkey matcher) without a restart. The channel debounces noisy free-text commits using
+		// the injected TimeProvider. Replaces the ad-hoc SettingsChangeBroadcaster from WHISPER-75.
+		services.AddSingleton<CommunityToolkit.Mvvm.Messaging.IMessenger>(
+			_ => new CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger());
+		services.AddSingleton(TimeProvider.System);
+		services.AddSingleton<Settings.SettingsChangeChannel>();
 
 		// Mapperly mappers are stateless; register them as singletons so handlers can inject them.
 		services.AddSingleton<Settings.SettingsMapper>();

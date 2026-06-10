@@ -7,6 +7,7 @@
 using Application.Ports;
 using Application.Settings;
 using AwesomeAssertions;
+using CommunityToolkit.Mvvm.Messaging;
 using Domain.Settings;
 using Logic.AppManagement.Lifecycle;
 using Logic.AppManagement.Settings;
@@ -20,24 +21,24 @@ public sealed class SettingsLifecycleServiceTests
 {
 	private readonly ISettingsStore _store = Substitute.For<ISettingsStore>();
 	private readonly SettingsHolder _holder = new();
-	private readonly SettingsChangeBroadcaster _broadcaster = new();
+	private readonly IMessenger _messenger = new WeakReferenceMessenger();
 
 	private static readonly AppSettings Changed =
 		new("large-v3", HotkeyBinding.Parse("Ctrl+Shift+D"), silenceThresholdMs: 750, fillerWordRemovalEnabled: false);
 
 	private SettingsLifecycleService NewService() =>
-		new(_store, _holder, _broadcaster, NullLogger<SettingsLifecycleService>.Instance);
+		new(_store, _holder, _messenger, NullLogger<SettingsLifecycleService>.Instance);
 
 	[Fact]
-	public async Task A_change_broadcast_after_startup_is_persisted_on_shutdown()
+	public async Task A_change_published_after_startup_is_persisted_on_shutdown()
 	{
 		_store.LoadAsync(Arg.Any<CancellationToken>()).Returns(AppSettings.Default);
 		SettingsLifecycleService service = NewService();
 
 		await service.StartAsync(CancellationToken.None);
-		_broadcaster.Raise(Changed); // a model/hotkey/device change during the session
+		_messenger.Send(new SettingsChangedMessage(Changed)); // a model/hotkey/device change during the session
 
-		_holder.Current.Should().Be(Changed, "the holder tracks the broadcast change");
+		_holder.Current.Should().Be(Changed, "the holder tracks the published change via weak registration");
 
 		await service.StopAsync(CancellationToken.None);
 
@@ -54,8 +55,8 @@ public sealed class SettingsLifecycleServiceTests
 		await service.StartAsync(CancellationToken.None);
 		await service.StopAsync(CancellationToken.None);
 
-		_broadcaster.Raise(Changed); // arrives after shutdown — must be ignored
+		_messenger.Send(new SettingsChangedMessage(Changed)); // arrives after shutdown — must be ignored
 
-		_holder.Current.Should().Be(AppSettings.Default, "the service unsubscribed on shutdown");
+		_holder.Current.Should().Be(AppSettings.Default, "the service unregistered on shutdown");
 	}
 }
