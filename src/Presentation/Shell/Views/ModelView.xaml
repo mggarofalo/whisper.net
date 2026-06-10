@@ -1,6 +1,7 @@
 <UserControl x:Class="Presentation.Shell.Views.ModelView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             KeyboardNavigation.TabNavigation="Local">
     <DockPanel Margin="24">
         <StackPanel DockPanel.Dock="Top"
                     Orientation="Horizontal"
@@ -14,6 +15,7 @@
                        Opacity="0.8"
                        VerticalAlignment="Center" />
             <Button Content="Refresh"
+                    AutomationProperties.Name="Refresh model list"
                     Command="{Binding LoadCommand}"
                     Margin="16,0,0,0"
                     Padding="12,4" />
@@ -56,6 +58,7 @@
                                            Margin="0,0,12,0" />
                                 <TextBlock Text="{Binding Memory, StringFormat='RAM: {0}'}" />
                                 <ProgressBar Value="{Binding DownloadPercent}"
+                                             AutomationProperties.Name="{Binding DisplayName, StringFormat='Download progress for {0}'}"
                                              Width="80"
                                              Height="6"
                                              Margin="12,0,0,0"
@@ -73,17 +76,20 @@
                                            Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}" />
                                 <!-- Download with progress; auto-disabled while a download runs (no concurrent runs). -->
                                 <Button Content="Download"
+                                        AutomationProperties.Name="{Binding DisplayName, StringFormat='Download {0}'}"
                                         Command="{Binding DataContext.DownloadCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                         CommandParameter="{Binding}"
                                         Margin="0,0,8,0"
                                         Padding="12,4" />
                                 <!-- Cancel the in-flight download; only shown while one is running. -->
                                 <Button Content="Cancel"
+                                        AutomationProperties.Name="Cancel download"
                                         Command="{Binding DataContext.DownloadCancelCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                         Margin="0,0,8,0"
                                         Padding="12,4"
                                         Visibility="{Binding DataContext.DownloadCommand.IsRunning, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource BoolToVisibility}}" />
                                 <Button Content="Select"
+                                        AutomationProperties.Name="{Binding DisplayName, StringFormat='Select {0}'}"
                                         Command="{Binding DataContext.SelectCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                         CommandParameter="{Binding}"
                                         Padding="12,4" />

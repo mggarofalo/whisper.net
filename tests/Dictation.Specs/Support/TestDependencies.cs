@@ -168,6 +168,11 @@ public static class TestDependencies
 		// calls IShellPresenter.ShowSettings on that decision is Presentation glue verified by smoke.
 		services.AddScoped<SetupStatusDriver>();
 
+		// Accessibility (WHISPER-83): inspects the settings view XAML directly (like the packaging/guidance
+		// drivers) to assert automation names, the labelled pickers, the capture control's announced binding,
+		// and a declared keyboard tab order. Screen-reader announcement of errors is verified manually.
+		services.AddScoped<AccessibilityDriver>();
+
 		// Model picker (WHISPER-27): the real ModelViewModel over the real Mediator pipeline (list /
 		// download / switch handlers) and the real catalog, faking only the device-facing model ports.
 		services.AddScoped<ModelPickerDriver>();

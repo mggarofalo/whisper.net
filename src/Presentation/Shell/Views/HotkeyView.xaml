@@ -1,7 +1,8 @@
 <UserControl x:Class="Presentation.Shell.Views.HotkeyView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:controls="clr-namespace:Presentation.Shell.Controls">
+             xmlns:controls="clr-namespace:Presentation.Shell.Controls"
+             KeyboardNavigation.TabNavigation="Local">
     <!-- AdornerDecorator (WHISPER-77) so the validated chord field renders its native error adorner. -->
     <AdornerDecorator>
         <StackPanel Margin="24">
@@ -24,8 +25,10 @@
                 <!-- The capture control records a pressed combination into the validated HotkeyInput, so an
                      invalid/unregisterable combo flags an adorner and the Save button (gated by
                      AssignCommand.CanExecute) disables. Press Esc/Backspace in the field to clear. -->
-                <controls:HotkeyCaptureControl Chord="{Binding HotkeyInput, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}" />
+                <controls:HotkeyCaptureControl AutomationProperties.Name="Dictation hotkey"
+                                               Chord="{Binding HotkeyInput, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}" />
                 <Button Content="Assign"
+                        AutomationProperties.Name="Assign hotkey"
                         Command="{Binding AssignCommand}"
                         Margin="8,0,0,0"
                         Padding="12,4" />
