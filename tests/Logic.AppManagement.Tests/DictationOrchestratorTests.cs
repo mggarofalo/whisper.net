@@ -41,8 +41,8 @@ public sealed class DictationOrchestratorTests
 			.Send(Arg.Any<DeliverTranscriptionCommand>(), Arg.Any<CancellationToken>())
 			.Returns(new DeliveryResult(Delivered: true, Text: "the result"));
 
-	private DictationOrchestrator CreateSut() =>
-		new(_audio, _stateMachine, _activation, new AudioResampler(), new AudioBufferingOptions(), _mediator,
+	private DictationOrchestrator CreateSut(AudioBufferingOptions? bufferingOptions = null) =>
+		new(_audio, _stateMachine, _activation, new AudioResampler(), bufferingOptions ?? new AudioBufferingOptions(), _mediator,
 			_feedback, Options.Create(_feedbackOptions), Substitute.For<IUserNotifier>(), _logger);
 
 	[Fact]
@@ -156,6 +156,21 @@ public sealed class DictationOrchestratorTests
 		await _mediator.Received(1).Send(
 			Arg.Is<RecordTranscriptionCommand>(command =>
 				command.Text == "the result" && command.Duration >= TimeSpan.Zero),
+			Arg.Any<CancellationToken>());
+	}
+
+	[Fact]
+	public async Task A_clip_without_a_usable_sample_rate_records_a_zero_duration_instead_of_failing()
+	{
+		// A non-positive target rate makes the finalized clip's SampleRate 0; the duration guard must
+		// yield TimeSpan.Zero rather than let the NaN division throw before the pipeline even runs.
+		DictationOrchestrator sut = CreateSut(new AudioBufferingOptions(TargetSampleRate: 0));
+
+		sut.Start();
+		await sut.StopAsync(TestContext.Current.CancellationToken);
+
+		await _mediator.Received(1).Send(
+			Arg.Is<RecordTranscriptionCommand>(command => command.Duration == TimeSpan.Zero),
 			Arg.Any<CancellationToken>());
 	}
 
