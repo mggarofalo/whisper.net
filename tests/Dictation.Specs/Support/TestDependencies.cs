@@ -173,6 +173,10 @@ public static class TestDependencies
 		// and a declared keyboard tab order. Screen-reader announcement of errors is verified manually.
 		services.AddScoped<AccessibilityDriver>();
 
+		// Native theming (WHISPER-84): inspects the presentation artifacts to assert the built-in Fluent
+		// ThemeMode.System opt-in and the recorded theming decision. The themed window is smoke-only.
+		services.AddScoped<ThemingDriver>();
+
 		// Model picker (WHISPER-27): the real ModelViewModel over the real Mediator pipeline (list /
 		// download / switch handlers) and the real catalog, faking only the device-facing model ports.
 		services.AddScoped<ModelPickerDriver>();
