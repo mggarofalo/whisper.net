@@ -24,6 +24,12 @@
                     Command="{Binding LoadCommand}"
                     Margin="16,0,0,0"
                     Padding="12,4" />
+            <!-- Lightweight loading state (WHISPER-108): visible while the activation-triggered load runs. -->
+            <TextBlock Text="Loading…"
+                       Opacity="0.7"
+                       Margin="16,0,0,0"
+                       VerticalAlignment="Center"
+                       Visibility="{Binding LoadCommand.IsRunning, Converter={StaticResource BoolToVisibility}}" />
             <!-- A failed download surfaces here natively (WHISPER-81), not as a crash. -->
             <TextBlock Text="{Binding DownloadError}"
                        Foreground="#C03030"

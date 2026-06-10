@@ -30,8 +30,12 @@ public sealed partial class StatsViewModel : FeatureViewModel
 	[ObservableProperty]
 	private TimeSpan _estimatedTimeSaved;
 
-	// Re-read the aggregate usage stats through Mediator and surface the totals. The view triggers this on
-	// open and from a refresh action, so the dashboard reflects new activity.
+	// Auto-load the totals on first activation (WHISPER-108): the dashboard opens populated, the cached
+	// instance does not re-query on later tab switches, and Refresh stays the manual re-query.
+	protected override IAsyncRelayCommand FirstActivationLoadCommand => RefreshCommand;
+
+	// Re-read the aggregate usage stats through Mediator and surface the totals; Refresh re-runs it so
+	// the dashboard reflects new activity.
 	[RelayCommand]
 	private async Task RefreshAsync(CancellationToken cancellationToken)
 	{
