@@ -17,6 +17,12 @@
                     Command="{Binding LoadCommand}"
                     Margin="16,0,0,0"
                     Padding="12,4" />
+            <!-- A failed download surfaces here natively (WHISPER-81), not as a crash. -->
+            <TextBlock Text="{Binding DownloadError}"
+                       Foreground="#C03030"
+                       Margin="16,0,0,0"
+                       VerticalAlignment="Center"
+                       TextWrapping="Wrap" />
         </StackPanel>
 
         <!-- One row per model: name, the three ratings, download progress, and a select/download action. -->
@@ -65,6 +71,18 @@
                                            Margin="0,0,8,0"
                                            VerticalAlignment="Center"
                                            Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}" />
+                                <!-- Download with progress; auto-disabled while a download runs (no concurrent runs). -->
+                                <Button Content="Download"
+                                        Command="{Binding DataContext.DownloadCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                        CommandParameter="{Binding}"
+                                        Margin="0,0,8,0"
+                                        Padding="12,4" />
+                                <!-- Cancel the in-flight download; only shown while one is running. -->
+                                <Button Content="Cancel"
+                                        Command="{Binding DataContext.DownloadCancelCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                        Margin="0,0,8,0"
+                                        Padding="12,4"
+                                        Visibility="{Binding DataContext.DownloadCommand.IsRunning, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource BoolToVisibility}}" />
                                 <Button Content="Select"
                                         Command="{Binding DataContext.SelectCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                         CommandParameter="{Binding}"

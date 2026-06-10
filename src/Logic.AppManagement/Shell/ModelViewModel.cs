@@ -28,6 +28,11 @@ public sealed partial class ModelViewModel : ObservableValidator, IFeatureViewMo
 	[ObservableProperty]
 	private string? _activeModelId;
 
+	/// <summary>A user-facing error from the last download attempt, or null when none failed. The view shows
+	/// this natively rather than crashing on a failed download (WHISPER-81).</summary>
+	[ObservableProperty]
+	private string? _downloadError;
+
 	/// <summary>Whether this section is the shell's active content; toggled by the navigation lifecycle.</summary>
 	[ObservableProperty]
 	private bool _isActive;
@@ -74,8 +79,12 @@ public sealed partial class ModelViewModel : ObservableValidator, IFeatureViewMo
 		SetActive(item.Id);
 	}
 
-	// Download a model through Mediator, surfacing live progress and a terminal success/failure state.
-	[RelayCommand]
+	// Download a model through Mediator, surfacing live determinate progress and a terminal success/failure
+	// state. The command is async end-to-end (no .Result/.Wait, so the UI thread never blocks), cannot run
+	// concurrently with itself, and is cancelable: IncludeCancelCommand generates DownloadCancelCommand,
+	// which cancels this invocation's token. IsRunning (on DownloadCommand) drives the progress bar and
+	// button enablement in the view.
+	[RelayCommand(IncludeCancelCommand = true, AllowConcurrentExecutions = false)]
 	private async Task DownloadAsync(ModelItemViewModel? item, CancellationToken cancellationToken)
 	{
 		if (item is null)
@@ -83,6 +92,7 @@ public sealed partial class ModelViewModel : ObservableValidator, IFeatureViewMo
 			return;
 		}
 
+		DownloadError = null;
 		item.DownloadPercent = 0;
 		item.DownloadState = ModelDownloadState.InProgress;
 
@@ -98,10 +108,17 @@ public sealed partial class ModelViewModel : ObservableValidator, IFeatureViewMo
 			item.IsDownloaded = true;
 			item.DownloadState = ModelDownloadState.Succeeded;
 		}
-		catch (Exception) when (cancellationToken.IsCancellationRequested is false)
+		catch (OperationCanceledException)
 		{
-			// A failed download is a terminal state the view surfaces; the active model is left unchanged.
+			// The user cancelled: reset the row to its pre-download state, leaving no half-finished progress.
+			item.DownloadPercent = 0;
+			item.DownloadState = ModelDownloadState.NotStarted;
+		}
+		catch (Exception)
+		{
+			// A failed download is a terminal state the view surfaces natively; the active model is unchanged.
 			item.DownloadState = ModelDownloadState.Failed;
+			DownloadError = $"Couldn't download '{item.DisplayName}'. Check your connection and try again.";
 		}
 	}
 

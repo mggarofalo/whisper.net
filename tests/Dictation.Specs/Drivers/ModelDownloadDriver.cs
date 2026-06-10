@@ -1,0 +1,92 @@
+// Drives the @WHISPER-81 model-download scenarios. It builds the REAL ModelViewModel over the REAL Mediator
+// pipeline (ListModels / DownloadModel handlers) and the REAL catalog, faking only the device-facing
+// downloader — gated on a signal so the test can observe a download IN FLIGHT, then cancel it. So it proves
+// the user-visible outcomes WHISPER-81 adds: a download reports determinate progress and is running, a
+// Cancel stops it and leaves the model un-activated, and a failed download surfaces a native error instead
+// of crashing. The ProgressBar + Cancel button that bind to these are Presentation glue verified by smoke.
+
+using Application.Ports;
+using AwesomeAssertions;
+using Domain.Models;
+using Logic.AppManagement.Shell;
+using Mediator;
+using NSubstitute;
+
+namespace Dictation.Specs.Drivers;
+
+public sealed class ModelDownloadDriver
+{
+	private readonly ModelViewModel _viewModel;
+	private readonly IModelDownloader _downloader;
+	private readonly TaskCompletionSource _gate = new();
+
+	private Task? _download;
+
+	public ModelDownloadDriver(IMediator mediator, IModelDownloader downloader, IModelLifecycle lifecycle)
+	{
+		_downloader = downloader;
+
+		// Nothing loaded by default, so ListModels can read a non-null status and mark nothing active.
+		lifecycle.Status.Returns(ModelStatus.Unloaded);
+
+		_viewModel = new ModelViewModel(mediator);
+	}
+
+	public Task LoadList() => _viewModel.LoadCommand.ExecuteAsync(null);
+
+	// The download reports 50% immediately, then blocks until the token cancels (this driver never opens the
+	// gate, so the only way the in-flight download ends is cancellation — exactly what the scenario drives).
+	public void ConfigureGatedDownload(string id) =>
+		_downloader.DownloadAsync(Arg.Any<WhisperModelCatalogEntry>(), Arg.Any<IProgress<ModelDownloadProgress>>(), Arg.Any<CancellationToken>())
+			.Returns(call => new ValueTask<string>(RunGatedDownload(
+				call.ArgAt<IProgress<ModelDownloadProgress>>(1),
+				call.ArgAt<CancellationToken>(2),
+				id)));
+
+	public void ConfigureFailingDownload() =>
+		_downloader.DownloadAsync(Arg.Any<WhisperModelCatalogEntry>(), Arg.Any<IProgress<ModelDownloadProgress>>(), Arg.Any<CancellationToken>())
+			.Returns<ValueTask<string>>(_ => throw new InvalidOperationException("download failed"));
+
+	// Begin the download but do not await it — it is in flight (blocked) so the test can inspect the running
+	// state and then cancel.
+	public void StartDownload(string id) => _download = _viewModel.DownloadCommand.ExecuteAsync(Item(id));
+
+	// Download synchronously to its (failed) terminal state.
+	public Task DownloadToCompletion(string id) => _viewModel.DownloadCommand.ExecuteAsync(Item(id));
+
+	public void Cancel() => _viewModel.DownloadCancelCommand.Execute(null);
+
+	public async Task AwaitDownload() => await _download!;
+
+	public void AssertRunningWithProgress(string id)
+	{
+		_viewModel.DownloadCommand.IsRunning.Should().BeTrue("the download is in flight");
+		Item(id).DownloadState.Should().Be(ModelDownloadState.InProgress);
+		Item(id).DownloadPercent.Should().Be(50d, "determinate progress is reported live");
+	}
+
+	public void AssertResetAndInactive(string id)
+	{
+		Item(id).DownloadState.Should().Be(ModelDownloadState.NotStarted, "a cancelled download resets the row");
+		Item(id).IsActive.Should().BeFalse();
+		_viewModel.ActiveModelId.Should().NotBe(id);
+	}
+
+	public void AssertNativeErrorShown() => _viewModel.DownloadError.Should().NotBeNullOrEmpty();
+
+	public void AssertNotActivated(string id)
+	{
+		Item(id).IsActive.Should().BeFalse();
+		_viewModel.ActiveModelId.Should().NotBe(id);
+	}
+
+	private async Task<string> RunGatedDownload(IProgress<ModelDownloadProgress>? progress, CancellationToken cancellationToken, string id)
+	{
+		progress?.Report(new ModelDownloadProgress(50, 100));
+		await _gate.Task.WaitAsync(cancellationToken);
+		return $"/cache/{id}.bin";
+	}
+
+	private ModelItemViewModel Item(string id) =>
+		_viewModel.Models.Single(model => string.Equals(model.Id, id, StringComparison.OrdinalIgnoreCase));
+}
