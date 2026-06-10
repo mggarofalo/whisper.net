@@ -18,8 +18,11 @@
                     Command="{Binding LoadCommand}"
                     Margin="16,0,0,0"
                     Padding="12,4" />
+            <!-- Disabled once the history is exhausted (WHISPER-110): the view-model tracks whether a
+                 further page may exist, so the button never offers a silent no-op. -->
             <Button Content="Load more"
                     Command="{Binding NextPageCommand}"
+                    IsEnabled="{Binding HasMorePages}"
                     Margin="8,0,0,0"
                     Padding="12,4" />
         </StackPanel>

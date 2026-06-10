@@ -1,7 +1,8 @@
 // The shell's history browser (WHISPER-45): lists past transcriptions newest-first, pages through them,
 // and re-copies an entry to the clipboard. It reads via BrowseHistoryQuery (a page at a time, so a
 // large history never blocks) and copies via CopyToClipboardCommand. Empty history is a first-class
-// empty state, not an error. Built on CommunityToolkit.Mvvm and WPF-free so the behavior is driven for
+// empty state, not an error, and HasMorePages (WHISPER-110) tells the view when Load More can no
+// longer produce anything so the control disables instead of silently no-opping. Built on CommunityToolkit.Mvvm and WPF-free so the behavior is driven for
 // real in specs; the thin view binds to it. Entries is a UiBoundCollection registered through the
 // collection-sync seam at construction (WHISPER-91), so a future off-UI-thread mutation (live feed,
 // background load) binds safely instead of throwing.
@@ -37,6 +38,13 @@ public sealed partial class HistoryViewModel : FeatureViewModel
 	[ObservableProperty]
 	private int _page = 1;
 
+	/// <summary>
+	/// Whether a further history page may exist. True until a load proves otherwise, so the view can
+	/// disable Load More instead of offering a silent no-op once the history is exhausted.
+	/// </summary>
+	[ObservableProperty]
+	private bool _hasMorePages = true;
+
 	// Load the first page through Mediator, replacing whatever was shown.
 	[RelayCommand]
 	private async Task LoadAsync(CancellationToken cancellationToken)
@@ -51,16 +59,21 @@ public sealed partial class HistoryViewModel : FeatureViewModel
 		}
 
 		IsEmpty = Entries.Count == 0;
+
+		// Only a completely full page can still be followed by another; a short (or empty) first page
+		// already proves the history is exhausted.
+		HasMorePages = first.Count == PageSize;
 	}
 
-	// Browse to the next page and append it; a no-op once the history is exhausted. Awaiting the query
-	// keeps the UI thread free while the page loads.
+	// Browse to the next page and append it; an empty page marks the history exhausted. Awaiting the
+	// query keeps the UI thread free while the page loads.
 	[RelayCommand]
 	private async Task NextPageAsync(CancellationToken cancellationToken)
 	{
 		IReadOnlyList<TranscriptEntryDto> next = await _mediator.Send(new BrowseHistoryQuery(PageSize, Page + 1), cancellationToken);
 		if (next.Count == 0)
 		{
+			HasMorePages = false;
 			return;
 		}
 
@@ -69,6 +82,9 @@ public sealed partial class HistoryViewModel : FeatureViewModel
 		{
 			Entries.Add(entry);
 		}
+
+		// A short page is the last page; only a completely full one can still be followed by another.
+		HasMorePages = next.Count == PageSize;
 	}
 
 	// Re-copy a past transcription's text to the clipboard via Mediator.

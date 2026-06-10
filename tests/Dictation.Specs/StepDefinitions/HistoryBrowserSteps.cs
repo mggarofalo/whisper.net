@@ -22,6 +22,9 @@ public sealed class HistoryBrowserSteps(HistoryBrowserDriver driver)
 	[Given(@"more transcriptions exist than fit on one page")]
 	public void GivenMoreThanOnePageExists() => driver.StoreHasEntriesAcrossTwoPages();
 
+	[Given(@"exactly one full page of transcriptions exists")]
+	public void GivenExactlyOneFullPageExists() => driver.StoreHasExactlyOneFullPage();
+
 	[Given(@"no transcriptions have been recorded")]
 	public void GivenNoTranscriptions() => driver.StoreIsEmpty();
 
@@ -45,4 +48,10 @@ public sealed class HistoryBrowserSteps(HistoryBrowserDriver driver)
 
 	[Then(@"the history view shows an empty state")]
 	public void ThenEmptyState() => driver.AssertEmptyState();
+
+	[Then(@"a further history page is offered")]
+	public void ThenFurtherPageOffered() => driver.AssertFurtherPageOffered();
+
+	[Then(@"no further history pages are offered")]
+	public void ThenNoFurtherPageOffered() => driver.AssertNoFurtherPageOffered();
 }

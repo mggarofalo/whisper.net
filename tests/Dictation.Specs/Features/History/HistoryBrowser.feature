@@ -3,6 +3,7 @@
 #  AC2 browse/page without blocking the UI thread             -> "Browsing loads the next page"
 #  AC3 selecting an entry copies its text via a command        -> "Re-copying a past transcription"
 #  AC4 empty history renders an empty state, not an error      -> "Empty history shows an empty state"
+#  WHISPER-110 AC3 Load More disabled when no further pages exist -> the three @WHISPER-110 scenarios
 
 @WHISPER-45
 Feature: Browsing transcription history
@@ -30,3 +31,25 @@ Feature: Browsing transcription history
     Given no transcriptions have been recorded
     When the user opens the history view
     Then the history view shows an empty state
+
+  # WHISPER-110: browsing past the end of the history silently did nothing, so the view offered
+  # "Load more" forever. The browser now tracks whether a further page may exist, and the view
+  # disables Load More when it cannot produce one.
+  @WHISPER-110
+  Scenario: Load more is unavailable when all entries fit on one page
+    Given transcriptions have been recorded previously
+    When the user opens the history view
+    Then no further history pages are offered
+
+  @WHISPER-110
+  Scenario: Load more stays available while a further page may exist
+    Given exactly one full page of transcriptions exists
+    When the user opens the history view
+    Then a further history page is offered
+
+  @WHISPER-110
+  Scenario: Load more becomes unavailable once the history is exhausted
+    Given exactly one full page of transcriptions exists
+    When the user opens the history view
+    And the user browses to the next page
+    Then no further history pages are offered

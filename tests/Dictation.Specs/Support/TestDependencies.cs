@@ -235,6 +235,11 @@ public static class TestDependencies
 		services.AddScoped(_ => Substitute.For<IClipboard>());
 		services.AddScoped<HistoryBrowserDriver>();
 
+		// History write-through (WHISPER-110): re-configures this scenario's IHistoryStore substitute to
+		// round-trip (AddAsync keeps entries; GetEntriesAsync returns them), so a dictation run through the
+		// real orchestrator is asserted via the real read path (history browser / stats dashboard) above.
+		services.AddScoped<HistoryRecordingDriver>();
+
 		// Stats dashboard (WHISPER-53): the real StatsViewModel over the real Mediator pipeline
 		// (GetUsageStats + the real Logic usage-stats calculator) and the faked IHistoryStore, so the
 		// dashboard's totals are genuinely computed by the Application layer.
