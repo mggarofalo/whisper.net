@@ -133,6 +133,25 @@ list-bearing view-models adopt by default:
 
 `HistoryViewModel.Entries` is the reference implementation of the pattern.
 
+### Event wiring: behavior vs command vs legitimate code-behind (WHISPER-93)
+
+How a view connects a UI event to logic, in order of preference:
+
+1. **A real `Command` binding** for every user intent where enablement matters (buttons, menu items):
+   `Command="{Binding AssignCommand}"`. The control's enabled state follows `CanExecute` for free.
+   **Caveat:** `InvokeCommandAction` does **not** honor `CanExecute` — it invokes the command even when
+   `CanExecute` is false and never disables the control. Where enablement matters, use a real command
+   binding, not a trigger.
+2. **A named, reusable attached behavior** (`Presentation/Behaviors`, built on
+   `Microsoft.Xaml.Behaviors.Wpf`'s `Behavior<T>`) for view-side reactions to lifecycle/UI events —
+   e.g. `FocusOnActivateBehavior` focuses a view's primary control each time its section is shown.
+   The event subscription lives once, inside the behavior's attach/detach lifecycle, never in a view's
+   code-behind. Use `Interaction.Triggers` + `InvokeCommandAction` only for fire-and-forget
+   notifications to the view-model where enablement is irrelevant.
+3. **Legitimate code-behind** stays the narrow WHISPER-92 exception: a self-contained input control
+   adapting raw UI events into a bindable `DependencyProperty` contract (`HotkeyCaptureControl`).
+   Everything else in a view is markup.
+
 ## CQRS via source-generated Mediator
 
 All application requests flow through the **source-generated Mediator** (martinothamar,

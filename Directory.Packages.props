@@ -25,6 +25,8 @@
   <ItemGroup>
     <PackageVersion Include="H.NotifyIcon.Wpf" Version="2.4.1" />
     <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <!-- Declarative view event wiring (WHISPER-93): EventTrigger/InvokeCommandAction + Behavior<T>. -->
+    <PackageVersion Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.135" />
   </ItemGroup>
 
   <!-- Audio: WASAPI capture + device enumeration (NAudio). Infrastructure-only; Windows at runtime. -->
