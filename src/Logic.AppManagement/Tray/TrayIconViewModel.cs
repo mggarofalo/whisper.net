@@ -2,8 +2,8 @@
 // TrayController. It exposes the current status and tooltip as observable properties and the two menu
 // actions as relay commands the context menu binds to. Moved out of Presentation (WHISPER-90) so the
 // specs and unit tests drive it for real: controller events are marshaled through the injected
-// IUiDispatcher seam — with a CheckAccess fast-path — instead of a hand-rolled
-// Application.Current.Dispatcher.Invoke that was untestable and null at shutdown.
+// IUiDispatcher seam — with a CheckAccess fast-path — instead of a hand-rolled blocking call against
+// the WPF application's dispatcher, which was untestable and null at shutdown.
 
 using Application.Ports;
 using CommunityToolkit.Mvvm.ComponentModel;

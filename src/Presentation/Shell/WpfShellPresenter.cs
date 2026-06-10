@@ -1,6 +1,6 @@
 // IShellPresenter for the WPF shell (WHISPER-18, dashboard shell in WHISPER-19): shows — or focuses, if
 // already open — the single dashboard window, marshaled onto the UI thread through the IUiDispatcher
-// seam (WHISPER-90) rather than a hand-rolled Application.Current.Dispatcher call. Both the tray "Open
+// seam (WHISPER-90) rather than a hand-rolled call against the live application's dispatcher. Both the tray "Open
 // Settings" action and (WHISPER-25) single-instance activation surface the window through this one seam.
 // The shell view-model graph depends on the scoped Mediator, so the presenter owns one long-lived UI
 // scope it resolves the view-model from — mirroring how the orchestrator runs inside a single host
