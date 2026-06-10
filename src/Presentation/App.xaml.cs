@@ -15,6 +15,7 @@ using Infrastructure.DependencyInjection;
 using Logic.AppManagement;
 using Logic.AppManagement.Diagnostics;
 using Logic.AppManagement.Lifecycle;
+using Logic.AppManagement.Notifications;
 using Logic.AppManagement.Shell;
 using Logic.AppManagement.Tray;
 using Mediator;
@@ -97,7 +98,7 @@ public partial class App
 		_host = builder.Build();
 
 		ILogger<App> logger = _host.Services.GetRequiredService<ILogger<App>>();
-		RegisterUnhandledExceptionLogging(logger);
+		RegisterUnhandledExceptionLogging(logger, _host.Services.GetRequiredService<IUserNotifier>());
 
 		// Single-instance enforcement (WHISPER-25): become the sole instance, or signal the already-running
 		// instance to surface and exit without starting a second host. Done before the host starts so a
@@ -125,6 +126,10 @@ public partial class App
 		// Create the tray icon: the user's primary entry point now that there is no window. It lives for
 		// the app's lifetime and is disposed on exit.
 		_trayIcon = new TrayIcon(_host.Services.GetRequiredService<TrayIconViewModel>());
+
+		// Error surfacing (WHISPER-95): now that the tray icon exists, attach the balloon presenter so
+		// backend failures become visible tray notifications instead of log-only events.
+		_host.Services.GetRequiredService<TrayUserNotifier>().AttachPresenter(_trayIcon.ShowNotification);
 
 		// The level overlay lives for the app's lifetime, hidden until recording starts (WHISPER-26).
 		_levelOverlay = new LevelOverlay(_host.Services.GetRequiredService<LevelOverlayViewModel>());
@@ -222,7 +227,7 @@ public partial class App
 		Shutdown();
 	}
 
-	private void RegisterUnhandledExceptionLogging(ILogger<App> logger)
+	private void RegisterUnhandledExceptionLogging(ILogger<App> logger, IUserNotifier notifier)
 	{
 		AppDomain.CurrentDomain.UnhandledException += (_, args) =>
 			logger.LogCritical(args.ExceptionObject as Exception, "Unhandled exception; the application is terminating.");
@@ -235,6 +240,12 @@ public partial class App
 			// default terminate; a genuinely fatal error still surfaces via AppDomain.UnhandledException.
 			logger.LogCritical(args.Exception, "Unhandled dispatcher exception; the UI action was aborted but the app keeps running.");
 			args.Handled = true;
+
+			// Additionally surface a non-technical notice (WHISPER-95): a silently-aborted UI action would
+			// otherwise look like the app ignoring the user. Exception details stay in the log.
+			notifier.NotifyError(
+				"Something went wrong",
+				"An unexpected error interrupted the last action. The app is still running; details are in the log.");
 		};
 
 		TaskScheduler.UnobservedTaskException += (_, args) =>

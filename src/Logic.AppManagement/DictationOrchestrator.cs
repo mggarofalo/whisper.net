@@ -29,6 +29,7 @@ public sealed class DictationOrchestrator
 	private readonly IMediator _mediator;
 	private readonly IAudioFeedback _audioFeedback;
 	private readonly IOptions<AudioFeedbackOptions> _feedbackOptions;
+	private readonly IUserNotifier _userNotifier;
 	private readonly ILogger<DictationOrchestrator> _logger;
 
 	// Serializes stage reads/writes so overlapping signals (key auto-repeat, a stop racing a capture
@@ -44,6 +45,7 @@ public sealed class DictationOrchestrator
 		IMediator mediator,
 		IAudioFeedback audioFeedback,
 		IOptions<AudioFeedbackOptions> feedbackOptions,
+		IUserNotifier userNotifier,
 		ILogger<DictationOrchestrator> logger)
 	{
 		_audioSource = audioSource;
@@ -52,6 +54,7 @@ public sealed class DictationOrchestrator
 		_mediator = mediator;
 		_audioFeedback = audioFeedback;
 		_feedbackOptions = feedbackOptions;
+		_userNotifier = userNotifier;
 		_logger = logger;
 
 		_audioSource.FrameAvailable += OnFrameAvailable;
@@ -175,6 +178,12 @@ public sealed class DictationOrchestrator
 				ex,
 				"Dictation pipeline failed after {ElapsedMs:F1}ms; returning to Idle.",
 				Stopwatch.GetElapsedTime(startedTicks).TotalMilliseconds);
+
+			// Surface the failure to the user (WHISPER-95): in a windowless app a log-only failure reads
+			// as "nothing was typed". The notifier never throws, so this cannot mask the recovery below.
+			_userNotifier.NotifyError(
+				"Dictation failed",
+				"Your speech could not be transcribed or delivered. The app is still running — please try again.");
 		}
 		finally
 		{
@@ -248,6 +257,11 @@ public sealed class DictationOrchestrator
 		_captureBuffer.StopRecording(); // discard the partial capture
 		_stateMachine.Cancel();
 		_logger.LogError("Audio capture failed ({Error}): {Message}; returning to Idle.", e.Error, e.Message);
+
+		// Surface the failure to the user (WHISPER-95): the recording was silently discarded otherwise.
+		_userNotifier.NotifyError(
+			"Microphone problem",
+			"Audio capture stopped unexpectedly, so the recording was discarded. Check your microphone and try again.");
 	}
 
 	// Guarded conditional transition: advance only from the expected stage. Returns whether it moved, and
