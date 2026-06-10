@@ -8,6 +8,7 @@
 
 using Application.Settings;
 using AwesomeAssertions;
+using CommunityToolkit.Mvvm.Messaging;
 using Dictation.Specs.Support;
 using Domain.Settings;
 using Infrastructure.Persistence;
@@ -29,7 +30,7 @@ public sealed class SettingsPersistenceDriver : IDisposable
 	private readonly string _directory = Path.Combine(Path.GetTempPath(), $"whisper-settings-{Guid.NewGuid():N}");
 	private readonly SettingsMapper _mapper = new();
 	private readonly RecordingLogger<SqliteSettingsStore> _storeLogger = new();
-	private readonly SettingsChangeBroadcaster _broadcaster = new();
+	private readonly IMessenger _messenger = new WeakReferenceMessenger();
 
 	private SettingsHolder _holder = new();
 
@@ -44,7 +45,7 @@ public sealed class SettingsPersistenceDriver : IDisposable
 	private SqliteSettingsStore NewStore() => new(NewDatabase(), _mapper, _storeLogger);
 
 	private SettingsLifecycleService NewLifecycle() =>
-		new(NewStore(), _holder, _broadcaster, NullLogger<SettingsLifecycleService>.Instance);
+		new(NewStore(), _holder, _messenger, NullLogger<SettingsLifecycleService>.Instance);
 
 	public async Task ChangeASettingAndShutDownGracefully()
 	{

@@ -16,7 +16,7 @@ namespace Application.Models;
 public sealed class SwitchActiveModelHandler(
 	IModelLifecycle lifecycle,
 	ISettingsStore settingsStore,
-	SettingsChangeBroadcaster broadcaster)
+	SettingsChangeChannel channel)
 	: ICommandHandler<SwitchActiveModelCommand, Mediator.Unit>
 {
 	public async ValueTask<Mediator.Unit> Handle(SwitchActiveModelCommand command, CancellationToken cancellationToken)
@@ -42,9 +42,10 @@ public sealed class SwitchActiveModelHandler(
 
 			await settingsStore.SaveAsync(updated, cancellationToken);
 
-			// Signal the change so running services apply it live and the in-memory holder is kept current,
-			// so a graceful shutdown persists the new model rather than overwriting it with a stale value.
-			broadcaster.Raise(updated);
+			// Publish the change on the instant-apply channel so running services apply it live and the
+			// in-memory holder is kept current, so a graceful shutdown persists the new model rather than
+			// overwriting it with a stale value (WHISPER-78).
+			channel.Publish(updated);
 		}
 
 		return Mediator.Unit.Value;

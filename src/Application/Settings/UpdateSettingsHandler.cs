@@ -8,7 +8,7 @@ using Domain.Settings;
 
 namespace Application.Settings;
 
-public sealed class UpdateSettingsHandler(ISettingsStore store, SettingsMapper mapper, SettingsChangeBroadcaster broadcaster)
+public sealed class UpdateSettingsHandler(ISettingsStore store, SettingsMapper mapper, SettingsChangeChannel channel)
 	: ICommandHandler<UpdateSettingsCommand, Mediator.Unit>
 {
 	public async ValueTask<Mediator.Unit> Handle(UpdateSettingsCommand command, CancellationToken cancellationToken)
@@ -16,9 +16,10 @@ public sealed class UpdateSettingsHandler(ISettingsStore store, SettingsMapper m
 		AppSettings settings = mapper.ToDomain(command.Settings);
 		await store.SaveAsync(settings, cancellationToken);
 
-		// Signal the change so running services apply it live (WHISPER-75) — e.g. the hotkey matcher rebinds
-		// without a restart. Raised after the save so subscribers never see a binding that failed to persist.
-		broadcaster.Raise(settings);
+		// Publish the change on the instant-apply channel so running services reconfigure live (WHISPER-78) —
+		// e.g. the hotkey matcher rebinds without a restart. Published after the save so subscribers never see
+		// a binding that failed to persist; the command has already passed validation, so the value is valid.
+		channel.Publish(settings);
 		return Mediator.Unit.Value;
 	}
 }

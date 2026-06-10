@@ -10,6 +10,7 @@
 
 using Application.Ports;
 using Application.Settings;
+using CommunityToolkit.Mvvm.Messaging;
 using Domain.Settings;
 using Logic.AppManagement.Settings;
 using Microsoft.Extensions.Hosting;
@@ -20,25 +21,28 @@ namespace Logic.AppManagement.Lifecycle;
 public sealed class SettingsLifecycleService(
 	ISettingsStore store,
 	SettingsHolder holder,
-	SettingsChangeBroadcaster broadcaster,
+	IMessenger messenger,
 	ILogger<SettingsLifecycleService> logger) : IHostedService
 {
 	public async Task StartAsync(CancellationToken cancellationToken)
 	{
 		holder.Current = await store.LoadAsync(cancellationToken);
 
-		// Keep the holder current as settings change at runtime, so the value saved on shutdown is the
-		// latest one the user chose — not the snapshot loaded at startup.
-		broadcaster.Changed += OnSettingsChanged;
+		// Track committed changes on the instant-apply channel (WHISPER-78) so the value saved on shutdown is
+		// the latest one the user chose — not the snapshot loaded at startup. Weak registration, so no leak.
+		messenger.Register<SettingsLifecycleService, SettingsChangedMessage>(
+			this, static (recipient, message) => recipient.OnSettingsChanged(message.Value));
 		logger.LogInformation("Loaded settings from the store on startup.");
 	}
 
 	public async Task StopAsync(CancellationToken cancellationToken)
 	{
-		broadcaster.Changed -= OnSettingsChanged;
+		// Stop tracking before the final save: once we have written the holder's value, a later change must
+		// not re-dirty it. (Registration is weak, so this is for correctness, not leak prevention.)
+		messenger.UnregisterAll(this);
 		await store.SaveAsync(holder.Current, cancellationToken);
 		logger.LogInformation("Persisted settings to the store on shutdown.");
 	}
 
-	private void OnSettingsChanged(object? sender, AppSettings settings) => holder.Current = settings;
+	private void OnSettingsChanged(AppSettings settings) => holder.Current = settings;
 }
