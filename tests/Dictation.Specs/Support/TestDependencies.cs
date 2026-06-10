@@ -117,6 +117,11 @@ public static class TestDependencies
 		// view-model logic) over a real state machine and a faked audio source, so it owns its own wiring.
 		services.AddScoped<LevelOverlayDriver>();
 
+		// UI dispatcher seam (WHISPER-90): the driver builds the real tray/overlay view-models over their
+		// real controllers and a synchronous recording dispatcher, so the marshaling contract (post vs
+		// CheckAccess fast-path, never blocking) is proven with no live WPF Application.
+		services.AddScoped<UiDispatcherDriver>();
+
 		// Model picker ports (WHISPER-27): the catalog + model lifecycle are the real ones from
 		// AddModelManagement, but the device-facing seams — the filesystem cache, the network downloader,
 		// and the lifecycle (whose runtime is not composed in specs) — are substituted so the picker's
