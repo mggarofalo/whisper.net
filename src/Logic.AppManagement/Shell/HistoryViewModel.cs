@@ -1,11 +1,13 @@
 // The shell's history browser (WHISPER-45): lists past transcriptions newest-first, pages through them,
-// and re-copies an entry to the clipboard. It depends on nothing but IMediator — it reads via
-// BrowseHistoryQuery (a page at a time, so a large history never blocks) and copies via
-// CopyToClipboardCommand. Empty history is a first-class empty state, not an error. Built on
-// CommunityToolkit.Mvvm and WPF-free so the behavior is driven for real in specs; the thin view binds to it.
+// and re-copies an entry to the clipboard. It reads via BrowseHistoryQuery (a page at a time, so a
+// large history never blocks) and copies via CopyToClipboardCommand. Empty history is a first-class
+// empty state, not an error. Built on CommunityToolkit.Mvvm and WPF-free so the behavior is driven for
+// real in specs; the thin view binds to it. Entries is a UiBoundCollection registered through the
+// collection-sync seam at construction (WHISPER-91), so a future off-UI-thread mutation (live feed,
+// background load) binds safely instead of throwing.
 
-using System.Collections.ObjectModel;
 using Application.History;
+using Application.Ports;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Mediator;
@@ -18,10 +20,14 @@ public sealed partial class HistoryViewModel : ObservableValidator, IFeatureView
 
 	private readonly IMediator _mediator;
 
-	public HistoryViewModel(IMediator mediator) => _mediator = mediator;
+	public HistoryViewModel(IMediator mediator, IUiCollectionSynchronizer synchronizer)
+	{
+		_mediator = mediator;
+		synchronizer.Enable(Entries);
+	}
 
 	/// <summary>The loaded history entries, newest first, growing as further pages are browsed.</summary>
-	public ObservableCollection<TranscriptEntryDto> Entries { get; } = [];
+	public UiBoundCollection<TranscriptEntryDto> Entries { get; } = [];
 
 	/// <summary>True when there is no history to show — the view renders an empty state, not an error.</summary>
 	[ObservableProperty]

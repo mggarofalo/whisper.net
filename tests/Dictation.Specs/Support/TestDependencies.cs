@@ -187,6 +187,13 @@ public static class TestDependencies
 		// decision that moved out of the device view's code-behind is driven via the picker driver.
 		services.AddScoped<ViewResolutionDriver>();
 
+		// Cross-thread collection binding (WHISPER-91): list-bearing view-models register their bound
+		// collections through this seam at construction; the recorder lets specs assert the registration
+		// (collection + gate) without WPF. Registered for every scenario that resolves such a view-model.
+		services.AddScoped<RecordingCollectionSynchronizer>();
+		services.AddScoped<IUiCollectionSynchronizer>(sp => sp.GetRequiredService<RecordingCollectionSynchronizer>());
+		services.AddScoped<CollectionSyncDriver>();
+
 		// Model picker (WHISPER-27): the real ModelViewModel over the real Mediator pipeline (list /
 		// download / switch handlers) and the real catalog, faking only the device-facing model ports.
 		services.AddScoped<ModelPickerDriver>();

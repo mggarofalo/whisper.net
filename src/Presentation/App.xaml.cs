@@ -74,6 +74,10 @@ public partial class App
 		// of touching the WPF application's dispatcher by hand (null-safe at shutdown, testable with a fake).
 		builder.Services.AddSingleton<IUiDispatcher>(new WpfUiDispatcher(Dispatcher));
 
+		// Cross-thread collection binding (WHISPER-91): list-bearing view-models register their bound
+		// collections (with the gate their mutations take) so a background-thread update binds safely.
+		builder.Services.AddSingleton<IUiCollectionSynchronizer, WpfCollectionSynchronizer>();
+
 		// Tray UI (WHISPER-18): the shell presenter (settings window), the tray coordination, and its
 		// view-model. Registered here in the composition root because they are Presentation concerns; the
 		// controller resolves the host-provided IHostApplicationLifetime for graceful Quit.
