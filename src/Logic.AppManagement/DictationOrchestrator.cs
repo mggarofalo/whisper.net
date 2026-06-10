@@ -43,6 +43,12 @@ public sealed class DictationOrchestrator
 	// failure) resolve to one accepted transition; the awaited delivery runs outside the lock.
 	private readonly object _gate = new();
 
+	// Set by OnCaptureFailed (on the capture thread) when the device fails while a stop is draining the
+	// post-release grace window (WHISPER-112), and read by the post-grace path before finalizing the
+	// capture. volatile provides the cross-thread visibility; the flag is scoped to one in-flight stop
+	// and reset on Start so a stale signal can never discard the next utterance.
+	private volatile bool _captureFailedDuringStop;
+
 	public DictationOrchestrator(
 		IAudioSource audioSource,
 		RecordingStateMachine stateMachine,
@@ -133,6 +139,7 @@ public sealed class DictationOrchestrator
 			return;
 		}
 
+		_captureFailedDuringStop = false; // a stale mid-grace failure signal must not discard this capture
 		_stateMachine.RequestStart();
 		_captureBuffer.StartRecording();
 		_audioSource.Start();
@@ -240,9 +247,14 @@ public sealed class DictationOrchestrator
 
 	// Wait the configured post-release grace window on the injected clock so the device's in-flight
 	// capture tail drains into the buffer (WHISPER-112). Returns false when the stop must not proceed to
-	// delivery: the wait was cancelled (the capture is discarded and the pipeline returned to a safe
-	// Idle), or another transition reclaimed the pipeline mid-grace — its handler already finalized or
-	// discarded the capture, so finalizing again here would deliver an empty clip.
+	// delivery — in both cases the capture is finalized-and-dropped here and the pipeline returned to a
+	// safe Idle: the wait was cancelled, or the capture device failed mid-grace (OnCaptureFailed cannot
+	// claim the Recording stage then, so it signals this in-flight stop through the failure flag and
+	// leaves the single buffer finalization to it). The final stage re-check is a defensive guard only:
+	// no current transition can reclaim the pipeline out of Transcribing mid-grace (Cancel and the
+	// Recording-stage failure path both require Recording), so it always passes today; it stays so that
+	// a future transition which does reclaim the stage — and therefore owns the capture — fails safe
+	// here instead of double-finalizing the buffer and delivering an empty clip.
 	private async Task<bool> WaitForCaptureTailAsync(CancellationToken cancellationToken)
 	{
 		int graceMs = _bufferingOptions.PostReleaseGraceMs;
@@ -260,6 +272,15 @@ public sealed class DictationOrchestrator
 				_logger.LogInformation("Dictation stop cancelled during the post-release grace window; capture discarded.");
 				return false;
 			}
+		}
+
+		if (_captureFailedDuringStop)
+		{
+			_captureBuffer.StopRecording(); // finalize-and-drop: a failed device delivers nothing.
+			_stateMachine.CompleteTranscription();
+			Advance(DictationStage.Idle);
+			_logger.LogInformation("Capture failed during the post-release grace window; capture discarded.");
+			return false;
 		}
 
 		return Stage == DictationStage.Transcribing;
@@ -324,23 +345,40 @@ public sealed class DictationOrchestrator
 		_captureBuffer.Append(e.Samples.Span, e.Format);
 
 	// A device error mid-capture is a stage error (AC4): discard the partial capture, log it, and return
-	// the pipeline to a safe Idle rather than leaving it stuck in Recording.
+	// the pipeline to a safe Idle rather than leaving it stuck in Recording. A failure during the
+	// post-release grace window (WHISPER-112) lands after the stop already advanced the pipeline to
+	// Transcribing; it is logged and surfaced identically, but the buffer finalization stays owned by
+	// the in-flight stop — the failure flag tells its post-grace check to discard instead of deliver.
 	private void OnCaptureFailed(object? sender, AudioCaptureFailedEventArgs e)
 	{
-		if (!TryAdvance(DictationStage.Recording, DictationStage.Idle))
+		if (TryAdvance(DictationStage.Recording, DictationStage.Idle))
 		{
+			_captureBuffer.StopRecording(); // discard the partial capture
+			_stateMachine.Cancel();
+			_logger.LogError("Audio capture failed ({Error}): {Message}; returning to Idle.", e.Error, e.Message);
+			NotifyCaptureFailure();
 			return;
 		}
 
-		_captureBuffer.StopRecording(); // discard the partial capture
-		_stateMachine.Cancel();
-		_logger.LogError("Audio capture failed ({Error}): {Message}; returning to Idle.", e.Error, e.Message);
+		if (Stage != DictationStage.Transcribing)
+		{
+			return; // nothing in flight to claim (Delivering/Idle): the capture is already finalized or absent.
+		}
 
-		// Surface the failure to the user (WHISPER-95): the recording was silently discarded otherwise.
+		_captureFailedDuringStop = true;
+		_logger.LogError(
+			"Audio capture failed ({Error}): {Message} during the post-release grace window; the in-flight stop will discard the capture.",
+			e.Error,
+			e.Message);
+		NotifyCaptureFailure();
+	}
+
+	// Surface a capture-device failure to the user (WHISPER-95): the recording is discarded either way,
+	// and in a windowless app a log-only failure reads as "nothing was typed".
+	private void NotifyCaptureFailure() =>
 		_userNotifier.NotifyError(
 			"Microphone problem",
 			"Audio capture stopped unexpectedly, so the recording was discarded. Check your microphone and try again.");
-	}
 
 	// Guarded conditional transition: advance only from the expected stage. Returns whether it moved, and
 	// raises StageChanged outside the lock so a subscriber can never re-enter the gate.

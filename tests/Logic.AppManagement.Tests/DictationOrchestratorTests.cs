@@ -6,9 +6,10 @@
 // is pinned here too: a delivered result dispatches a RecordTranscriptionCommand, an undelivered one
 // does not, and a failed history write is swallowed with a warning. The post-release grace window
 // (WHISPER-112) is pinned on a manual clock: delivery waits for the window, frames arriving during it
-// land in the delivered clip, a cancel mid-grace cannot derail the stop, and a cancelled wait discards
-// the capture. Every port is an NSubstitute fake, so the orchestration is exercised with no real audio,
-// model, or delivery.
+// land in the delivered clip, a cancel mid-grace cannot derail the stop, a cancelled wait discards
+// the capture, and a device failure mid-grace discards the capture, notifies the user, and never
+// poisons the next utterance. Every port is an NSubstitute fake, so the orchestration is exercised
+// with no real audio, model, or delivery.
 
 using Application.Configuration;
 using Application.History;
@@ -38,6 +39,7 @@ public sealed class DictationOrchestratorTests
 	private readonly HotkeyActivationController _activation = new();
 	private readonly IAudioFeedback _feedback = Substitute.For<IAudioFeedback>();
 	private readonly AudioFeedbackOptions _feedbackOptions = new();
+	private readonly IUserNotifier _userNotifier = Substitute.For<IUserNotifier>();
 	private readonly CapturingLogger<DictationOrchestrator> _logger = new();
 
 	public DictationOrchestratorTests() =>
@@ -51,7 +53,7 @@ public sealed class DictationOrchestratorTests
 	private DictationOrchestrator CreateSut(AudioBufferingOptions? bufferingOptions = null, TimeProvider? time = null) =>
 		new(_audio, _stateMachine, _activation, new AudioResampler(),
 			bufferingOptions ?? new AudioBufferingOptions(PostReleaseGraceMs: 0), _mediator,
-			_feedback, Options.Create(_feedbackOptions), Substitute.For<IUserNotifier>(),
+			_feedback, Options.Create(_feedbackOptions), _userNotifier,
 			time ?? TimeProvider.System, _logger);
 
 	[Fact]
@@ -289,6 +291,55 @@ public sealed class DictationOrchestratorTests
 		await stop;
 
 		await _mediator.DidNotReceive().Send(Arg.Any<DeliverTranscriptionCommand>(), Arg.Any<CancellationToken>());
+		sut.Stage.Should().Be(DictationStage.Idle);
+		_stateMachine.State.Should().Be(RecordingState.Idle);
+	}
+
+	[Fact]
+	public async Task A_capture_device_failure_during_the_grace_window_discards_the_capture_and_notifies()
+	{
+		// The device dies after release but before the grace elapses (WHISPER-112): the failure must be
+		// logged and surfaced exactly like a Recording-stage failure, and the in-flight stop must discard
+		// the partial capture — no delivery, no history entry — and return the pipeline to a safe Idle.
+		ManualTimeProvider time = new();
+		DictationOrchestrator sut = CreateSut(new AudioBufferingOptions(PostReleaseGraceMs: 400), time);
+
+		sut.Start();
+		Task stop = sut.StopAsync(TestContext.Current.CancellationToken);
+		_audio.CaptureFailed += Raise.EventWith(
+			new AudioCaptureFailedEventArgs(Domain.Audio.AudioCaptureError.DeviceUnavailable, "device removed"));
+		time.Advance(TimeSpan.FromMilliseconds(400));
+		await stop;
+
+		await _mediator.DidNotReceive().Send(Arg.Any<DeliverTranscriptionCommand>(), Arg.Any<CancellationToken>());
+		await _mediator.DidNotReceive().Send(Arg.Any<RecordTranscriptionCommand>(), Arg.Any<CancellationToken>());
+		sut.Stage.Should().Be(DictationStage.Idle);
+		_stateMachine.State.Should().Be(RecordingState.Idle);
+		_logger.Entries.Should().Contain(entry => entry.Level == LogLevel.Error);
+		_userNotifier.Received(1).NotifyError(Arg.Any<string>(), Arg.Any<string>());
+	}
+
+	[Fact]
+	public async Task A_dictation_after_a_mid_grace_capture_failure_delivers_normally()
+	{
+		// The failure signal is scoped to the in-flight stop: Start resets it, so the next utterance
+		// must run the full pipeline as if the earlier device failure had never happened.
+		ManualTimeProvider time = new();
+		DictationOrchestrator sut = CreateSut(new AudioBufferingOptions(PostReleaseGraceMs: 400), time);
+
+		sut.Start();
+		Task failedStop = sut.StopAsync(TestContext.Current.CancellationToken);
+		_audio.CaptureFailed += Raise.EventWith(
+			new AudioCaptureFailedEventArgs(Domain.Audio.AudioCaptureError.DeviceUnavailable, "device removed"));
+		time.Advance(TimeSpan.FromMilliseconds(400));
+		await failedStop;
+
+		sut.Start();
+		Task stop = sut.StopAsync(TestContext.Current.CancellationToken);
+		time.Advance(TimeSpan.FromMilliseconds(400));
+		await stop;
+
+		await _mediator.Received(1).Send(Arg.Any<DeliverTranscriptionCommand>(), Arg.Any<CancellationToken>());
 		sut.Stage.Should().Be(DictationStage.Idle);
 		_stateMachine.State.Should().Be(RecordingState.Idle);
 	}
