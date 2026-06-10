@@ -194,6 +194,10 @@ public static class TestDependencies
 		services.AddScoped<IUiCollectionSynchronizer>(sp => sp.GetRequiredService<RecordingCollectionSynchronizer>());
 		services.AddScoped<CollectionSyncDriver>();
 
+		// Declarative event wiring (WHISPER-93): inspects the views, the reusable focus behavior, the
+		// behaviors package reference, and the committed wiring guideline. Pure-artifact, like theming.
+		services.AddScoped<DeclarativeWiringDriver>();
+
 		// Model picker (WHISPER-27): the real ModelViewModel over the real Mediator pipeline (list /
 		// download / switch handlers) and the real catalog, faking only the device-facing model ports.
 		services.AddScoped<ModelPickerDriver>();

@@ -38,6 +38,8 @@
     <PackageReference Include="Microsoft.Extensions.Hosting" />
     <PackageReference Include="H.NotifyIcon.Wpf" />
     <PackageReference Include="CommunityToolkit.Mvvm" />
+    <!-- Declarative event wiring (WHISPER-93): EventTrigger/InvokeCommandAction + Behavior<T> infra. -->
+    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" />
     <!-- In-app install/update hooks (WHISPER-20); the UpdateManager auto-update flow follows in WHISPER-29. -->
     <PackageReference Include="Velopack" />
   </ItemGroup>

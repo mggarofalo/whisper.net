@@ -1,6 +1,8 @@
 <UserControl x:Class="Presentation.Shell.Views.AudioDeviceView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
+             xmlns:behaviors="clr-namespace:Presentation.Behaviors"
              KeyboardNavigation.TabNavigation="Local">
     <StackPanel Margin="24">
         <StackPanel Orientation="Horizontal"
@@ -28,7 +30,12 @@
                   ItemsSource="{Binding Devices}"
                   DisplayMemberPath="Name"
                   SelectedValuePath="Id"
-                  SelectedValue="{Binding SelectedDeviceId, Mode=TwoWay}" />
+                  SelectedValue="{Binding SelectedDeviceId, Mode=TwoWay}">
+            <b:Interaction.Behaviors>
+                <!-- Focus the picker on section activation (WHISPER-93) for immediate keyboard use. -->
+                <behaviors:FocusOnActivateBehavior />
+            </b:Interaction.Behaviors>
+        </ComboBox>
 
         <!-- The clear fallback state when a persisted device is no longer present (empty otherwise). -->
         <TextBlock Text="{Binding UnavailableDeviceWarning}"
