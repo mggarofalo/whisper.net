@@ -7,7 +7,9 @@
 msg_file="$1"
 
 if [ -x "node_modules/.bin/commitlint" ]; then
-	npx --no-install commitlint --edit "$msg_file"
+	# Invoke the local binary directly (not via npx): npx's POSIX shim is broken under Git-for-Windows
+	# sh on some Node installs, and the direct call resolves to the same node_modules/.bin script.
+	node_modules/.bin/commitlint --edit "$msg_file"
 	exit $?
 fi
 
