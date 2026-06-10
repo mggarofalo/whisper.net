@@ -1,8 +1,10 @@
 // Inner TDD loop for SilenceTrimmer (WHISPER-112): only a SUSTAINED sub-threshold tail counts as dead
 // air — a shorter quiet tail is the soft end of speech and is preserved; a trimmed tail keeps a short
 // pad of the actually-recorded samples beyond the last speech; a clip that ends in speech is unchanged;
-// an all-silent clip trims to empty. (The pre-112 per-sample backward walk trimmed quiet word endings —
-// the "Trims_trailing_silence" pin was updated to a sustained tail when that behavior changed.)
+// an all-silent clip trims to empty. The amplitude boundary is pinned strictly: silence is rectified
+// amplitude BELOW the threshold, so a sample exactly at the threshold — or a loud negative one — is
+// speech. (The pre-112 per-sample backward walk trimmed quiet word endings — the
+// "Trims_trailing_silence" pin was updated to a sustained tail when that behavior changed.)
 
 using AwesomeAssertions;
 using Domain.Audio;
@@ -70,6 +72,26 @@ public sealed class SilenceTrimmerTests
 	public void A_tail_just_under_the_window_is_preserved()
 	{
 		AudioClip clip = new(Samples((0.5f, 1600), (0f, WindowSamples - 1)), SampleRate);
+
+		_trimmer.Trim(clip).Samples.Should().Equal(clip.Samples);
+	}
+
+	[Fact]
+	public void A_tail_exactly_at_the_amplitude_threshold_counts_as_speech()
+	{
+		// The contract is "below the threshold counts as silence": a sustained tail sitting exactly AT
+		// the threshold is speech, so even at twice the window it must survive untrimmed.
+		AudioClip clip = new(Samples((0.5f, 1600), (_options.AmplitudeThreshold, WindowSamples * 2)), SampleRate);
+
+		_trimmer.Trim(clip).Samples.Should().Equal(clip.Samples);
+	}
+
+	[Fact]
+	public void Loud_negative_samples_count_as_speech()
+	{
+		// Real audio is bipolar: silence is judged on rectified amplitude, so a tail of loud
+		// negative-half-wave samples is speech, never dead air.
+		AudioClip clip = new(Samples((0.5f, 1600), (-0.5f, WindowSamples * 2)), SampleRate);
 
 		_trimmer.Trim(clip).Samples.Should().Equal(clip.Samples);
 	}
