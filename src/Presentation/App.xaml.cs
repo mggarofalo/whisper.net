@@ -47,6 +47,14 @@ public partial class App
 
 		base.OnStartup(e);
 
+		// Native theming (WHISPER-84): opt into WPF's built-in Fluent theme, following the OS Light/Dark
+		// preference and accent colour, so the settings window looks native with no third-party dependency.
+		// ThemeMode is experimental in .NET 10 (WPF0001); the opt-in is deliberate and isolated to this one
+		// line so it cannot destabilize the app's logic. Rationale is recorded in docs/theming.md.
+#pragma warning disable WPF0001
+		ThemeMode = ThemeMode.System;
+#pragma warning restore WPF0001
+
 		// Doctor / selftest (WHISPER-50): when launched with --doctor, run the environment checks, print the
 		// pass/warn/fail report to the launching terminal, set the exit code from the result, and exit
 		// without going tray-resident. This is the diagnostics entry point users attach to a bug report.
