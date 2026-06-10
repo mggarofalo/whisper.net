@@ -4,18 +4,23 @@
 // cancel that discards a capture, and the two error paths (a failed delivery and a device capture
 // failure) that must log and return the pipeline to a safe Idle. The history write-through (WHISPER-110)
 // is pinned here too: a delivered result dispatches a RecordTranscriptionCommand, an undelivered one
-// does not, and a failed history write is swallowed with a warning. Every port is an NSubstitute fake,
-// so the orchestration is exercised with no real audio, model, or delivery.
+// does not, and a failed history write is swallowed with a warning. The post-release grace window
+// (WHISPER-112) is pinned on a manual clock: delivery waits for the window, frames arriving during it
+// land in the delivered clip, a cancel mid-grace cannot derail the stop, and a cancelled wait discards
+// the capture. Every port is an NSubstitute fake, so the orchestration is exercised with no real audio,
+// model, or delivery.
 
 using Application.Configuration;
 using Application.History;
 using Application.Ports;
 using Application.Transcription;
 using AwesomeAssertions;
+using Domain.Audio;
 using Domain.Feedback;
 using Domain.Input;
 using Domain.Recording;
 using Domain.Settings;
+using Logic.AppManagement.Tests.Support;
 using Logic.AudioManagement;
 using Mediator;
 using Microsoft.Extensions.Logging;
@@ -41,9 +46,13 @@ public sealed class DictationOrchestratorTests
 			.Send(Arg.Any<DeliverTranscriptionCommand>(), Arg.Any<CancellationToken>())
 			.Returns(new DeliveryResult(Delivered: true, Text: "the result"));
 
-	private DictationOrchestrator CreateSut(AudioBufferingOptions? bufferingOptions = null) =>
-		new(_audio, _stateMachine, _activation, new AudioResampler(), bufferingOptions ?? new AudioBufferingOptions(), _mediator,
-			_feedback, Options.Create(_feedbackOptions), Substitute.For<IUserNotifier>(), _logger);
+	// Grace 0 by default so the stage/delivery tests stay synchronous; the WHISPER-112 grace-window
+	// tests opt in with a positive window driven by a manual clock.
+	private DictationOrchestrator CreateSut(AudioBufferingOptions? bufferingOptions = null, TimeProvider? time = null) =>
+		new(_audio, _stateMachine, _activation, new AudioResampler(),
+			bufferingOptions ?? new AudioBufferingOptions(PostReleaseGraceMs: 0), _mediator,
+			_feedback, Options.Create(_feedbackOptions), Substitute.For<IUserNotifier>(),
+			time ?? TimeProvider.System, _logger);
 
 	[Fact]
 	public void Starts_idle()
@@ -164,7 +173,7 @@ public sealed class DictationOrchestratorTests
 	{
 		// A non-positive target rate makes the finalized clip's SampleRate 0; the duration guard must
 		// yield TimeSpan.Zero rather than let the NaN division throw before the pipeline even runs.
-		DictationOrchestrator sut = CreateSut(new AudioBufferingOptions(TargetSampleRate: 0));
+		DictationOrchestrator sut = CreateSut(new AudioBufferingOptions(TargetSampleRate: 0, PostReleaseGraceMs: 0));
 
 		sut.Start();
 		await sut.StopAsync(TestContext.Current.CancellationToken);
@@ -204,6 +213,84 @@ public sealed class DictationOrchestratorTests
 		_stateMachine.State.Should().Be(RecordingState.Idle);
 		_logger.Entries.Should().Contain(entry => entry.Level == LogLevel.Warning);
 		_logger.Entries.Should().NotContain(entry => entry.Level == LogLevel.Error);
+	}
+
+	[Fact]
+	public async Task Frames_arriving_during_the_post_release_grace_window_land_in_the_delivered_clip()
+	{
+		// The device's stop is asynchronous (WHISPER-112): the user's final syllables arrive after the
+		// stop request. They must drain into the delivered clip, not the idle preroll ring.
+		ManualTimeProvider time = new();
+		AudioClip? delivered = null;
+		_mediator
+			.Send(Arg.Do<DeliverTranscriptionCommand>(command => delivered = command.Clip), Arg.Any<CancellationToken>())
+			.Returns(new DeliveryResult(Delivered: true, Text: "the result"));
+		DictationOrchestrator sut = CreateSut(new AudioBufferingOptions(PrerollMs: 0, PostReleaseGraceMs: 400), time);
+
+		sut.Start();
+		RaiseFrame(0.5f);
+		Task stop = sut.StopAsync(TestContext.Current.CancellationToken);
+		RaiseFrame(0.7f); // the flush the device delivers after the stop request
+		time.Advance(TimeSpan.FromMilliseconds(400));
+		await stop;
+
+		delivered.Should().NotBeNull();
+		delivered!.Samples.Should().Contain(0.5f);
+		delivered.Samples.Should().Contain(0.7f);
+	}
+
+	[Fact]
+	public async Task Delivery_waits_for_the_post_release_grace_window_to_elapse()
+	{
+		ManualTimeProvider time = new();
+		DictationOrchestrator sut = CreateSut(new AudioBufferingOptions(PostReleaseGraceMs: 400), time);
+
+		sut.Start();
+		Task stop = sut.StopAsync(TestContext.Current.CancellationToken);
+
+		stop.IsCompleted.Should().BeFalse("the stop holds the capture open until the grace window elapses");
+		await _mediator.DidNotReceive().Send(Arg.Any<DeliverTranscriptionCommand>(), Arg.Any<CancellationToken>());
+
+		time.Advance(TimeSpan.FromMilliseconds(400));
+		await stop;
+
+		await _mediator.Received(1).Send(Arg.Any<DeliverTranscriptionCommand>(), Arg.Any<CancellationToken>());
+		sut.Stage.Should().Be(DictationStage.Idle);
+	}
+
+	[Fact]
+	public async Task A_cancel_during_the_grace_window_does_not_derail_the_stop_in_flight()
+	{
+		// Esc lands between release and finalization: the pipeline is already Transcribing, so the
+		// cancel is ignored and the stop still delivers exactly one (non-empty) clip.
+		ManualTimeProvider time = new();
+		DictationOrchestrator sut = CreateSut(new AudioBufferingOptions(PostReleaseGraceMs: 400), time);
+
+		sut.Start();
+		Task stop = sut.StopAsync(TestContext.Current.CancellationToken);
+		sut.Cancel();
+		time.Advance(TimeSpan.FromMilliseconds(400));
+		await stop;
+
+		await _mediator.Received(1).Send(Arg.Any<DeliverTranscriptionCommand>(), Arg.Any<CancellationToken>());
+		sut.Stage.Should().Be(DictationStage.Idle);
+	}
+
+	[Fact]
+	public async Task A_stop_cancelled_during_the_grace_window_discards_the_capture_and_returns_to_idle()
+	{
+		ManualTimeProvider time = new();
+		using CancellationTokenSource cancellation = new();
+		DictationOrchestrator sut = CreateSut(new AudioBufferingOptions(PostReleaseGraceMs: 400), time);
+
+		sut.Start();
+		Task stop = sut.StopAsync(cancellation.Token);
+		await cancellation.CancelAsync();
+		await stop;
+
+		await _mediator.DidNotReceive().Send(Arg.Any<DeliverTranscriptionCommand>(), Arg.Any<CancellationToken>());
+		sut.Stage.Should().Be(DictationStage.Idle);
+		_stateMachine.State.Should().Be(RecordingState.Idle);
 	}
 
 	[Fact]
@@ -327,6 +414,16 @@ public sealed class DictationOrchestratorTests
 		await _mediator.Received(1).Send(Arg.Any<DeliverTranscriptionCommand>(), Arg.Any<CancellationToken>());
 		sut.Stage.Should().Be(DictationStage.Idle);
 		_logger.Entries.Should().Contain(entry => entry.Level == LogLevel.Error);
+	}
+
+	// Raise one capture frame at the given amplitude through the faked audio source, already in the
+	// 16 kHz mono clip format so the resampler passes the values through untouched.
+	private void RaiseFrame(float amplitude)
+	{
+		float[] samples = new float[160];
+		Array.Fill(samples, amplitude);
+		_audio.FrameAvailable += Raise.EventWith(
+			new AudioFrameAvailableEventArgs(samples, new CaptureFormat(16_000, 1, 32, AudioSampleFormat.IeeeFloat)));
 	}
 
 	// A minimal ILogger that records each entry's level so the error-path tests can assert on it.

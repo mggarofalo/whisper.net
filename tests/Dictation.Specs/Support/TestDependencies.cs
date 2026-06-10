@@ -101,6 +101,15 @@ public static class TestDependencies
 		services.AddScoped<ILogger<DictationOrchestrator>>(sp => sp.GetRequiredService<RecordingLogger<DictationOrchestrator>>());
 		services.AddScoped<DictationOrchestratorDriver>();
 
+		// Capture tail after chord release (WHISPER-112): a scenario-scoped manual clock overrides the
+		// TimeProvider.System registered by AddApplication, so the orchestrator's post-release grace
+		// window elapses under test control instead of on the wall clock — drivers that run a stop drain
+		// it via StopAndElapseGraceAsync. The driver runs the fake device in deferred-stop mode (NAudio's
+		// real timing) against the real orchestrator + delivery pipeline and the real SilenceTrimmer.
+		services.AddScoped<ManualTimeProvider>();
+		services.AddScoped<TimeProvider>(sp => sp.GetRequiredService<ManualTimeProvider>());
+		services.AddScoped<CaptureTailDriver>();
+
 		// Command-mode hook (WHISPER-35): substitute the matcher (default: no match) so the command-mode
 		// driver can make it recognize a command, while every other delivery scenario behaves exactly as
 		// before. Overrides the production NoOpCommandMatcher registered by AddAppManagement.

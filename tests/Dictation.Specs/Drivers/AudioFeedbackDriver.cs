@@ -10,6 +10,7 @@ using Dictation.Specs.Support;
 using Domain.Audio;
 using Domain.Feedback;
 using Logic.AppManagement;
+using Logic.AudioManagement;
 using NSubstitute;
 
 namespace Dictation.Specs.Drivers;
@@ -19,7 +20,9 @@ public sealed class AudioFeedbackDriver(
 	IAudioFeedback feedback,
 	AudioFeedbackOptions options,
 	ITranscriber transcriber,
-	FakeAudioCaptureClient captureClient)
+	FakeAudioCaptureClient captureClient,
+	ManualTimeProvider time,
+	AudioBufferingOptions bufferingOptions)
 {
 	public void EnableFeedback() => options.Enabled = true;
 
@@ -36,7 +39,7 @@ public sealed class AudioFeedbackDriver(
 		if (ToSound(@event) != FeedbackSound.RecordingStarted)
 		{
 			captureClient.ProduceFrame(new float[960]);
-			await orchestrator.StopAsync();
+			await orchestrator.StopAndElapseGraceAsync(time, bufferingOptions);
 		}
 	}
 

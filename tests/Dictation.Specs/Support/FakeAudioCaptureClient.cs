@@ -1,7 +1,9 @@
 // A controllable stand-in for the native capture device, implementing the Infrastructure capture
 // seam. It lets the @WHISPER-7 scenarios drive the REAL WasapiAudioSource without a microphone:
 // the test decides the negotiated format, when frames arrive, what flushes on stop, and whether the
-// device fails. Only the device glue is faked here — all the capture behavior under test is real.
+// device fails. The deferred-stop mode (WHISPER-112) additionally models NAudio's asynchronous stop:
+// Stop() returns immediately and the device keeps delivering its in-flight frames until the scenario
+// completes the stop. Only the device glue is faked here — all the capture behavior under test is real.
 
 using Domain.Audio;
 using Infrastructure.Audio;
@@ -11,11 +13,19 @@ namespace Dictation.Specs.Support;
 public sealed class FakeAudioCaptureClient : IAudioCaptureClient
 {
 	private readonly List<float[]> _flushOnStop = [];
+	private bool _stopRequested;
 
 	public CaptureFormat Format { get; set; } = new(48_000, 2, 32, AudioSampleFormat.IeeeFloat);
 	public int StartCount { get; private set; }
 	public bool IsRecording { get; private set; }
 	public bool Released { get; private set; }
+
+	/// <summary>
+	/// Opt in to NAudio's real stop timing (WHISPER-112): Stop() only records the request, and the
+	/// device keeps delivering frames until the scenario calls <see cref="CompleteStop"/>. The default
+	/// stays the synchronous flush the WHISPER-7 scenarios pin.
+	/// </summary>
+	public bool DeferStopCompletion { get; set; }
 
 	public event EventHandler<AudioCaptureBuffer>? DataAvailable;
 	public event EventHandler<AudioCaptureStopped>? RecordingStopped;
@@ -40,6 +50,26 @@ public sealed class FakeAudioCaptureClient : IAudioCaptureClient
 			return;
 		}
 
+		if (DeferStopCompletion)
+		{
+			_stopRequested = true;
+			return;
+		}
+
+		CompleteStop();
+	}
+
+	// Finish a stop: deliver everything still buffered on the device, then report the clean stop. In
+	// the default mode Stop() calls this directly; in deferred mode the scenario calls it after the
+	// device has produced its tail frames, modeling NAudio's asynchronous stop (WHISPER-112).
+	public void CompleteStop()
+	{
+		if (!IsRecording && !_stopRequested)
+		{
+			return;
+		}
+
+		_stopRequested = false;
 		IsRecording = false;
 		Released = true;
 

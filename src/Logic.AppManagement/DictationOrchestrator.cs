@@ -1,9 +1,12 @@
 // The dictation orchestrator: the coordination hub that runs one utterance end to end (WHISPER-14).
 // A hotkey start request begins microphone capture through the IAudioSource port; a stop request
-// finalizes the captured audio into a clip and drives it through the Application delivery pipeline
-// (DeliverTranscriptionCommand via Mediator) — trim, transcribe, post-process, inject — with no manual
-// step in between, then records a delivered transcription to history (RecordTranscriptionCommand,
-// WHISPER-110) so the History section and usage stats reflect real usage. It owns an explicit pipeline
+// keeps the capture buffer open through a short post-release grace window (WHISPER-112) — the device's
+// stop is asynchronous, so the frames already in flight (the user's final syllables) arrive AFTER the
+// stop request — then finalizes the captured audio into a clip and drives it through the Application
+// delivery pipeline (DeliverTranscriptionCommand via Mediator) — trim, transcribe, post-process,
+// inject — with no manual step in between, then records a delivered transcription to history
+// (RecordTranscriptionCommand, WHISPER-110) so the History section and usage stats reflect real
+// usage. It owns an explicit pipeline
 // state machine (Idle -> Recording -> Transcribing -> Delivering -> Idle) guarded against concurrent
 // transitions, and keeps the shared RecordingStateMachine in step so the tray/UI reflect status. Every cross-layer touch is an Application port (no Infrastructure
 // type is referenced here), so the whole flow is unit-testable with faked ports. Any stage error is
@@ -28,10 +31,12 @@ public sealed class DictationOrchestrator
 	private readonly IAudioSource _audioSource;
 	private readonly RecordingStateMachine _stateMachine;
 	private readonly CaptureBuffer _captureBuffer;
+	private readonly AudioBufferingOptions _bufferingOptions;
 	private readonly IMediator _mediator;
 	private readonly IAudioFeedback _audioFeedback;
 	private readonly IOptions<AudioFeedbackOptions> _feedbackOptions;
 	private readonly IUserNotifier _userNotifier;
+	private readonly TimeProvider _timeProvider;
 	private readonly ILogger<DictationOrchestrator> _logger;
 
 	// Serializes stage reads/writes so overlapping signals (key auto-repeat, a stop racing a capture
@@ -48,15 +53,18 @@ public sealed class DictationOrchestrator
 		IAudioFeedback audioFeedback,
 		IOptions<AudioFeedbackOptions> feedbackOptions,
 		IUserNotifier userNotifier,
+		TimeProvider timeProvider,
 		ILogger<DictationOrchestrator> logger)
 	{
 		_audioSource = audioSource;
 		_stateMachine = stateMachine;
 		_captureBuffer = new CaptureBuffer(bufferingOptions, resampler);
+		_bufferingOptions = bufferingOptions;
 		_mediator = mediator;
 		_audioFeedback = audioFeedback;
 		_feedbackOptions = feedbackOptions;
 		_userNotifier = userNotifier;
+		_timeProvider = timeProvider;
 		_logger = logger;
 
 		_audioSource.FrameAvailable += OnFrameAvailable;
@@ -133,9 +141,10 @@ public sealed class DictationOrchestrator
 	}
 
 	/// <summary>
-	/// Stop signal (release / VAD silence): finalize the capture and run the full delivery pipeline —
-	/// Recording -> Transcribing -> Delivering -> Idle. A failure at any stage is logged and the pipeline
-	/// is returned to a safe Idle so it can never get stuck.
+	/// Stop signal (release / VAD silence): drain the device's in-flight capture tail through a short
+	/// post-release grace window (WHISPER-112), then finalize the capture and run the full delivery
+	/// pipeline — Recording -> Transcribing -> Delivering -> Idle. A failure at any stage is logged and
+	/// the pipeline is returned to a safe Idle so it can never get stuck.
 	/// </summary>
 	public async Task StopAsync(CancellationToken cancellationToken = default)
 	{
@@ -145,9 +154,19 @@ public sealed class DictationOrchestrator
 		}
 
 		_audioSource.Stop();
-		AudioClip clip = _captureBuffer.StopRecording();
 		_stateMachine.RequestStop();
 		PlayFeedback(FeedbackSound.RecordingStopped);
+
+		// Post-release grace window (WHISPER-112): the device's stop is asynchronous — frames already in
+		// flight (plus the user's final syllables) keep arriving for a short moment after the stop
+		// request. The capture buffer stays recording through the window so that tail lands in the clip
+		// instead of falling into the idle preroll ring; only then is the recording finalized.
+		if (!await WaitForCaptureTailAsync(cancellationToken))
+		{
+			return;
+		}
+
+		AudioClip clip = _captureBuffer.StopRecording();
 
 		// Measured where the capture is finalized: how long the recorded audio ran, the usage measure
 		// (WHISPER-24) the history record carries once delivery succeeds.
@@ -217,6 +236,33 @@ public sealed class DictationOrchestrator
 			_logger.LogInformation("Continuous dictation mode active; auto-restarting recording for the next utterance.");
 			Start();
 		}
+	}
+
+	// Wait the configured post-release grace window on the injected clock so the device's in-flight
+	// capture tail drains into the buffer (WHISPER-112). Returns false when the stop must not proceed to
+	// delivery: the wait was cancelled (the capture is discarded and the pipeline returned to a safe
+	// Idle), or another transition reclaimed the pipeline mid-grace — its handler already finalized or
+	// discarded the capture, so finalizing again here would deliver an empty clip.
+	private async Task<bool> WaitForCaptureTailAsync(CancellationToken cancellationToken)
+	{
+		int graceMs = _bufferingOptions.PostReleaseGraceMs;
+		if (graceMs > 0)
+		{
+			try
+			{
+				await Task.Delay(TimeSpan.FromMilliseconds(graceMs), _timeProvider, cancellationToken);
+			}
+			catch (OperationCanceledException)
+			{
+				_captureBuffer.StopRecording(); // finalize-and-drop: a cancelled stop delivers nothing.
+				_stateMachine.CompleteTranscription();
+				Advance(DictationStage.Idle);
+				_logger.LogInformation("Dictation stop cancelled during the post-release grace window; capture discarded.");
+				return false;
+			}
+		}
+
+		return Stage == DictationStage.Transcribing;
 	}
 
 	/// <summary>

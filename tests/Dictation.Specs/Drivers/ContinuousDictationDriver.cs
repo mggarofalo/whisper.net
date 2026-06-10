@@ -9,6 +9,7 @@ using AwesomeAssertions;
 using Dictation.Specs.Support;
 using Domain.Audio;
 using Logic.AppManagement;
+using Logic.AudioManagement;
 using NSubstitute;
 
 namespace Dictation.Specs.Drivers;
@@ -17,7 +18,9 @@ public sealed class ContinuousDictationDriver(
 	DictationOrchestrator orchestrator,
 	ITranscriber transcriber,
 	FakeAudioCaptureClient captureClient,
-	FakeTextInjectorFactory injectors)
+	FakeTextInjectorFactory injectors,
+	ManualTimeProvider time,
+	AudioBufferingOptions bufferingOptions)
 {
 	private static float[] SpokenFrame() => new float[960];
 
@@ -35,7 +38,7 @@ public sealed class ContinuousDictationDriver(
 			.Returns(new TranscriptionResult("take a note"));
 
 		captureClient.ProduceFrame(SpokenFrame());
-		await orchestrator.StopAsync();
+		await orchestrator.StopAndElapseGraceAsync(time, bufferingOptions);
 	}
 
 	public void PressEscToExit() => orchestrator.ExitContinuousMode();

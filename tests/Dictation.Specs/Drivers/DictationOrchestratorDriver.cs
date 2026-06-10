@@ -9,6 +9,7 @@ using AwesomeAssertions;
 using Dictation.Specs.Support;
 using Domain.Audio;
 using Logic.AppManagement;
+using Logic.AudioManagement;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 
@@ -19,7 +20,9 @@ public sealed class DictationOrchestratorDriver(
 	ITranscriber transcriber,
 	FakeAudioCaptureClient captureClient,
 	FakeTextInjectorFactory injectors,
-	RecordingLogger<DictationOrchestrator> logger)
+	RecordingLogger<DictationOrchestrator> logger,
+	ManualTimeProvider time,
+	AudioBufferingOptions bufferingOptions)
 {
 	// One buffer of (silent) interleaved stereo samples at the fake device's 48 kHz/2ch default — its
 	// content is irrelevant while the transcriber is faked; it only has to flow through capture.
@@ -37,12 +40,13 @@ public sealed class DictationOrchestratorDriver(
 		captureClient.ProduceFrame(SpokenFrame());
 	}
 
-	// The full hands-free path: start, speak, stop — capture -> transcribe -> deliver -> idle.
+	// The full hands-free path: start, speak, stop — capture -> transcribe -> deliver -> idle. The stop
+	// drains the post-release grace window (WHISPER-112) on the scenario's manual clock.
 	public async Task RunFullDictation()
 	{
 		orchestrator.Start();
 		captureClient.ProduceFrame(SpokenFrame());
-		await orchestrator.StopAsync();
+		await orchestrator.StopAndElapseGraceAsync(time, bufferingOptions);
 	}
 
 	// Stop while the faked transcriber throws, so the stop drives the pipeline into its error path.
@@ -52,7 +56,7 @@ public sealed class DictationOrchestratorDriver(
 			.TranscribeAsync(Arg.Any<AudioClip>(), Arg.Any<CancellationToken>())
 			.Returns<TranscriptionResult>(_ => throw new InvalidOperationException("transcription failed"));
 
-		await orchestrator.StopAsync();
+		await orchestrator.StopAndElapseGraceAsync(time, bufferingOptions);
 	}
 
 	// --- assertions ---

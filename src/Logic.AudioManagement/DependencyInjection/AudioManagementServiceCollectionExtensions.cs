@@ -12,6 +12,9 @@ public static class AudioManagementServiceCollectionExtensions
 {
 	public static IServiceCollection AddAudioManagement(this IServiceCollection services, IConfiguration? configuration = null)
 	{
+		// Trailing-silence trim tunables (WHISPER-112): a plain default today, like AudioBufferingOptions;
+		// bound from configuration later if the thresholds ever need to be user-tunable.
+		services.AddSingleton(new SilenceTrimmerOptions());
 		services.AddSingleton<ISilenceTrimmer, SilenceTrimmer>();
 		services.AddSingleton<IFillerWordCleaner, FillerWordCleaner>();
 
