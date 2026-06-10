@@ -632,6 +632,28 @@ public sealed class PushToTalkSteps
 3. **Shared mutable scenario state** — order-dependent, flaky scenarios. **Guard:** per-scenario DI scope from the plugin; carry state in a scenario-scoped `ScenarioWorld`, never in `static` fields.
 4. **Scenarios that mirror code instead of behavior** — "the handler calls `_cleaner.Clean`." **Guard:** if a non-programmer can't read the scenario as a sentence about the product, rewrite it; assert on outcomes, not on internal calls (the one acceptable "interaction" assertion is at the *port boundary*, e.g. "text was delivered").
 
+### The Presentation smoke layer (WHISPER-96)
+
+"UI is manual/iterative" above does **not** mean the view glue is unguarded. A thin, STA-threaded
+smoke layer (`tests/Presentation.Smoke.Tests`, `net10.0-windows`, in the same fast gate CI runs on
+Windows) covers exactly two failure modes the WPF-free specs cannot see:
+
+- **Binding-path typos / renames**: each `DataTemplate`-resolved feature view is constructed against
+  its real, scope-resolved view-model (the same `AddApplication` + `AddAppManagement` composition);
+  construction + first bind must raise no exception and no data-binding trace error
+  (`PresentationTraceSources.DataBindingSource` errors fail the test).
+- **Missing templates**: every registered `NavigationSection` view-model type must resolve an implicit
+  `DataTemplate` from the shell window's resources.
+
+Behavior stays in the view-model specs; the smoke layer never clicks, types, or asserts pixels.
+
+**FlaUI / UI Automation: deferred.** For this app's UI surface — one settings window of simple
+sections, a tray menu, and a click-through overlay — full UIA-driven tests would re-test behavior the
+WPF-free specs already prove, at the cost of the slowest and most brittle layer in the stack. The
+decision: **defer FlaUI adoption**, and revisit when the UI grows genuinely interactive surface
+(multi-window flows, drag interactions, complex focus choreography) that bindings + view-model specs
++ this smoke layer cannot represent.
+
 ---
 
 ## 7. Definition of Done + traceability

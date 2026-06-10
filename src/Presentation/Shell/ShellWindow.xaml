@@ -8,25 +8,34 @@
         Height="480"
         WindowStartupLocation="CenterScreen">
     <Window.Resources>
-        <!-- Map each feature view-model to its view so the content region renders the active section. -->
-        <DataTemplate DataType="{x:Type vm:HomeViewModel}">
-            <views:HomeView />
-        </DataTemplate>
-        <DataTemplate DataType="{x:Type vm:ModelViewModel}">
-            <views:ModelView />
-        </DataTemplate>
-        <DataTemplate DataType="{x:Type vm:AudioDeviceViewModel}">
-            <views:AudioDeviceView />
-        </DataTemplate>
-        <DataTemplate DataType="{x:Type vm:HotkeyViewModel}">
-            <views:HotkeyView />
-        </DataTemplate>
-        <DataTemplate DataType="{x:Type vm:HistoryViewModel}">
-            <views:HistoryView />
-        </DataTemplate>
-        <DataTemplate DataType="{x:Type vm:StatsViewModel}">
-            <views:StatsView />
-        </DataTemplate>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- The shared converters + validation chrome the feature views reference (WHISPER-96):
+                     merged at window level too, so the shell is self-contained — its views resolve their
+                     resources wherever the window is composed, Application or not (the smoke harness). -->
+                <ResourceDictionary Source="/Presentation;component/Shell/ShellResources.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- Map each feature view-model to its view so the content region renders the active section. -->
+            <DataTemplate DataType="{x:Type vm:HomeViewModel}">
+                <views:HomeView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:ModelViewModel}">
+                <views:ModelView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:AudioDeviceViewModel}">
+                <views:AudioDeviceView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:HotkeyViewModel}">
+                <views:HotkeyView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:HistoryViewModel}">
+                <views:HistoryView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:StatsViewModel}">
+                <views:StatsView />
+            </DataTemplate>
+        </ResourceDictionary>
     </Window.Resources>
 
     <DockPanel>

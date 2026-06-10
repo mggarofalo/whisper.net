@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The thin view-level smoke layer (WHISPER-96): STA-threaded tests that construct each
+    DataTemplate-resolved feature view against its real (Mediator-substituted) view-model and assert
+    construction + first bind raise no exception and no data-binding trace error, plus the
+    NavigationSection -> DataTemplate completeness check. Behavior stays in the WPF-free view-model
+    specs; this layer only guards the view glue (binding paths, templates). Windows-only by necessity
+    (WPF), like the Presentation project it references; CI's Windows test gate runs it with the rest
+    of the solution.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <UseWPF>true</UseWPF>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="AwesomeAssertions" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="coverlet.collector" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Presentation\Presentation.csproj" />
+  </ItemGroup>
+
+</Project>
