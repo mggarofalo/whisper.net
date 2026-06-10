@@ -247,14 +247,17 @@ public sealed class DictationOrchestrator
 
 	// Wait the configured post-release grace window on the injected clock so the device's in-flight
 	// capture tail drains into the buffer (WHISPER-112). Returns false when the stop must not proceed to
-	// delivery — in both cases the capture is finalized-and-dropped here and the pipeline returned to a
-	// safe Idle: the wait was cancelled, or the capture device failed mid-grace (OnCaptureFailed cannot
-	// claim the Recording stage then, so it signals this in-flight stop through the failure flag and
-	// leaves the single buffer finalization to it). The final stage re-check is a defensive guard only:
-	// no current transition can reclaim the pipeline out of Transcribing mid-grace (Cancel and the
-	// Recording-stage failure path both require Recording), so it always passes today; it stays so that
-	// a future transition which does reclaim the stage — and therefore owns the capture — fails safe
-	// here instead of double-finalizing the buffer and delivering an empty clip.
+	// delivery — in every false path the capture is finalized-and-dropped here and the pipeline returned
+	// to a safe Idle: the wait was cancelled; the capture device failed mid-grace (OnCaptureFailed
+	// cannot claim the Recording stage then, so it signals this in-flight stop through the failure
+	// flag and leaves the buffer finalization to it); or — defensively — the stage was reclaimed out of
+	// Transcribing (no current transition can do that: Cancel and the Recording-stage failure path both
+	// require Recording, so the guard exists for a future transition, and the discard is harmless then —
+	// the buffer finalization is reset-safe and the state-machine transition is guarded). The failure
+	// flag and the stage guard are merged into ONE final gate with the flag read last, immediately
+	// before control returns to the finalize path: a failure landing in the gap between the grace delay
+	// completing and a separate, earlier flag check would otherwise notify the user the microphone
+	// failed and then deliver the partial clip anyway.
 	private async Task<bool> WaitForCaptureTailAsync(CancellationToken cancellationToken)
 	{
 		int graceMs = _bufferingOptions.PostReleaseGraceMs;
@@ -274,16 +277,16 @@ public sealed class DictationOrchestrator
 			}
 		}
 
-		if (_captureFailedDuringStop)
+		if (Stage != DictationStage.Transcribing || _captureFailedDuringStop)
 		{
-			_captureBuffer.StopRecording(); // finalize-and-drop: a failed device delivers nothing.
+			_captureBuffer.StopRecording(); // finalize-and-drop: a failed device or reclaimed stage delivers nothing.
 			_stateMachine.CompleteTranscription();
 			Advance(DictationStage.Idle);
-			_logger.LogInformation("Capture failed during the post-release grace window; capture discarded.");
+			_logger.LogInformation("Capture failed or stage reclaimed during the post-release grace window; capture discarded.");
 			return false;
 		}
 
-		return Stage == DictationStage.Transcribing;
+		return true;
 	}
 
 	/// <summary>

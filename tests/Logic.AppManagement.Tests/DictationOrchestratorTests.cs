@@ -7,8 +7,8 @@
 // does not, and a failed history write is swallowed with a warning. The post-release grace window
 // (WHISPER-112) is pinned on a manual clock: delivery waits for the window, frames arriving during it
 // land in the delivered clip, a cancel mid-grace cannot derail the stop, a cancelled wait discards
-// the capture, and a device failure mid-grace discards the capture, notifies the user, and never
-// poisons the next utterance. Every port is an NSubstitute fake, so the orchestration is exercised
+// the capture, and a device failure mid-grace — including one landing at the grace boundary, racing
+// the finalization — discards the capture, notifies the user, and never poisons the next utterance. Every port is an NSubstitute fake, so the orchestration is exercised
 // with no real audio, model, or delivery.
 
 using Application.Configuration;
@@ -342,6 +342,43 @@ public sealed class DictationOrchestratorTests
 		await _mediator.Received(1).Send(Arg.Any<DeliverTranscriptionCommand>(), Arg.Any<CancellationToken>());
 		sut.Stage.Should().Be(DictationStage.Idle);
 		_stateMachine.State.Should().Be(RecordingState.Idle);
+	}
+
+	[Fact]
+	public async Task A_capture_failure_racing_the_post_grace_finalization_discards_the_capture()
+	{
+		// The WHISPER-112 late-failure race the merged final gate guards: OnCaptureFailed fires in the
+		// gap between the grace delay completing and the stop finalizing the capture. Code that read the
+		// failure flag once, ahead of a separate stage guard, could notify the user the microphone failed
+		// and then deliver the partial clip anyway; the single final gate re-reads the flag immediately
+		// before finalization, so the gap shrinks to one read. The true interleaving has no seam a test
+		// can drive: with the manual clock the awaited delay resumes — and the whole stop completes —
+		// synchronously inside Advance, so a failure raised after Advance returns models a failure after
+		// delivery, not one inside the gap (verified: the stop task is already complete when Advance
+		// returns). The closest deterministic approximation, used here, hooks the failure raise to the
+		// same Advance tick through a manual timer due at the grace boundary and registered ahead of the
+		// stop's own delay timer: the failure lands inside Advance immediately before the gate runs.
+		// This interleaving is caught by the pre-merge code too — the race window sits between two
+		// adjacent reads and cannot be entered on demand — so this test pins the merged-gate behavior
+		// rather than reproducing the bug.
+		ManualTimeProvider time = new();
+		DictationOrchestrator sut = CreateSut(new AudioBufferingOptions(PostReleaseGraceMs: 400), time);
+
+		sut.Start();
+		using ITimer failure = time.CreateTimer(
+			_ => _audio.CaptureFailed += Raise.EventWith(
+				new AudioCaptureFailedEventArgs(Domain.Audio.AudioCaptureError.DeviceUnavailable, "device removed")),
+			null, TimeSpan.FromMilliseconds(400), Timeout.InfiniteTimeSpan);
+		Task stop = sut.StopAsync(TestContext.Current.CancellationToken);
+		time.Advance(TimeSpan.FromMilliseconds(400));
+		await stop;
+
+		await _mediator.DidNotReceive().Send(Arg.Any<DeliverTranscriptionCommand>(), Arg.Any<CancellationToken>());
+		await _mediator.DidNotReceive().Send(Arg.Any<RecordTranscriptionCommand>(), Arg.Any<CancellationToken>());
+		sut.Stage.Should().Be(DictationStage.Idle);
+		_stateMachine.State.Should().Be(RecordingState.Idle);
+		_logger.Entries.Should().Contain(entry => entry.Level == LogLevel.Error);
+		_userNotifier.Received(1).NotifyError(Arg.Any<string>(), Arg.Any<string>());
 	}
 
 	[Fact]
