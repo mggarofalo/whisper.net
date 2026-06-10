@@ -31,6 +31,8 @@ public sealed class SwitchActiveModelHandler(
 		AppSettings current = await settingsStore.LoadAsync(cancellationToken);
 		if (!string.Equals(current.ModelId, command.ModelId, StringComparison.Ordinal))
 		{
+			// A model becoming active means first-run setup is effectively done, so mark it completed
+			// (WHISPER-82) — the launch flow then goes straight to the tray instead of re-prompting.
 			AppSettings updated = new(
 				command.ModelId,
 				current.Hotkey,
@@ -38,7 +40,7 @@ public sealed class SwitchActiveModelHandler(
 				current.FillerWordRemovalEnabled,
 				current.CaptureDeviceId,
 				current.AuditLogEnabled,
-				current.SetupCompleted);
+				setupCompleted: true);
 
 			await settingsStore.SaveAsync(updated, cancellationToken);
 

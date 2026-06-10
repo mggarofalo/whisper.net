@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using Application.Diagnostics;
 using Application.Ports;
+using Application.Settings;
 using Infrastructure.DependencyInjection;
 using Logic.AppManagement;
 using Logic.AppManagement.Diagnostics;
@@ -21,7 +22,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Presentation.Diagnostics;
-using Presentation.Onboarding;
 using Presentation.Overlay;
 using Presentation.Shell;
 using Presentation.Tray;
@@ -34,8 +34,6 @@ public partial class App
 	private IHost? _host;
 	private TrayIcon? _trayIcon;
 	private LevelOverlay? _levelOverlay;
-	private OnboardingWindow? _onboardingWindow;
-	private IServiceScope? _onboardingScope;
 	private bool _hostStarted;
 	private bool _shuttingDown;
 
@@ -115,13 +113,13 @@ public partial class App
 
 		logger.LogInformation("Whisper host started; running tray-resident with no startup window.");
 
-		// First-run onboarding (WHISPER-51): on a fresh install (setup not completed), guide the user
-		// through model/audio/hotkey setup and permissions before the tray app takes over. The flow's
-		// view-models depend on the scoped Mediator, so it runs inside a dedicated UI scope kept alive
-		// until the window closes. Skipped silently once setup has been completed. Fire-and-forget so the
-		// "is onboarding required?" settings read (WHISPER-73) runs off the UI thread instead of blocking
-		// it with sync-over-async; the async continuation resumes on the UI thread to show the window.
-		_ = ShowOnboardingIfRequiredAsync(logger);
+		// First-run setup (WHISPER-82): there is no separate onboarding window any more — settings IS the
+		// single source of truth. On launch, open the settings window when the app is unconfigured (no
+		// active model OR setup not completed) so the user finishes setup over the real settings views;
+		// otherwise stay tray-only. Fire-and-forget so the settings/cache read runs off the UI thread
+		// instead of blocking it with sync-over-async; the continuation resumes on the UI thread to show
+		// the window via the shell presenter.
+		_ = OpenSettingsIfUnconfiguredAsync(logger);
 	}
 
 	// Builds the full composition (but never starts the host, so no hotkey hook / tray / hosted services
@@ -146,43 +144,36 @@ public partial class App
 		Shutdown();
 	}
 
-	private async Task ShowOnboardingIfRequiredAsync(ILogger<App> logger)
+	private async Task OpenSettingsIfUnconfiguredAsync(ILogger<App> logger)
 	{
-		_onboardingScope = _host!.Services.CreateScope();
-		OnboardingViewModel onboarding = _onboardingScope.ServiceProvider.GetRequiredService<OnboardingViewModel>();
-
-		bool required;
+		SetupStatus status;
 		try
 		{
-			// Awaited (not GetAwaiter().GetResult()) so the settings read does not block the UI thread; the
-			// continuation resumes on the WPF dispatcher, so the window is still created on the UI thread.
-			required = await onboarding.IsRequiredAsync();
+			// A short-lived scope for the one-shot query; awaited (not GetAwaiter().GetResult()) so the
+			// settings/cache read does not block the UI thread, with the continuation resuming on the WPF
+			// dispatcher so the window is shown on the UI thread.
+			using IServiceScope scope = _host!.Services.CreateScope();
+			IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+			status = await mediator.Send(new GetSetupStatusQuery());
 		}
 		catch (Exception ex)
 		{
-			// A failure deciding whether onboarding is needed must not strand the app; log it (now to the
-			// persistent file sink) and fall through to the normal tray experience.
-			logger.LogError(ex, "Failed to determine whether onboarding is required; continuing without it.");
-			_onboardingScope.Dispose();
-			_onboardingScope = null;
+			// A failure deciding whether the app is configured must not strand it; log it and stay tray-only.
+			logger.LogError(ex, "Failed to determine whether first-run setup is required; continuing tray-only.");
 			return;
 		}
 
-		if (!required)
+		if (status.IsConfigured)
 		{
-			_onboardingScope.Dispose();
-			_onboardingScope = null;
 			return;
 		}
 
-		logger.LogInformation("First run detected; showing onboarding.");
-		_onboardingWindow = new OnboardingWindow(onboarding);
-		_onboardingWindow.Show();
+		logger.LogInformation("App is unconfigured; opening the settings window for first-run setup.");
+		_host!.Services.GetRequiredService<IShellPresenter>().ShowSettings();
 	}
 
 	protected override void OnExit(ExitEventArgs e)
 	{
-		_onboardingScope?.Dispose();
 		_levelOverlay?.Dispose();
 		_trayIcon?.Dispose();
 
