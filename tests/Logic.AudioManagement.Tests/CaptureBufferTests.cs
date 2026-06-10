@@ -1,11 +1,13 @@
 // Inner TDD loop for CaptureBuffer: the preroll ring retains only the most recent samples, recording
 // is seeded with that preroll, the soft max-duration limit (WHISPER-111) signals once at 80% and once
 // at 100% while every sample — including those past the limit — is retained, the hard failsafe limit
-// signals once at the configured ceiling, the buffer is reusable across recordings (all limit signals
-// re-arm per recording), a discard abandons the capture without materializing it, absurd configured
-// durations clamp instead of wrapping the sample arithmetic, and the recording store survives the
-// capture-thread/orchestrator-thread interleaving (appends racing a stop). Uses a 1 kHz target rate
-// so 1 sample == 1 ms and the arithmetic is obvious.
+// signals once at the configured ceiling without truncating the tail that drains after it, the buffer
+// is reusable across recordings (all limit signals re-arm per recording), a discard abandons the
+// capture without materializing it, absurd configured durations clamp instead of wrapping the sample
+// arithmetic, the recorded-duration arithmetic guards an unusable rate, the recording store's up-front
+// capacity hint stays bounded below a long soft limit, and the store survives the capture-thread/
+// orchestrator-thread interleaving (appends racing a stop). Uses a 1 kHz target rate so
+// 1 sample == 1 ms and the arithmetic is obvious.
 
 using AwesomeAssertions;
 using Domain.Audio;
@@ -225,6 +227,23 @@ public sealed class CaptureBufferTests
 	}
 
 	[Fact]
+	public void Appends_after_the_hard_limit_are_retained_until_the_recording_is_stopped()
+	{
+		// The hard failsafe stops the recording through the NORMAL stop path, which drains the device's
+		// in-flight tail through the post-release grace window (WHISPER-112) — so samples arriving
+		// between the ceiling firing and the stop finalizing must still land in the clip, never be
+		// dropped. The ceiling bounds the recording by STOPPING it, not by truncating it.
+		CaptureBuffer buffer = NewBuffer(prerollMs: 0, maxMs: 2, hardMaxMs: 4);
+
+		buffer.StartRecording();
+		Append(buffer, 1f, 2f, 3f, 4f); // reaches the hard ceiling
+		Append(buffer, 5f, 6f);         // the tail a real device still delivers while the stop drains
+		AudioClip clip = buffer.StopRecording();
+
+		clip.Samples.Should().Equal(1f, 2f, 3f, 4f, 5f, 6f);
+	}
+
+	[Fact]
 	public void Discard_recording_abandons_the_capture_and_resets_for_reuse()
 	{
 		CaptureBuffer buffer = NewBuffer(prerollMs: 0, maxMs: 100);
@@ -254,6 +273,42 @@ public sealed class CaptureBufferTests
 
 		// An idle discard must not disturb the retained preroll.
 		clip.Samples.Should().Equal(1f, 2f);
+	}
+
+	[Fact]
+	public void Recorded_duration_is_zero_when_the_target_rate_is_unusable()
+	{
+		// A non-positive configured rate cannot yield a duration: the guard must report zero rather
+		// than divide by the rate — the soft-limit message handlers read this property on every limit
+		// event, on the capture thread, where a DivideByZeroException would kill the capture loop.
+		CaptureBuffer buffer = new(
+			new AudioBufferingOptions(PrerollMs: 0, MaxDurationMs: 100, TargetSampleRate: 0),
+			new AudioResampler());
+
+		buffer.StartRecording();
+
+		buffer.RecordedDurationMs.Should().Be(0);
+	}
+
+	[Fact]
+	public void The_recording_store_is_capacity_hinted_well_below_a_long_soft_limit()
+	{
+		// The up-front capacity hint is min(soft limit, 30 s of audio): at the 600 s production default
+		// and 16 kHz, hinting the full limit would pre-allocate ~38 MB per buffer, while the 30 s bound
+		// stays under ~2 MB. Pin the bound by measuring the construction's own (same-thread) allocations:
+		// genuinely hinted (well above a bare list) but never sized to the full soft limit.
+		AudioResampler resampler = new();
+		AudioBufferingOptions options = new(PrerollMs: 0, MaxDurationMs: 600_000, TargetSampleRate: 16_000);
+
+		long before = GC.GetAllocatedBytesForCurrentThread();
+		CaptureBuffer buffer = new(options, resampler);
+		long allocated = GC.GetAllocatedBytesForCurrentThread() - before;
+
+		GC.KeepAlive(buffer);
+		allocated.Should().BeInRange(
+			100_000,
+			10_000_000,
+			"the store pre-allocates the 30 s hint (~1.9 MB at 16 kHz), not the full soft limit (~38 MB)");
 	}
 
 	[Fact]
