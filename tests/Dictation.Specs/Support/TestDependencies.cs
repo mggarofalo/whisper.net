@@ -198,6 +198,10 @@ public static class TestDependencies
 		// behaviors package reference, and the committed wiring guideline. Pure-artifact, like theming.
 		services.AddScoped<DeclarativeWiringDriver>();
 
+		// VM activation lifecycle (WHISPER-94): real shell navigation over the cached feature view-models
+		// and the scenario-scoped messenger, proving subscriptions live exactly while a section is active.
+		services.AddScoped<VmLifecycleDriver>();
+
 		// Model picker (WHISPER-27): the real ModelViewModel over the real Mediator pipeline (list /
 		// download / switch handlers) and the real catalog, faking only the device-facing model ports.
 		services.AddScoped<ModelPickerDriver>();

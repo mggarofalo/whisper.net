@@ -14,7 +14,7 @@ using Mediator;
 
 namespace Logic.AppManagement.Shell;
 
-public sealed partial class HistoryViewModel : ObservableValidator, IFeatureViewModel
+public sealed partial class HistoryViewModel : FeatureViewModel
 {
 	private const int PageSize = 50;
 
@@ -36,13 +36,6 @@ public sealed partial class HistoryViewModel : ObservableValidator, IFeatureView
 	/// <summary>The 1-based index of the most recent page loaded.</summary>
 	[ObservableProperty]
 	private int _page = 1;
-
-	[ObservableProperty]
-	private bool _isActive;
-
-	public void OnNavigatedTo() => IsActive = true;
-
-	public void OnNavigatedFrom() => IsActive = false;
 
 	// Load the first page through Mediator, replacing whatever was shown.
 	[RelayCommand]

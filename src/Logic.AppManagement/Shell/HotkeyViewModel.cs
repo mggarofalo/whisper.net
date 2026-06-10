@@ -11,6 +11,7 @@ using System.ComponentModel.DataAnnotations;
 using Application.Settings;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using Domain;
 using Domain.Input;
 using Domain.Settings;
@@ -18,13 +19,18 @@ using Mediator;
 
 namespace Logic.AppManagement.Shell;
 
-public sealed partial class HotkeyViewModel : ObservableValidator, IFeatureViewModel
+public sealed partial class HotkeyViewModel : FeatureViewModel
 {
 	private readonly IMediator _mediator;
+	private readonly IMessenger _messenger;
 
 	private AppSettingsDto? _settings;
 
-	public HotkeyViewModel(IMediator mediator) => _mediator = mediator;
+	public HotkeyViewModel(IMediator mediator, IMessenger messenger)
+	{
+		_mediator = mediator;
+		_messenger = messenger;
+	}
 
 	/// <summary>The current, persisted dictation hotkey chord (e.g. "Ctrl+Shift+D").</summary>
 	[ObservableProperty]
@@ -43,12 +49,28 @@ public sealed partial class HotkeyViewModel : ObservableValidator, IFeatureViewM
 	[ObservableProperty]
 	private string? _error;
 
-	[ObservableProperty]
-	private bool _isActive;
+	// Live subscriptions exist only while this section is the shell's active content (WHISPER-94): the
+	// instant-apply registration is added on activate and removed on deactivate, so an inactive cached
+	// section gets no callbacks. The messenger is the shared WeakReferenceMessenger, so even a missed
+	// deactivation could never root this cached view-model.
+	protected override void OnActivated() =>
+		_messenger.Register<HotkeyViewModel, SettingsChangedMessage>(
+			this, static (recipient, message) => recipient.OnSettingsChanged(message));
 
-	public void OnNavigatedTo() => IsActive = true;
+	protected override void OnDeactivated() => _messenger.Unregister<SettingsChangedMessage>(this);
 
-	public void OnNavigatedFrom() => IsActive = false;
+	// A live settings commit (instant apply, WHISPER-78) refreshes the displayed binding while active —
+	// e.g. a hotkey assigned elsewhere shows here without a reload.
+	private void OnSettingsChanged(SettingsChangedMessage message)
+	{
+		string chord = message.Value.Hotkey.Chord;
+		CurrentHotkey = chord;
+
+		if (_settings is not null)
+		{
+			_settings = _settings with { Hotkey = chord };
+		}
+	}
 
 	// Load the persisted hotkey through Mediator, seeding the editable field with the current binding.
 	[RelayCommand]

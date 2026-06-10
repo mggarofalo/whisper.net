@@ -18,7 +18,7 @@ using Mediator;
 
 namespace Logic.AppManagement.Shell;
 
-public sealed partial class AudioDeviceViewModel : ObservableValidator, IFeatureViewModel
+public sealed partial class AudioDeviceViewModel : FeatureViewModel
 {
 	private readonly IMediator _mediator;
 
@@ -44,9 +44,6 @@ public sealed partial class AudioDeviceViewModel : ObservableValidator, IFeature
 	[ObservableProperty]
 	private bool _isLoading;
 
-	[ObservableProperty]
-	private bool _isActive;
-
 	/// <summary>The device id currently persisted in settings — what a selection change is compared
 	/// against to tell a real user pick from the programmatic selection a reload performs.</summary>
 	public string? CommittedDeviceId => _settings?.CaptureDeviceId;
@@ -62,10 +59,6 @@ public sealed partial class AudioDeviceViewModel : ObservableValidator, IFeature
 			SelectCommand.Execute(value);
 		}
 	}
-
-	public void OnNavigatedTo() => IsActive = true;
-
-	public void OnNavigatedFrom() => IsActive = false;
 
 	// Load the device list and the persisted selection through Mediator. If the persisted device is gone,
 	// fall back to system default for the live selection and warn, without overwriting the persisted id.

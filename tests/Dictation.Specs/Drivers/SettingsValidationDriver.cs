@@ -24,10 +24,10 @@ public sealed class SettingsValidationDriver
 	private AppSettings _persisted =
 		new("base.en", HotkeyBinding.Parse(DefaultHotkey), silenceThresholdMs: 700, fillerWordRemovalEnabled: false);
 
-	public SettingsValidationDriver(IMediator mediator, ISettingsStore store)
+	public SettingsValidationDriver(IMediator mediator, ISettingsStore store, CommunityToolkit.Mvvm.Messaging.IMessenger messenger)
 	{
 		_store = store;
-		_hotkey = new HotkeyViewModel(mediator);
+		_hotkey = new HotkeyViewModel(mediator, messenger);
 
 		_store.LoadAsync(Arg.Any<CancellationToken>()).Returns(_ => _persisted);
 		_store.When(s => s.SaveAsync(Arg.Any<AppSettings>(), Arg.Any<CancellationToken>()))
