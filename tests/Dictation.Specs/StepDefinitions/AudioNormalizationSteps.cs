@@ -42,6 +42,6 @@ public sealed class AudioNormalizationSteps(AudioNormalizationDriver driver)
 	[Then(@"the finalized recording is exactly (\d+) ms long")]
 	public void ThenRecordingIsExactlyMsLong(int ms) => driver.AssertRecordingDurationMs(ms);
 
-	[Then(@"the maximum-duration cap is reported to the caller")]
-	public void ThenCapReported() => driver.AssertCapReported();
+	[Then(@"the maximum-duration limit is reported to the caller")]
+	public void ThenLimitReported() => driver.AssertLimitReported();
 }

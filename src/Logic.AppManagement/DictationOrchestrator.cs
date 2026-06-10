@@ -8,15 +8,24 @@
 // (RecordTranscriptionCommand, WHISPER-110) so the History section and usage stats reflect real
 // usage. It owns an explicit pipeline
 // state machine (Idle -> Recording -> Transcribing -> Delivering -> Idle) guarded against concurrent
-// transitions, and keeps the shared RecordingStateMachine in step so the tray/UI reflect status. Every cross-layer touch is an Application port (no Infrastructure
-// type is referenced here), so the whole flow is unit-testable with faked ports. Any stage error is
-// logged via Serilog and returns the pipeline to a safe Idle — no transition can leave it stuck.
+// transitions, and keeps the shared RecordingStateMachine in step so the tray/UI reflect status. The
+// capture buffer's max duration is a SOFT limit (WHISPER-111): when a recording approaches and then
+// reaches it, the orchestrator publishes DictationNearLimitMessage / DictationAtLimitMessage on the
+// shared IMessenger so the UI can warn the user — recording continues and nothing is dropped. A HARD
+// failsafe ceiling backs the soft limit: at HardLimitReached the orchestrator stops the dictation
+// itself through the normal stop path — stop and transcribe, never discard — and publishes
+// DictationHardLimitStopMessage so the UI can say why dictation stopped on its own. Every cross-layer
+// touch is an Application port (no Infrastructure type is referenced here), so the whole flow is
+// unit-testable with faked ports. Any stage error is logged via Serilog and returns the pipeline to a
+// safe Idle — no transition can leave it stuck.
 
 using System.Diagnostics;
 using Application.Configuration;
+using Application.Dictation;
 using Application.History;
 using Application.Ports;
 using Application.Transcription;
+using CommunityToolkit.Mvvm.Messaging;
 using Domain.Audio;
 using Domain.Feedback;
 using Logic.AudioManagement;
@@ -33,6 +42,7 @@ public sealed class DictationOrchestrator
 	private readonly CaptureBuffer _captureBuffer;
 	private readonly AudioBufferingOptions _bufferingOptions;
 	private readonly IMediator _mediator;
+	private readonly IMessenger _messenger;
 	private readonly IAudioFeedback _audioFeedback;
 	private readonly IOptions<AudioFeedbackOptions> _feedbackOptions;
 	private readonly IUserNotifier _userNotifier;
@@ -56,6 +66,7 @@ public sealed class DictationOrchestrator
 		AudioResampler resampler,
 		AudioBufferingOptions bufferingOptions,
 		IMediator mediator,
+		IMessenger messenger,
 		IAudioFeedback audioFeedback,
 		IOptions<AudioFeedbackOptions> feedbackOptions,
 		IUserNotifier userNotifier,
@@ -67,6 +78,7 @@ public sealed class DictationOrchestrator
 		_captureBuffer = new CaptureBuffer(bufferingOptions, resampler);
 		_bufferingOptions = bufferingOptions;
 		_mediator = mediator;
+		_messenger = messenger;
 		_audioFeedback = audioFeedback;
 		_feedbackOptions = feedbackOptions;
 		_userNotifier = userNotifier;
@@ -75,6 +87,31 @@ public sealed class DictationOrchestrator
 
 		_audioSource.FrameAvailable += OnFrameAvailable;
 		_audioSource.CaptureFailed += OnCaptureFailed;
+
+		// Soft-limit signals (WHISPER-111): the capture buffer fires these once per recording, on the
+		// capture thread, at 80% and 100% of the soft max duration. Recording continues either way —
+		// the handlers stay tiny and only publish the strongly-typed message on the (thread-safe)
+		// messenger so the UI can warn the user; they must never touch the pipeline state.
+		_captureBuffer.NearMaxDuration += (_, _) => _messenger.Send(
+			new DictationNearLimitMessage(_captureBuffer.RecordedDurationMs, _bufferingOptions.MaxDurationMs));
+		_captureBuffer.MaxDurationReached += (_, _) => _messenger.Send(
+			new DictationAtLimitMessage(_captureBuffer.RecordedDurationMs, _bufferingOptions.MaxDurationMs));
+
+		// Hard failsafe (WHISPER-111): the soft-limit messages above have no consuming UI yet, so the
+		// hard ceiling is the enforcement bound that keeps a runaway recording from growing without end.
+		// It must take the NORMAL stop path — stop and transcribe, never discard. The event fires on the
+		// capture thread, so the stop is dispatched exactly like the hotkey release below: a guarded
+		// fire-and-forget StopAsync, whose entry transition (Recording -> Transcribing) makes any
+		// duplicate or racing call a harmless no-op. The message is published first so the eventual UI
+		// can tell the user why dictation stopped on its own.
+		_captureBuffer.HardLimitReached += (_, _) =>
+		{
+			_messenger.Send(new DictationHardLimitStopMessage(_captureBuffer.RecordedDurationMs, _bufferingOptions.HardMaxDurationMs));
+			_logger.LogWarning(
+				"Recording reached the hard duration ceiling ({HardMaxDurationMs} ms); stopping and transcribing.",
+				_bufferingOptions.HardMaxDurationMs);
+			_ = StopAsync();
+		};
 
 		// The hotkey is the production start/stop signal (AC2): push-to-talk/toggle matching lives in the
 		// controller, and the orchestrator only reacts to its decisions. The stop path is fire-and-forget
@@ -247,13 +284,14 @@ public sealed class DictationOrchestrator
 
 	// Wait the configured post-release grace window on the injected clock so the device's in-flight
 	// capture tail drains into the buffer (WHISPER-112). Returns false when the stop must not proceed to
-	// delivery — in every false path the capture is finalized-and-dropped here and the pipeline returned
-	// to a safe Idle: the wait was cancelled; the capture device failed mid-grace (OnCaptureFailed
-	// cannot claim the Recording stage then, so it signals this in-flight stop through the failure
-	// flag and leaves the buffer finalization to it); or — defensively — the stage was reclaimed out of
-	// Transcribing (no current transition can do that: Cancel and the Recording-stage failure path both
-	// require Recording, so the guard exists for a future transition, and the discard is harmless then —
-	// the buffer finalization is reset-safe and the state-machine transition is guarded). The failure
+	// delivery — in every false path the capture is discarded here (DiscardRecording: no clip is ever
+	// materialized for audio nobody will hear) and the pipeline returned to a safe Idle: the wait was
+	// cancelled; the capture device failed mid-grace (OnCaptureFailed cannot claim the Recording stage
+	// then, so it signals this in-flight stop through the failure flag and leaves the buffer discard to
+	// it); or — defensively — the stage was reclaimed out of Transcribing (no current transition can do
+	// that: Cancel and the Recording-stage failure path both require Recording, so the guard exists for
+	// a future transition, and the discard is harmless then — the buffer discard is reset-safe and the
+	// state-machine transition is guarded). The failure
 	// flag and the stage guard are merged into ONE final gate with the flag read last, immediately
 	// before control returns to the finalize path: a failure landing in the gap between the grace delay
 	// completing and a separate, earlier flag check would otherwise notify the user the microphone
@@ -269,7 +307,7 @@ public sealed class DictationOrchestrator
 			}
 			catch (OperationCanceledException)
 			{
-				_captureBuffer.StopRecording(); // finalize-and-drop: a cancelled stop delivers nothing.
+				_captureBuffer.DiscardRecording(); // a cancelled stop delivers nothing; no snapshot is materialized.
 				_stateMachine.CompleteTranscription();
 				Advance(DictationStage.Idle);
 				_logger.LogInformation("Dictation stop cancelled during the post-release grace window; capture discarded.");
@@ -279,7 +317,7 @@ public sealed class DictationOrchestrator
 
 		if (Stage != DictationStage.Transcribing || _captureFailedDuringStop)
 		{
-			_captureBuffer.StopRecording(); // finalize-and-drop: a failed device or reclaimed stage delivers nothing.
+			_captureBuffer.DiscardRecording(); // a failed device or reclaimed stage delivers nothing; no snapshot is materialized.
 			_stateMachine.CompleteTranscription();
 			Advance(DictationStage.Idle);
 			_logger.LogInformation("Capture failed or stage reclaimed during the post-release grace window; capture discarded.");
@@ -301,7 +339,7 @@ public sealed class DictationOrchestrator
 		}
 
 		_audioSource.Stop();
-		_captureBuffer.StopRecording(); // finalize-and-drop: the captured clip is discarded, never delivered.
+		_captureBuffer.DiscardRecording(); // the captured audio is discarded, never delivered — and never materialized.
 		_stateMachine.Cancel();
 		_logger.LogInformation("Dictation cancelled; capture discarded.");
 	}
@@ -356,7 +394,7 @@ public sealed class DictationOrchestrator
 	{
 		if (TryAdvance(DictationStage.Recording, DictationStage.Idle))
 		{
-			_captureBuffer.StopRecording(); // discard the partial capture
+			_captureBuffer.DiscardRecording(); // discard the partial capture without materializing it
 			_stateMachine.Cancel();
 			_logger.LogError("Audio capture failed ({Error}): {Message}; returning to Idle.", e.Error, e.Message);
 			NotifyCaptureFailure();

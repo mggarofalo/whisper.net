@@ -20,7 +20,7 @@ public sealed class AudioNormalizationDriver(AudioResampler resampler)
 	private AudioBufferingOptions _options = new();
 	private CaptureBuffer? _buffer;
 	private float _sampleCounter;
-	private bool _capReported;
+	private bool _limitReported;
 	private AudioClip? _clip;
 
 	private CaptureBuffer Buffer => _buffer ?? throw new InvalidOperationException("Configure the buffer first.");
@@ -62,7 +62,7 @@ public sealed class AudioNormalizationDriver(AudioResampler resampler)
 	private void BuildBuffer()
 	{
 		_buffer = new CaptureBuffer(_options, resampler);
-		_buffer.MaxDurationReached += (_, _) => _capReported = true;
+		_buffer.MaxDurationReached += (_, _) => _limitReported = true;
 	}
 
 	public void CaptureIdle(int ms) => Append(ms);
@@ -107,5 +107,6 @@ public sealed class AudioNormalizationDriver(AudioResampler resampler)
 	public void AssertRecordingDurationMs(int ms) =>
 		FinalClip().Samples.Should().HaveCount(MsToSamples(ms));
 
-	public void AssertCapReported() => _capReported.Should().BeTrue();
+	public void AssertLimitReported() =>
+		_limitReported.Should().BeTrue("the soft limit (WHISPER-111) must be observable even though recording continues");
 }

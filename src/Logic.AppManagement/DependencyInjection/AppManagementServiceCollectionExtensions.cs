@@ -32,6 +32,8 @@ public static class AppManagementServiceCollectionExtensions
 
 		// Capture buffering options (WHISPER-14): the per-app preroll / max-duration / target-rate the
 		// orchestrator builds its CaptureBuffer from. A plain default today; bound from configuration later.
+		// The max duration is a SOFT limit (WHISPER-111, 10 minutes by default): recording continues past
+		// it and the orchestrator publishes near/at-limit messages instead of truncating.
 		services.AddSingleton(new Logic.AudioManagement.AudioBufferingOptions());
 
 		// Dictation orchestrator (WHISPER-14): the coordination hub that runs capture -> transcribe ->
