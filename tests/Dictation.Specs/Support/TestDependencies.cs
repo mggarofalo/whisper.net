@@ -131,6 +131,11 @@ public static class TestDependencies
 		// the Model section's Mediator round-trip run for real over the faked model lifecycle.
 		services.AddScoped<ShellNavigationDriver>();
 
+		// Settings/feature view-model foundation (WHISPER-76): resolve the real feature section view-models
+		// from the scope and assert they share the validation-capable ObservableValidator base and raise
+		// source-generated change notification — the foundation the rest of M12 builds on.
+		services.AddScoped<SettingsViewModelFoundationDriver>();
+
 		// Model picker (WHISPER-27): the real ModelViewModel over the real Mediator pipeline (list /
 		// download / switch handlers) and the real catalog, faking only the device-facing model ports.
 		services.AddScoped<ModelPickerDriver>();

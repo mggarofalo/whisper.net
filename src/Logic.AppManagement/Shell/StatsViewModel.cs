@@ -12,7 +12,7 @@ using Mediator;
 
 namespace Logic.AppManagement.Shell;
 
-public sealed partial class StatsViewModel : ObservableObject, IFeatureViewModel
+public sealed partial class StatsViewModel : ObservableValidator, IFeatureViewModel
 {
 	private readonly IMediator _mediator;
 

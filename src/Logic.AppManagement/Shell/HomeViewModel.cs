@@ -8,7 +8,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace Logic.AppManagement.Shell;
 
-public sealed partial class HomeViewModel : ObservableObject, IFeatureViewModel
+public sealed partial class HomeViewModel : ObservableValidator, IFeatureViewModel
 {
 	/// <summary>Whether this section is the shell's active content; toggled by the navigation lifecycle.</summary>
 	[ObservableProperty]

@@ -15,7 +15,7 @@ using Mediator;
 
 namespace Logic.AppManagement.Shell;
 
-public sealed partial class AudioDeviceViewModel : ObservableObject, IFeatureViewModel
+public sealed partial class AudioDeviceViewModel : ObservableValidator, IFeatureViewModel
 {
 	private readonly IMediator _mediator;
 

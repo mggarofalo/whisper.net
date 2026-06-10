@@ -12,7 +12,7 @@ using Mediator;
 
 namespace Logic.AppManagement.Shell;
 
-public sealed partial class HistoryViewModel : ObservableObject, IFeatureViewModel
+public sealed partial class HistoryViewModel : ObservableValidator, IFeatureViewModel
 {
 	private const int PageSize = 50;
 

@@ -23,7 +23,7 @@ using Mediator;
 
 namespace Logic.AppManagement.Shell;
 
-public sealed partial class OnboardingViewModel : ObservableObject
+public sealed partial class OnboardingViewModel : ObservableValidator
 {
 	private readonly IMediator _mediator;
 	private readonly IPermissionProbe _permissions;
