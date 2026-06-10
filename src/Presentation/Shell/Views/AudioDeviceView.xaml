@@ -17,9 +17,9 @@
                     Padding="12,4" />
         </StackPanel>
 
-        <!-- A ComboBox of capture devices by friendly name (WHISPER-80). Selecting an entry commits and
-             live-applies (handled in code-behind so the programmatic selection a reload performs is not
-             mistaken for a user pick). The stored value is the stable device id, not an index. -->
+        <!-- A ComboBox of capture devices by friendly name (WHISPER-80). The two-way SelectedValue binding
+             is the whole contract: the view-model commits a genuine user pick and ignores the programmatic
+             selection a reload performs (WHISPER-92). The stored value is the stable device id, not an index. -->
         <ComboBox x:Name="DeviceBox"
                   Width="320"
                   HorizontalAlignment="Left"
@@ -28,8 +28,7 @@
                   ItemsSource="{Binding Devices}"
                   DisplayMemberPath="Name"
                   SelectedValuePath="Id"
-                  SelectedValue="{Binding SelectedDeviceId, Mode=TwoWay}"
-                  SelectionChanged="OnDeviceSelectionChanged" />
+                  SelectedValue="{Binding SelectedDeviceId, Mode=TwoWay}" />
 
         <!-- The clear fallback state when a persisted device is no longer present (empty otherwise). -->
         <TextBlock Text="{Binding UnavailableDeviceWarning}"
