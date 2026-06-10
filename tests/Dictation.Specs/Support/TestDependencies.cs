@@ -152,6 +152,11 @@ public static class TestDependencies
 		// are proven without WPF (the capture control itself is Presentation glue verified by smoke).
 		services.AddScoped<HotkeyCaptureDriver>();
 
+		// Audio-device picker (WHISPER-80): the real AudioDeviceViewModel over the real Mediator pipeline and
+		// the faked device enumerator + settings store, so the friendly-name listing, commit, and the
+		// removed-device fallback/warning are proven WPF-free (the ComboBox view is smoke-only).
+		services.AddScoped<AudioDevicePickerDriver>();
+
 		// Model picker (WHISPER-27): the real ModelViewModel over the real Mediator pipeline (list /
 		// download / switch handlers) and the real catalog, faking only the device-facing model ports.
 		services.AddScoped<ModelPickerDriver>();
