@@ -57,6 +57,17 @@ public sealed class AudioDevicePickerDriver
 
 	public Task PickDevice(string deviceId) => _viewModel.SelectCommand.ExecuteAsync(deviceId);
 
+	// A selection change as the ComboBox's two-way SelectedValue binding performs it (WHISPER-92): set
+	// the property and await the commit the view-model decides to make (if any).
+	public async Task ChangeSelection(string deviceId)
+	{
+		_viewModel.SelectedDeviceId = deviceId;
+		if (_viewModel.SelectCommand.ExecutionTask is { } commit)
+		{
+			await commit;
+		}
+	}
+
 	public void AssertListedByName(params string[] names) =>
 		_viewModel.Devices.Select(device => device.Name).Should().Contain(names);
 
@@ -67,6 +78,15 @@ public sealed class AudioDevicePickerDriver
 
 	public void AssertFellBackToSystemDefault() =>
 		_viewModel.SelectedDeviceId.Should().Be(AudioDevice.SystemDefault);
+
+	public void AssertCommittedExactlyOnce(string deviceId)
+	{
+		_store.Received(1).SaveAsync(Arg.Any<AppSettings>(), Arg.Any<CancellationToken>());
+		_persisted.CaptureDeviceId.Should().Be(deviceId);
+	}
+
+	public void AssertNothingCommitted() =>
+		_store.DidNotReceive().SaveAsync(Arg.Any<AppSettings>(), Arg.Any<CancellationToken>());
 
 	public void AssertUnavailableWarningShown() =>
 		_viewModel.UnavailableDeviceWarning.Should().NotBeNullOrEmpty();

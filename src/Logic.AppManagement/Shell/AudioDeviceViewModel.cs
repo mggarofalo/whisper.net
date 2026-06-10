@@ -39,17 +39,29 @@ public sealed partial class AudioDeviceViewModel : ObservableValidator, IFeature
 	[ObservableProperty]
 	private string? _unavailableDeviceWarning;
 
-	/// <summary>True while a load is in flight, so the view can suppress commit-on-selection during the
-	/// programmatic selection a reload performs (a user pick outside a load is a genuine commit).</summary>
+	/// <summary>True while a load is in flight, suppressing commit-on-selection during the programmatic
+	/// selection a reload performs (a user pick outside a load is a genuine commit).</summary>
 	[ObservableProperty]
 	private bool _isLoading;
 
 	[ObservableProperty]
 	private bool _isActive;
 
-	/// <summary>The device id currently persisted in settings — what the view compares a ComboBox selection
+	/// <summary>The device id currently persisted in settings — what a selection change is compared
 	/// against to tell a real user pick from the programmatic selection a reload performs.</summary>
 	public string? CommittedDeviceId => _settings?.CaptureDeviceId;
+
+	// The commit decision that used to live in the view's SelectionChanged code-behind (WHISPER-92):
+	// the ComboBox two-way binds SelectedDeviceId, and a change commits only when it is a genuine user
+	// pick — never while a load repopulates the picker, and only when the choice differs from what is
+	// already persisted (so the missing-device fallback to system default is never written back).
+	partial void OnSelectedDeviceIdChanged(string? value)
+	{
+		if (!IsLoading && value is not null && value != CommittedDeviceId)
+		{
+			SelectCommand.Execute(value);
+		}
+	}
 
 	public void OnNavigatedTo() => IsActive = true;
 

@@ -91,6 +91,29 @@ is driven for real in the Reqnroll specs while the views are verified by manual 
 shell (`WHISPER-19`) resolves each section's view-model from the DI container through an
 `INavigationService`, so feature views plug in without the shell knowing them.
 
+### View ↔ view-model resolution (WHISPER-92)
+
+This is the codified standard for how a view meets its view-model; deviations are spec-enforced by
+the `@WHISPER-92` scenarios.
+
+- **Views are resolved by implicit `DataTemplate`s keyed on the view-model type.** The shell window's
+  resources map each feature view-model (`HomeViewModel`, `ModelViewModel`, …) to its view; the
+  content region is a `ContentControl` bound to `CurrentViewModel`. Adding a section means adding a
+  view-model, a view, a `NavigationSection` registration, and one `DataTemplate` — nothing else.
+- **View-models are supplied by the DI container, never located.** The `NavigationService` resolves
+  each section's view-model from the shell's UI scope. There is **no `ViewModelLocator`**, no service
+  lookup from a view, and no per-view `DataContext` assignment in code-behind. The one composition-root
+  exception is the shell window itself, which receives its injected `ShellViewModel` at construction.
+- **Feature-view code-behind is `InitializeComponent`-only.** A view reacts to view-model state through
+  data bindings (or a declarative behavior), never by subscribing to `PropertyChanged` and switching on
+  property names — a renamed property must surface as a binding/compile break, not a silent no-op.
+  Decisions (like the device picker's commit-on-genuine-user-pick) belong in the view-model, where the
+  specs drive them.
+- **Legitimate code-behind is the narrow exception**: a self-contained, reusable input control that
+  adapts raw UI events into a bindable `DependencyProperty` contract (e.g. `HotkeyCaptureControl`'s
+  keyboard capture). Such a control owns no application behavior and exposes everything testable
+  through its bound properties.
+
 ## CQRS via source-generated Mediator
 
 All application requests flow through the **source-generated Mediator** (martinothamar,
