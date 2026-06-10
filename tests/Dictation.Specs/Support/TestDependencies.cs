@@ -162,6 +162,12 @@ public static class TestDependencies
 		// ProgressBar + Cancel button are smoke-only).
 		services.AddScoped<ModelDownloadDriver>();
 
+		// First-run setup decision (WHISPER-82): the real GetSetupStatusQuery + SwitchActiveModel over the
+		// real Mediator pipeline and catalog, faking the store + cache, so the launch decision (open settings
+		// when unconfigured; mark done when a model is activated) is proven WPF-free. The App.xaml wiring that
+		// calls IShellPresenter.ShowSettings on that decision is Presentation glue verified by smoke.
+		services.AddScoped<SetupStatusDriver>();
+
 		// Model picker (WHISPER-27): the real ModelViewModel over the real Mediator pipeline (list /
 		// download / switch handlers) and the real catalog, faking only the device-facing model ports.
 		services.AddScoped<ModelPickerDriver>();
@@ -177,12 +183,9 @@ public static class TestDependencies
 		// dashboard's totals are genuinely computed by the Application layer.
 		services.AddScoped<StatsDashboardDriver>();
 
-		// First-run onboarding (WHISPER-51): the real OnboardingViewModel over the real Mediator pipeline
-		// (GetSettings/UpdateSettings/SwitchActiveModel/DownloadModel/CompleteOnboarding) and faked ports —
-		// the settings store (round-tripped so completion is remembered), the model downloader, and the
-		// permission probe (substituted so the deny-then-grant re-attempt can be driven).
+		// Input-permission probe: substituted so the diagnostics hotkey check can be driven (the onboarding
+		// flow that also used it was removed in WHISPER-82; settings is now the single first-run surface).
 		services.AddScoped(_ => Substitute.For<IPermissionProbe>());
-		services.AddScoped<OnboardingDriver>();
 
 		// Host bootstrapping (WHISPER-12): the driver builds its own real Generic Host internally over a
 		// fake hook seam, so it is registered plainly and owns the hosted-service lifecycle it asserts.

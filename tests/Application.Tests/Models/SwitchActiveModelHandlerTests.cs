@@ -25,7 +25,7 @@ public sealed class SwitchActiveModelHandlerTests
 	public async Task Switches_the_lifecycle_and_persists_the_selected_model_id()
 	{
 		AppSettings current = new("base.en", HotkeyBinding.Parse("Ctrl+Win"), 500, fillerWordRemovalEnabled: true,
-			captureDeviceId: "Mic-1", auditLogEnabled: true, setupCompleted: true);
+			captureDeviceId: "Mic-1", auditLogEnabled: true, setupCompleted: false);
 		_store.LoadAsync(Arg.Any<CancellationToken>()).Returns(current);
 
 		AppSettings? published = null;
@@ -37,7 +37,8 @@ public sealed class SwitchActiveModelHandlerTests
 
 		await _lifecycle.Received(1).SwitchAsync("large-v3", Arg.Any<CancellationToken>());
 
-		// settings.ModelId is persisted as the new model; every other setting is preserved.
+		// settings.ModelId is persisted as the new model; every other setting is preserved, and setup is
+		// marked completed because a model is now active (WHISPER-82).
 		await _store.Received(1).SaveAsync(
 			Arg.Is<AppSettings>(s =>
 				s.ModelId == "large-v3" &&

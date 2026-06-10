@@ -91,9 +91,8 @@ public static class AppManagementServiceCollectionExtensions
 		services.AddScoped<Shell.HistoryViewModel>();
 		services.AddScoped<Shell.StatsViewModel>();
 
-		// First-run onboarding (WHISPER-51): not a nav section — the host shows it instead of the shell on
-		// first launch. Transient so each run starts fresh.
-		services.AddTransient<Shell.OnboardingViewModel>();
+		// First-run setup is no longer a separate flow (WHISPER-82): the settings shell IS onboarding, opened
+		// on launch when the app is unconfigured. There is no dedicated onboarding view-model to register.
 
 		// Self-diagnostics (WHISPER-50): the doctor / selftest checks, each probing one subsystem through
 		// the existing ports. Registered in the order they appear in the report so the output is
