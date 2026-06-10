@@ -12,7 +12,7 @@ using Mediator;
 
 namespace Logic.AppManagement.Shell;
 
-public sealed partial class StatsViewModel : ObservableValidator, IFeatureViewModel
+public sealed partial class StatsViewModel : FeatureViewModel
 {
 	private readonly IMediator _mediator;
 
@@ -29,13 +29,6 @@ public sealed partial class StatsViewModel : ObservableValidator, IFeatureViewMo
 	/// <summary>Estimated typing time saved, derived by the Application layer from the word count.</summary>
 	[ObservableProperty]
 	private TimeSpan _estimatedTimeSaved;
-
-	[ObservableProperty]
-	private bool _isActive;
-
-	public void OnNavigatedTo() => IsActive = true;
-
-	public void OnNavigatedFrom() => IsActive = false;
 
 	// Re-read the aggregate usage stats through Mediator and surface the totals. The view triggers this on
 	// open and from a refresh action, so the dashboard reflects new activity.

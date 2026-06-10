@@ -31,7 +31,7 @@ public sealed class HotkeyViewModelValidationTests
 	[InlineData("Zorp")]
 	public void Invalid_chord_flags_a_field_error(string chord)
 	{
-		HotkeyViewModel viewModel = new(Substitute.For<IMediator>());
+		HotkeyViewModel viewModel = new(Substitute.For<IMediator>(), new CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger());
 
 		viewModel.HotkeyInput = chord;
 
@@ -45,7 +45,7 @@ public sealed class HotkeyViewModelValidationTests
 	[InlineData("F13")]
 	public void Valid_chord_has_no_field_error(string chord)
 	{
-		HotkeyViewModel viewModel = new(Substitute.For<IMediator>());
+		HotkeyViewModel viewModel = new(Substitute.For<IMediator>(), new CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger());
 
 		viewModel.HotkeyInput = chord;
 
@@ -58,7 +58,7 @@ public sealed class HotkeyViewModelValidationTests
 	{
 		IMediator mediator = Substitute.For<IMediator>();
 		mediator.Send(Arg.Any<GetSettingsQuery>(), Arg.Any<CancellationToken>()).Returns(CurrentSettings);
-		HotkeyViewModel viewModel = new(mediator);
+		HotkeyViewModel viewModel = new(mediator, new CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger());
 		await viewModel.LoadCommand.ExecuteAsync(null);
 
 		viewModel.HotkeyInput = "Ctrl+Zorp";
@@ -74,7 +74,7 @@ public sealed class HotkeyViewModelValidationTests
 	{
 		IMediator mediator = Substitute.For<IMediator>();
 		mediator.Send(Arg.Any<GetSettingsQuery>(), Arg.Any<CancellationToken>()).Returns(CurrentSettings);
-		HotkeyViewModel viewModel = new(mediator);
+		HotkeyViewModel viewModel = new(mediator, new CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger());
 		await viewModel.LoadCommand.ExecuteAsync(null);
 
 		viewModel.HotkeyInput = "Ctrl+Shift+J";

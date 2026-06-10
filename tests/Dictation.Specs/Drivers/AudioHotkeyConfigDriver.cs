@@ -29,12 +29,12 @@ public sealed class AudioHotkeyConfigDriver
 	private AppSettings _persisted =
 		new("base.en", HotkeyBinding.Parse(DefaultHotkey), silenceThresholdMs: 700, fillerWordRemovalEnabled: false);
 
-	public AudioHotkeyConfigDriver(IMediator mediator, FakeAudioDeviceEnumerator enumerator, ISettingsStore store)
+	public AudioHotkeyConfigDriver(IMediator mediator, FakeAudioDeviceEnumerator enumerator, ISettingsStore store, CommunityToolkit.Mvvm.Messaging.IMessenger messenger)
 	{
 		_enumerator = enumerator;
 		_store = store;
 		_audio = new AudioDeviceViewModel(mediator);
-		_hotkey = new HotkeyViewModel(mediator);
+		_hotkey = new HotkeyViewModel(mediator, messenger);
 
 		// The store starts holding the persisted settings, and a save round-trips into the next load so a
 		// change can be shown to persist across a reload.

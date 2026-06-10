@@ -15,7 +15,7 @@ using Mediator;
 
 namespace Logic.AppManagement.Shell;
 
-public sealed partial class ModelViewModel : ObservableValidator, IFeatureViewModel
+public sealed partial class ModelViewModel : FeatureViewModel
 {
 	private readonly IMediator _mediator;
 
@@ -32,14 +32,6 @@ public sealed partial class ModelViewModel : ObservableValidator, IFeatureViewMo
 	/// this natively rather than crashing on a failed download (WHISPER-81).</summary>
 	[ObservableProperty]
 	private string? _downloadError;
-
-	/// <summary>Whether this section is the shell's active content; toggled by the navigation lifecycle.</summary>
-	[ObservableProperty]
-	private bool _isActive;
-
-	public void OnNavigatedTo() => IsActive = true;
-
-	public void OnNavigatedFrom() => IsActive = false;
 
 	// Load the model list through Mediator and project each into a row; mark which one is active.
 	[RelayCommand]

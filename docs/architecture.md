@@ -152,6 +152,27 @@ How a view connects a UI event to logic, in order of preference:
    adapting raw UI events into a bindable `DependencyProperty` contract (`HotkeyCaptureControl`).
    Everything else in a view is markup.
 
+### View-model activation lifecycle (WHISPER-94)
+
+Feature view-models are **cached per shell UI scope** (WHISPER-89), so navigation toggles activation
+instead of recreating. The lifecycle rule:
+
+- Every feature view-model derives from `FeatureViewModel`, whose `OnNavigatedTo`/`OnNavigatedFrom`
+  flip `IsActive` exactly once per transition and call the `OnActivated`/`OnDeactivated` hooks.
+- **Live subscriptions belong in the hooks**: register messenger/controller subscriptions in
+  `OnActivated`, remove them in `OnDeactivated`. An inactive cached view-model holds no live
+  subscriptions and gets no callbacks — it is dormant state, not a background listener.
+- **Cached view-models are deactivated on navigate-away and disposed only at shell teardown**, when
+  the UI scope that owns them is disposed. Navigation never disposes a section.
+- The messenger standard is CommunityToolkit's **`WeakReferenceMessenger`** (registered once by
+  `AddApplication`), so even a missed unregister can degrade freshness but can never root a cached
+  view-model — leaks are impossible by construction, and the activate/deactivate discipline is about
+  correctness (no stale callbacks), not memory.
+
+`HotkeyViewModel` is the reference recipient: it registers for `SettingsChangedMessage` on activate
+(so an instant-apply commit refreshes its displayed binding) and unregisters on deactivate — the
+contract M12 live-apply recipients follow.
+
 ## CQRS via source-generated Mediator
 
 All application requests flow through the **source-generated Mediator** (martinothamar,

@@ -4,17 +4,6 @@
 // CommunityToolkit.Mvvm and kept WPF-free so it is unit-testable; later M10 issues flesh out the
 // overview (e.g. surfacing quick stats).
 
-using CommunityToolkit.Mvvm.ComponentModel;
-
 namespace Logic.AppManagement.Shell;
 
-public sealed partial class HomeViewModel : ObservableValidator, IFeatureViewModel
-{
-	/// <summary>Whether this section is the shell's active content; toggled by the navigation lifecycle.</summary>
-	[ObservableProperty]
-	private bool _isActive;
-
-	public void OnNavigatedTo() => IsActive = true;
-
-	public void OnNavigatedFrom() => IsActive = false;
-}
+public sealed class HomeViewModel : FeatureViewModel;
