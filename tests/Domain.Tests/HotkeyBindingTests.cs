@@ -26,6 +26,15 @@ public sealed class HotkeyBindingTests
 	}
 
 	[Theory]
+	[InlineData("ctrl+alt+k", "Ctrl + Alt + K")]     // the spaced form the capture control displays (WHISPER-79)
+	[InlineData("f13", "F13")]
+	[InlineData("ctrl+win", "Ctrl + Win")]
+	public void Display_chord_spaces_the_canonical_separators(string raw, string expected)
+	{
+		HotkeyBinding.Parse(raw).DisplayChord.Should().Be(expected);
+	}
+
+	[Theory]
 	[InlineData("ctrl+win", KeyModifiers.Control | KeyModifiers.Win, KeyboardKey.None)]   // pure-modifier
 	[InlineData("ctrl+shift", KeyModifiers.Control | KeyModifiers.Shift, KeyboardKey.None)]
 	[InlineData("shift+alt+space", KeyModifiers.Shift | KeyModifiers.Alt, KeyboardKey.Space)]

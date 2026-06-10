@@ -1,0 +1,17 @@
+<UserControl x:Class="Presentation.Shell.Controls.HotkeyCaptureControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- A read-only capture field (WHISPER-79): it shows the captured combination and records the next one
+         the user presses. Focusable but read-only, with no context menu, so its own text shortcuts never
+         steal the keystroke we want to capture. -->
+    <TextBox x:Name="DisplayBox"
+             IsReadOnly="True"
+             IsReadOnlyCaretVisible="False"
+             Focusable="True"
+             ContextMenu="{x:Null}"
+             VerticalContentAlignment="Center"
+             Padding="6,4"
+             MinWidth="200"
+             PreviewKeyDown="OnPreviewKeyDown"
+             GotKeyboardFocus="OnGotKeyboardFocus" />
+</UserControl>
