@@ -2,14 +2,16 @@
 // A hotkey start request begins microphone capture through the IAudioSource port; a stop request
 // finalizes the captured audio into a clip and drives it through the Application delivery pipeline
 // (DeliverTranscriptionCommand via Mediator) — trim, transcribe, post-process, inject — with no manual
-// step in between. It owns an explicit pipeline state machine (Idle -> Recording -> Transcribing ->
-// Delivering -> Idle) guarded against concurrent transitions, and keeps the shared RecordingStateMachine
-// in step so the tray/UI reflect status. Every cross-layer touch is an Application port (no Infrastructure
+// step in between, then records a delivered transcription to history (RecordTranscriptionCommand,
+// WHISPER-110) so the History section and usage stats reflect real usage. It owns an explicit pipeline
+// state machine (Idle -> Recording -> Transcribing -> Delivering -> Idle) guarded against concurrent
+// transitions, and keeps the shared RecordingStateMachine in step so the tray/UI reflect status. Every cross-layer touch is an Application port (no Infrastructure
 // type is referenced here), so the whole flow is unit-testable with faked ports. Any stage error is
 // logged via Serilog and returns the pipeline to a safe Idle — no transition can leave it stuck.
 
 using System.Diagnostics;
 using Application.Configuration;
+using Application.History;
 using Application.Ports;
 using Application.Transcription;
 using Domain.Audio;
@@ -147,6 +149,12 @@ public sealed class DictationOrchestrator
 		_stateMachine.RequestStop();
 		PlayFeedback(FeedbackSound.RecordingStopped);
 
+		// Measured where the capture is finalized: how long the recorded audio ran, the usage measure
+		// (WHISPER-24) the history record carries once delivery succeeds.
+		TimeSpan audioDuration = clip.SampleRate > 0
+			? TimeSpan.FromSeconds((double)clip.Samples.Count / clip.SampleRate)
+			: TimeSpan.Zero;
+
 		long startedTicks = Stopwatch.GetTimestamp();
 		try
 		{
@@ -171,6 +179,15 @@ public sealed class DictationOrchestrator
 				result.Block,
 				result.Text.Length,
 				Stopwatch.GetElapsedTime(startedTicks).TotalMilliseconds);
+
+			// History write-through (WHISPER-110): a delivered transcription is recorded so the History
+			// section and usage stats reflect real usage. Recording observes delivery, it is never a
+			// dependency of it — the method owns its errors, so a failed write can neither surface as a
+			// delivery failure nor keep the pipeline from returning to Idle.
+			if (result.Delivered)
+			{
+				await RecordToHistoryAsync(result.Text, audioDuration, cancellationToken);
+			}
 		}
 		catch (Exception ex)
 		{
@@ -217,6 +234,21 @@ public sealed class DictationOrchestrator
 		_captureBuffer.StopRecording(); // finalize-and-drop: the captured clip is discarded, never delivered.
 		_stateMachine.Cancel();
 		_logger.LogInformation("Dictation cancelled; capture discarded.");
+	}
+
+	// Record the delivered transcription in history through the Application command (append + retention
+	// prune). Any failure is logged as a warning and swallowed: the text already reached the user, so a
+	// history-write problem must never read as a dictation failure.
+	private async Task RecordToHistoryAsync(string text, TimeSpan audioDuration, CancellationToken cancellationToken)
+	{
+		try
+		{
+			await _mediator.Send(new RecordTranscriptionCommand(text, DateTimeOffset.UtcNow, audioDuration), cancellationToken);
+		}
+		catch (Exception ex)
+		{
+			_logger.LogWarning(ex, "Recording the delivered transcription to history failed; the delivery itself succeeded.");
+		}
 	}
 
 	// Audio feedback (WHISPER-21): play the cue for a pipeline transition, but only when feedback is

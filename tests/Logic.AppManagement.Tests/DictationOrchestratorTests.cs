@@ -2,10 +2,13 @@
 // Pins down the explicit stage path (Idle -> Recording -> Transcribing -> Delivering -> Idle) and its
 // observability, the hotkey start signal, the concurrency guard against a second capture, the Esc
 // cancel that discards a capture, and the two error paths (a failed delivery and a device capture
-// failure) that must log and return the pipeline to a safe Idle. Every port is an NSubstitute fake, so
-// the orchestration is exercised with no real audio, model, or delivery.
+// failure) that must log and return the pipeline to a safe Idle. The history write-through (WHISPER-110)
+// is pinned here too: a delivered result dispatches a RecordTranscriptionCommand, an undelivered one
+// does not, and a failed history write is swallowed with a warning. Every port is an NSubstitute fake,
+// so the orchestration is exercised with no real audio, model, or delivery.
 
 using Application.Configuration;
+using Application.History;
 using Application.Ports;
 using Application.Transcription;
 using AwesomeAssertions;
@@ -38,8 +41,8 @@ public sealed class DictationOrchestratorTests
 			.Send(Arg.Any<DeliverTranscriptionCommand>(), Arg.Any<CancellationToken>())
 			.Returns(new DeliveryResult(Delivered: true, Text: "the result"));
 
-	private DictationOrchestrator CreateSut() =>
-		new(_audio, _stateMachine, _activation, new AudioResampler(), new AudioBufferingOptions(), _mediator,
+	private DictationOrchestrator CreateSut(AudioBufferingOptions? bufferingOptions = null) =>
+		new(_audio, _stateMachine, _activation, new AudioResampler(), bufferingOptions ?? new AudioBufferingOptions(), _mediator,
 			_feedback, Options.Create(_feedbackOptions), Substitute.For<IUserNotifier>(), _logger);
 
 	[Fact]
@@ -140,6 +143,67 @@ public sealed class DictationOrchestratorTests
 		sut.Stage.Should().Be(DictationStage.Idle);
 		_stateMachine.State.Should().Be(RecordingState.Idle);
 		_logger.Entries.Should().Contain(entry => entry.Level == LogLevel.Error);
+	}
+
+	[Fact]
+	public async Task A_delivered_transcription_is_recorded_to_history()
+	{
+		DictationOrchestrator sut = CreateSut();
+
+		sut.Start();
+		await sut.StopAsync(TestContext.Current.CancellationToken);
+
+		await _mediator.Received(1).Send(
+			Arg.Is<RecordTranscriptionCommand>(command =>
+				command.Text == "the result" && command.Duration >= TimeSpan.Zero),
+			Arg.Any<CancellationToken>());
+	}
+
+	[Fact]
+	public async Task A_clip_without_a_usable_sample_rate_records_a_zero_duration_instead_of_failing()
+	{
+		// A non-positive target rate makes the finalized clip's SampleRate 0; the duration guard must
+		// yield TimeSpan.Zero rather than let the NaN division throw before the pipeline even runs.
+		DictationOrchestrator sut = CreateSut(new AudioBufferingOptions(TargetSampleRate: 0));
+
+		sut.Start();
+		await sut.StopAsync(TestContext.Current.CancellationToken);
+
+		await _mediator.Received(1).Send(
+			Arg.Is<RecordTranscriptionCommand>(command => command.Duration == TimeSpan.Zero),
+			Arg.Any<CancellationToken>());
+	}
+
+	[Fact]
+	public async Task An_undelivered_result_is_not_recorded_to_history()
+	{
+		_mediator
+			.Send(Arg.Any<DeliverTranscriptionCommand>(), Arg.Any<CancellationToken>())
+			.Returns(new DeliveryResult(Delivered: false, Text: string.Empty));
+		DictationOrchestrator sut = CreateSut();
+
+		sut.Start();
+		await sut.StopAsync(TestContext.Current.CancellationToken);
+
+		await _mediator.DidNotReceive().Send(Arg.Any<RecordTranscriptionCommand>(), Arg.Any<CancellationToken>());
+	}
+
+	[Fact]
+	public async Task A_history_write_failure_is_swallowed_with_a_warning_and_never_breaks_delivery()
+	{
+		_mediator
+			.Send(Arg.Any<RecordTranscriptionCommand>(), Arg.Any<CancellationToken>())
+			.Returns<Mediator.Unit>(_ => throw new InvalidOperationException("history write failed"));
+		DictationOrchestrator sut = CreateSut();
+
+		sut.Start();
+		await sut.StopAsync(TestContext.Current.CancellationToken);
+
+		// The pipeline completed (no error path taken) and the failure was downgraded to a warning.
+		sut.Stage.Should().Be(DictationStage.Idle);
+		_stateMachine.State.Should().Be(RecordingState.Idle);
+		_logger.Entries.Should().Contain(entry => entry.Level == LogLevel.Warning);
+		_logger.Entries.Should().NotContain(entry => entry.Level == LogLevel.Error);
 	}
 
 	[Fact]

@@ -59,6 +59,17 @@ public sealed class HistoryBrowserDriver
 		ReturnEntries(entries);
 	}
 
+	// Exactly PageSize entries (WHISPER-110): the first page fills completely, so the browser cannot
+	// know the history is exhausted until the (empty) next page is requested.
+	public void StoreHasExactlyOneFullPage()
+	{
+		DateTimeOffset start = new(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
+		TranscriptEntry[] entries = Enumerable.Range(0, PageSize)
+			.Select(i => new TranscriptEntry(Guid.NewGuid(), $"entry-{i:D2}", start.AddMinutes(i)))
+			.ToArray();
+		ReturnEntries(entries);
+	}
+
 	public void StoreIsEmpty() => ReturnEntries([]);
 
 	// --- when ---
@@ -95,6 +106,18 @@ public sealed class HistoryBrowserDriver
 		_viewModel.IsEmpty.Should().BeTrue();
 		_viewModel.Entries.Should().BeEmpty();
 	}
+
+	// The write-through assertion (WHISPER-110): the recorded transcription is read back through the
+	// real Mediator pipeline into the view-model the History section binds — not off the store fake.
+	public void AssertMostRecentEntryIs(string text)
+	{
+		_viewModel.Entries.Should().NotBeEmpty("a delivered transcription must be recorded in history");
+		_viewModel.Entries[0].Text.Should().Be(text);
+	}
+
+	public void AssertFurtherPageOffered() => _viewModel.HasMorePages.Should().BeTrue();
+
+	public void AssertNoFurtherPageOffered() => _viewModel.HasMorePages.Should().BeFalse();
 
 	private void ReturnEntries(IReadOnlyList<TranscriptEntry> entries) =>
 		_store.GetEntriesAsync(Arg.Any<DateTimeOffset?>(), Arg.Any<DateTimeOffset?>(), Arg.Any<int?>(), Arg.Any<CancellationToken>())
