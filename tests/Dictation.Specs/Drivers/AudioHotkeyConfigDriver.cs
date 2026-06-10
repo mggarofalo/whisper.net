@@ -66,7 +66,20 @@ public sealed class AudioHotkeyConfigDriver
 
 	// --- hotkey flow ---
 
-	public Task LoadHotkey() => _hotkey.LoadCommand.ExecuteAsync(null);
+	// Open the hotkey section through the REAL navigation lifecycle (WHISPER-109): activation triggers
+	// the load, so the spec exercises the production path instead of invoking LoadCommand directly.
+	public async Task LoadHotkey()
+	{
+		_hotkey.OnNavigatedTo();
+		await (_hotkey.LoadCommand.ExecutionTask ?? Task.CompletedTask);
+	}
+
+	// Reopening the view is a navigate-away-and-back round-trip; reactivation reloads from the store.
+	public async Task ReloadHotkey()
+	{
+		_hotkey.OnNavigatedFrom();
+		await LoadHotkey();
+	}
 
 	public Task AssignHotkey(string chord) => _hotkey.AssignCommand.ExecuteAsync(chord);
 

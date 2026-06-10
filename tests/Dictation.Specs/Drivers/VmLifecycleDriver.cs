@@ -16,18 +16,27 @@ public sealed class VmLifecycleDriver(ShellViewModel shell, HotkeyViewModel hotk
 {
 	private static readonly string RepositoryRoot = FindRepositoryRoot();
 
+	// What the cached hotkey section displayed just before a publish — "did not react" means the display
+	// is still exactly this. (Activation seeds the binding from settings since WHISPER-109, so the
+	// inactive section's display is the loaded chord, not null.)
+	private string? _hotkeyBeforePublish;
+
 	public void OpenShellOn(string section) => shell.NavigateCommand.Execute(section);
 
 	public void NavigateTo(string section) => shell.NavigateCommand.Execute(section);
 
-	public void PublishSettingsChange(string chord) =>
+	public void PublishSettingsChange(string chord)
+	{
+		_hotkeyBeforePublish = hotkey.CurrentHotkey;
 		messenger.Send(new SettingsChangedMessage(
 			new AppSettings("base.en", HotkeyBinding.Parse(chord), silenceThresholdMs: 700, fillerWordRemovalEnabled: false)));
+	}
 
 	public void AssertCurrentHotkeyShown(string chord) => hotkey.CurrentHotkey.Should().Be(chord);
 
 	public void AssertHotkeyDidNotReact() =>
-		hotkey.CurrentHotkey.Should().BeNull("an inactive cached section must receive no callbacks (WHISPER-94 AC1)");
+		hotkey.CurrentHotkey.Should().Be(_hotkeyBeforePublish,
+			"an inactive cached section must receive no callbacks (WHISPER-94 AC1)");
 
 	public void AssertLifecycleDocumented()
 	{

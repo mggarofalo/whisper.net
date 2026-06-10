@@ -46,7 +46,18 @@ public static class TestDependencies
 		// Substitute ONLY the Infrastructure ports — the seams the specs control.
 		services.AddScoped(_ => Substitute.For<ITranscriber>());
 		services.AddScoped(_ => Substitute.For<IWhisperRuntimeProbe>());
-		services.AddScoped(_ => Substitute.For<ISettingsStore>());
+
+		// The settings-store substitute honors the port contract out of the box: LoadAsync returns the
+		// defaults (never null), exactly as a fresh install would. Activating the hotkey section triggers a
+		// load (WHISPER-109), so scenarios that merely navigate the shell — without configuring the store —
+		// must still compose a contract-respecting load. Drivers that need specific persisted state
+		// re-configure LoadAsync, which overrides this default.
+		services.AddScoped(_ =>
+		{
+			ISettingsStore store = Substitute.For<ISettingsStore>();
+			store.LoadAsync(Arg.Any<CancellationToken>()).Returns(Domain.Settings.AppSettings.Default);
+			return store;
+		});
 		services.AddScoped(_ => Substitute.For<IHistoryStore>());
 		services.AddScoped(_ => Substitute.For<IAuditLog>());
 		services.AddScoped(_ => Substitute.For<IGpuProbe>());
@@ -399,6 +410,13 @@ public static class TestDependencies
 		// Hotkey reassignment (WHISPER-75): drives the real HotkeyConfigurationHostedService + activation
 		// controller over the Mediator pipeline, proving startup config and live rebind on a settings change.
 		services.AddScoped<HotkeyConfigurationDriver>();
+
+		// Hotkey assignment end-to-end (WHISPER-109): the real HotkeyViewModel entered through the REAL
+		// navigation lifecycle (OnNavigatedTo) over the real Mediator pipeline + hosted service + activation
+		// controller, faking only the round-trip store — proving activation seeds the section and an
+		// assignment applies live and on the next launch. The driver owns its controller/service instances
+		// (a relaunch needs fresh ones), so only the driver itself is registered.
+		services.AddScoped<HotkeyAssignmentDriver>();
 
 		// Signed auto-update (WHISPER-29): the real AutoUpdateService policy over a faked update source, so
 		// the check/download/apply, opt-in gating, and graceful-degradation behaviour run without Velopack
