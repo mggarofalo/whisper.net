@@ -44,7 +44,7 @@ public sealed class AudioHotkeyConfigSteps(AudioHotkeyConfigDriver driver)
 	[Then(@"the binding ""(.*)"" is shown after reload")]
 	public async Task ThenTheBindingIsShownAfterReload(string chord)
 	{
-		await driver.LoadHotkey();
+		await driver.ReloadHotkey();
 		driver.AssertCurrentHotkeyIs(chord);
 	}
 

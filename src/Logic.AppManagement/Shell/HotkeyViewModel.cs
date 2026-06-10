@@ -52,10 +52,15 @@ public sealed partial class HotkeyViewModel : FeatureViewModel
 	// Live subscriptions exist only while this section is the shell's active content (WHISPER-94): the
 	// instant-apply registration is added on activate and removed on deactivate, so an inactive cached
 	// section gets no callbacks. The messenger is the shared WeakReferenceMessenger, so even a missed
-	// deactivation could never root this cached view-model.
-	protected override void OnActivated() =>
+	// deactivation could never root this cached view-model. Activation also triggers the load
+	// (WHISPER-109): without it the section showed no binding and AssignAsync silently no-opped on its
+	// null-settings guard, so assignment never persisted.
+	protected override void OnActivated()
+	{
 		_messenger.Register<HotkeyViewModel, SettingsChangedMessage>(
 			this, static (recipient, message) => recipient.OnSettingsChanged(message));
+		LoadCommand.Execute(null);
+	}
 
 	protected override void OnDeactivated() => _messenger.Unregister<SettingsChangedMessage>(this);
 
