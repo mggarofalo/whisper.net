@@ -4,5 +4,34 @@
     <Application.Resources>
         <!-- App-wide converters for the dashboard views (WHISPER-27). -->
         <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+
+        <!-- Reusable native validation adorner (WHISPER-77): a red border around the offending control plus
+             the INotifyDataErrorInfo message beside it, and the same message as the control's tooltip. Applied
+             app-wide to validated TextBoxes so settings errors surface natively next to the field. -->
+        <ControlTemplate x:Key="ValidationErrorTemplate">
+            <StackPanel Orientation="Horizontal">
+                <Border BorderBrush="#C03030"
+                        BorderThickness="1"
+                        CornerRadius="2">
+                    <AdornedElementPlaceholder />
+                </Border>
+                <TextBlock Text="{Binding [0].ErrorContent}"
+                           Foreground="#C03030"
+                           Margin="6,0,0,0"
+                           VerticalAlignment="Center" />
+            </StackPanel>
+        </ControlTemplate>
+
+        <Style TargetType="TextBox">
+            <Setter Property="Validation.ErrorTemplate"
+                    Value="{StaticResource ValidationErrorTemplate}" />
+            <Style.Triggers>
+                <Trigger Property="Validation.HasError"
+                         Value="True">
+                    <Setter Property="ToolTip"
+                            Value="{Binding (Validation.Errors)[0].ErrorContent, RelativeSource={RelativeSource Self}}" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
     </Application.Resources>
 </Application>

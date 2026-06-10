@@ -136,6 +136,11 @@ public static class TestDependencies
 		// source-generated change notification — the foundation the rest of M12 builds on.
 		services.AddScoped<SettingsViewModelFoundationDriver>();
 
+		// Native settings validation (WHISPER-77): the real HotkeyViewModel over the real Mediator pipeline
+		// and faked settings store, so the DataAnnotations + INotifyDataErrorInfo gate (invalid chord flags a
+		// field error and blocks the save; valid chord persists) is proven at the view-model boundary.
+		services.AddScoped<SettingsValidationDriver>();
+
 		// Model picker (WHISPER-27): the real ModelViewModel over the real Mediator pipeline (list /
 		// download / switch handlers) and the real catalog, faking only the device-facing model ports.
 		services.AddScoped<ModelPickerDriver>();
