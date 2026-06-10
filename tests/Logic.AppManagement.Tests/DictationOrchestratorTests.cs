@@ -8,14 +8,20 @@
 // (WHISPER-112) is pinned on a manual clock: delivery waits for the window, frames arriving during it
 // land in the delivered clip, a cancel mid-grace cannot derail the stop, a cancelled wait discards
 // the capture, and a device failure mid-grace — including one landing at the grace boundary, racing
-// the finalization — discards the capture, notifies the user, and never poisons the next utterance. Every port is an NSubstitute fake, so the orchestration is exercised
+// the finalization — discards the capture, notifies the user, and never poisons the next utterance.
+// The soft recording limit (WHISPER-111) is pinned here at the orchestration boundary: approaching the
+// limit publishes DictationNearLimitMessage once, reaching it publishes DictationAtLimitMessage once,
+// and frames past the limit still land in the delivered clip. Every port is an NSubstitute fake (the
+// messenger is a real WeakReferenceMessenger, the repo standard), so the orchestration is exercised
 // with no real audio, model, or delivery.
 
 using Application.Configuration;
+using Application.Dictation;
 using Application.History;
 using Application.Ports;
 using Application.Transcription;
 using AwesomeAssertions;
+using CommunityToolkit.Mvvm.Messaging;
 using Domain.Audio;
 using Domain.Feedback;
 using Domain.Input;
@@ -38,6 +44,7 @@ public sealed class DictationOrchestratorTests
 	private readonly RecordingStateMachine _stateMachine = new();
 	private readonly HotkeyActivationController _activation = new();
 	private readonly IAudioFeedback _feedback = Substitute.For<IAudioFeedback>();
+	private readonly WeakReferenceMessenger _messenger = new();
 	private readonly AudioFeedbackOptions _feedbackOptions = new();
 	private readonly IUserNotifier _userNotifier = Substitute.For<IUserNotifier>();
 	private readonly CapturingLogger<DictationOrchestrator> _logger = new();
@@ -53,7 +60,7 @@ public sealed class DictationOrchestratorTests
 	private DictationOrchestrator CreateSut(AudioBufferingOptions? bufferingOptions = null, TimeProvider? time = null) =>
 		new(_audio, _stateMachine, _activation, new AudioResampler(),
 			bufferingOptions ?? new AudioBufferingOptions(PostReleaseGraceMs: 0), _mediator,
-			_feedback, Options.Create(_feedbackOptions), _userNotifier,
+			_messenger, _feedback, Options.Create(_feedbackOptions), _userNotifier,
 			time ?? TimeProvider.System, _logger);
 
 	[Fact]
@@ -379,6 +386,72 @@ public sealed class DictationOrchestratorTests
 		_stateMachine.State.Should().Be(RecordingState.Idle);
 		_logger.Entries.Should().Contain(entry => entry.Level == LogLevel.Error);
 		_userNotifier.Received(1).NotifyError(Arg.Any<string>(), Arg.Any<string>());
+	}
+
+	[Fact]
+	public void Approaching_the_soft_limit_publishes_a_near_limit_message_once()
+	{
+		// 100 ms soft limit at 16 kHz = 1600 samples; the 80% near threshold is 1280 = 8 frames of 160.
+		List<DictationNearLimitMessage> nearLimit = [];
+		List<DictationAtLimitMessage> atLimit = [];
+		_messenger.Register<DictationNearLimitMessage>(this, (_, message) => nearLimit.Add(message));
+		_messenger.Register<DictationAtLimitMessage>(this, (_, message) => atLimit.Add(message));
+		DictationOrchestrator sut = CreateSut(new AudioBufferingOptions(PrerollMs: 0, MaxDurationMs: 100, PostReleaseGraceMs: 0));
+
+		sut.Start();
+		for (int i = 0; i < 9; i++)
+		{
+			RaiseFrame(0.5f); // 90 ms: through the 80% threshold, still below the limit
+		}
+
+		nearLimit.Should().ContainSingle("the warning fires once per recording, not once per frame");
+		nearLimit[0].RecordedMs.Should().Be(80, "the message reports how much was recorded when the threshold was crossed");
+		nearLimit[0].LimitMs.Should().Be(100);
+		atLimit.Should().BeEmpty("the recording has not reached the limit yet");
+	}
+
+	[Fact]
+	public void Reaching_the_soft_limit_publishes_an_at_limit_message_once()
+	{
+		List<DictationNearLimitMessage> nearLimit = [];
+		List<DictationAtLimitMessage> atLimit = [];
+		_messenger.Register<DictationNearLimitMessage>(this, (_, message) => nearLimit.Add(message));
+		_messenger.Register<DictationAtLimitMessage>(this, (_, message) => atLimit.Add(message));
+		DictationOrchestrator sut = CreateSut(new AudioBufferingOptions(PrerollMs: 0, MaxDurationMs: 100, PostReleaseGraceMs: 0));
+
+		sut.Start();
+		for (int i = 0; i < 12; i++)
+		{
+			RaiseFrame(0.5f); // 120 ms: through the 80% threshold and past the limit
+		}
+
+		nearLimit.Should().ContainSingle();
+		atLimit.Should().ContainSingle("the at-limit signal fires once per recording even as frames keep arriving");
+		atLimit[0].RecordedMs.Should().Be(100, "the message reports the recording length at the limit");
+		atLimit[0].LimitMs.Should().Be(100);
+	}
+
+	[Fact]
+	public async Task Frames_past_the_soft_limit_land_in_the_delivered_clip()
+	{
+		// The limit is soft (WHISPER-111): the recording grows past it, so the whole utterance —
+		// 120 ms against a 100 ms limit — must reach delivery, never a truncated 100 ms clip.
+		AudioClip? delivered = null;
+		_mediator
+			.Send(Arg.Do<DeliverTranscriptionCommand>(command => delivered = command.Clip), Arg.Any<CancellationToken>())
+			.Returns(new DeliveryResult(Delivered: true, Text: "the result"));
+		DictationOrchestrator sut = CreateSut(new AudioBufferingOptions(PrerollMs: 0, MaxDurationMs: 100, PostReleaseGraceMs: 0));
+
+		sut.Start();
+		for (int i = 0; i < 12; i++)
+		{
+			RaiseFrame(0.5f);
+		}
+
+		await sut.StopAsync(TestContext.Current.CancellationToken);
+
+		delivered.Should().NotBeNull();
+		delivered!.Samples.Should().HaveCount(12 * 160, "every frame, including those past the soft limit, is retained");
 	}
 
 	[Fact]

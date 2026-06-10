@@ -1,7 +1,8 @@
 // Inner TDD loop for CaptureBuffer: the preroll ring retains only the most recent samples, recording
-// is seeded with that preroll, the max-duration cap trims and fires exactly once, and the buffer is
-// reusable across recordings. Uses a 1 kHz target rate so 1 sample == 1 ms and the arithmetic is
-// obvious.
+// is seeded with that preroll, the soft max-duration limit (WHISPER-111) signals once at 80% and once
+// at 100% while every sample — including those past the limit — is retained, and the buffer is
+// reusable across recordings (limit signals re-arm per recording). Uses a 1 kHz target rate so
+// 1 sample == 1 ms and the arithmetic is obvious.
 
 using AwesomeAssertions;
 using Domain.Audio;
@@ -57,31 +58,101 @@ public sealed class CaptureBufferTests
 	}
 
 	[Fact]
-	public void Cap_trims_the_recording_and_fires_once()
+	public void The_soft_limit_fires_once_and_recording_continues()
 	{
 		CaptureBuffer buffer = NewBuffer(prerollMs: 0, maxMs: 3);
 		int fired = 0;
 		buffer.MaxDurationReached += (_, _) => fired++;
 
 		buffer.StartRecording();
-		Append(buffer, 1f, 2f, 3f, 4f, 5f); // exceeds the 3-sample cap
+		Append(buffer, 1f, 2f, 3f, 4f, 5f); // exceeds the 3-sample soft limit
 		AudioClip clip = buffer.StopRecording();
 
-		clip.Samples.Should().Equal(1f, 2f, 3f);
+		clip.Samples.Should().Equal(1f, 2f, 3f, 4f, 5f);
 		fired.Should().Be(1);
 	}
 
 	[Fact]
-	public void Appends_after_the_cap_are_ignored()
+	public void Appends_after_the_soft_limit_are_retained()
 	{
 		CaptureBuffer buffer = NewBuffer(prerollMs: 0, maxMs: 3);
 
 		buffer.StartRecording();
 		Append(buffer, 1f, 2f, 3f);
-		Append(buffer, 4f, 5f); // already capped
+		Append(buffer, 4f, 5f); // past the soft limit: still retained, never dropped
 		AudioClip clip = buffer.StopRecording();
 
-		clip.Samples.Should().Equal(1f, 2f, 3f);
+		clip.Samples.Should().Equal(1f, 2f, 3f, 4f, 5f);
+	}
+
+	[Fact]
+	public void Near_max_duration_fires_once_at_eighty_percent_of_the_limit()
+	{
+		CaptureBuffer buffer = NewBuffer(prerollMs: 0, maxMs: 10); // near threshold at 8 samples
+		int fired = 0;
+		buffer.NearMaxDuration += (_, _) => fired++;
+
+		buffer.StartRecording();
+		Append(buffer, 1f, 2f, 3f, 4f, 5f, 6f, 7f);
+		fired.Should().Be(0, "the recording is still below 80% of the limit");
+
+		Append(buffer, 8f); // exactly 80%
+		fired.Should().Be(1);
+
+		Append(buffer, 9f, 10f, 11f); // through and past the limit
+		fired.Should().Be(1, "the near-limit warning fires once per recording");
+	}
+
+	[Fact]
+	public void Max_duration_reached_fires_once_at_the_limit()
+	{
+		CaptureBuffer buffer = NewBuffer(prerollMs: 0, maxMs: 3);
+		int fired = 0;
+		buffer.MaxDurationReached += (_, _) => fired++;
+
+		buffer.StartRecording();
+		Append(buffer, 1f, 2f);
+		fired.Should().Be(0, "the recording is still below the limit");
+
+		Append(buffer, 3f); // exactly 100%
+		fired.Should().Be(1);
+
+		Append(buffer, 4f, 5f); // past the limit
+		fired.Should().Be(1, "the at-limit signal fires once per recording");
+	}
+
+	[Fact]
+	public void Limit_signals_re_arm_for_the_next_recording()
+	{
+		CaptureBuffer buffer = NewBuffer(prerollMs: 0, maxMs: 5); // near threshold at 4 samples
+		int near = 0;
+		int reached = 0;
+		buffer.NearMaxDuration += (_, _) => near++;
+		buffer.MaxDurationReached += (_, _) => reached++;
+
+		buffer.StartRecording();
+		Append(buffer, 1f, 2f, 3f, 4f, 5f, 6f);
+		buffer.StopRecording();
+
+		buffer.StartRecording();
+		Append(buffer, 1f, 2f, 3f, 4f, 5f, 6f);
+		AudioClip second = buffer.StopRecording();
+
+		near.Should().Be(2, "each recording warns once as it approaches the limit");
+		reached.Should().Be(2, "each recording signals once at the limit");
+		second.Samples.Should().Equal(1f, 2f, 3f, 4f, 5f, 6f);
+	}
+
+	[Fact]
+	public void Stop_recording_returns_everything_recorded_past_the_limit()
+	{
+		CaptureBuffer buffer = NewBuffer(prerollMs: 0, maxMs: 2);
+
+		buffer.StartRecording();
+		Append(buffer, 1f, 2f, 3f, 4f, 5f, 6f, 7f, 8f); // four times the soft limit
+		AudioClip clip = buffer.StopRecording();
+
+		clip.Samples.Should().Equal(1f, 2f, 3f, 4f, 5f, 6f, 7f, 8f);
 	}
 
 	[Fact]

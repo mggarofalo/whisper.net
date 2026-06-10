@@ -110,6 +110,15 @@ public static class TestDependencies
 		services.AddScoped<TimeProvider>(sp => sp.GetRequiredService<ManualTimeProvider>());
 		services.AddScoped<CaptureTailDriver>();
 
+		// Long dictation soft limit (WHISPER-111): a scenario-scoped, mutable holder behind the
+		// AudioBufferingOptions resolution (overriding the production singleton), so the long-dictation
+		// scenarios can shrink the soft limit BEFORE the orchestrator — which captures the options at
+		// construction — is first resolved. Scenarios that never touch the holder get the production
+		// defaults, exactly as the singleton registration provided.
+		services.AddScoped<ScenarioAudioBufferingOptions>();
+		services.AddScoped(sp => sp.GetRequiredService<ScenarioAudioBufferingOptions>().Options);
+		services.AddScoped<LongDictationDriver>();
+
 		// Command-mode hook (WHISPER-35): substitute the matcher (default: no match) so the command-mode
 		// driver can make it recognize a command, while every other delivery scenario behaves exactly as
 		// before. Overrides the production NoOpCommandMatcher registered by AddAppManagement.
