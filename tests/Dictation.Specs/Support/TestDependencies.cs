@@ -157,6 +157,11 @@ public static class TestDependencies
 		// removed-device fallback/warning are proven WPF-free (the ComboBox view is smoke-only).
 		services.AddScoped<AudioDevicePickerDriver>();
 
+		// Model download (WHISPER-81): the real ModelViewModel over the real Mediator pipeline + catalog with
+		// the downloader gated, so the in-flight/cancel/native-error outcomes are proven WPF-free (the
+		// ProgressBar + Cancel button are smoke-only).
+		services.AddScoped<ModelDownloadDriver>();
+
 		// Model picker (WHISPER-27): the real ModelViewModel over the real Mediator pipeline (list /
 		// download / switch handlers) and the real catalog, faking only the device-facing model ports.
 		services.AddScoped<ModelPickerDriver>();
