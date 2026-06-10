@@ -1,5 +1,6 @@
 // IShellPresenter for the WPF shell (WHISPER-18, dashboard shell in WHISPER-19): shows — or focuses, if
-// already open — the single dashboard window, marshaled onto the UI thread. Both the tray "Open
+// already open — the single dashboard window, marshaled onto the UI thread through the IUiDispatcher
+// seam (WHISPER-90) rather than a hand-rolled Application.Current.Dispatcher call. Both the tray "Open
 // Settings" action and (WHISPER-25) single-instance activation surface the window through this one seam.
 // The shell view-model graph depends on the scoped Mediator, so the presenter owns one long-lived UI
 // scope it resolves the view-model from — mirroring how the orchestrator runs inside a single host
@@ -14,24 +15,34 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Presentation.Shell;
 
-public sealed class WpfShellPresenter(IServiceScopeFactory scopeFactory) : IShellPresenter, IDisposable
+public sealed class WpfShellPresenter(IServiceScopeFactory scopeFactory, IUiDispatcher uiDispatcher) : IShellPresenter, IDisposable
 {
 	private IServiceScope? _uiScope;
 
-	public void ShowSettings() =>
-		System.Windows.Application.Current.Dispatcher.Invoke(() =>
+	public void ShowSettings()
+	{
+		if (uiDispatcher.CheckAccess())
 		{
-			System.Windows.Application application = System.Windows.Application.Current;
-			ShellWindow window = application.Windows.OfType<ShellWindow>().FirstOrDefault() ?? CreateWindow();
+			ShowOrActivateWindow();
+			return;
+		}
 
-			window.Show();
-			if (window.WindowState == WindowState.Minimized)
-			{
-				window.WindowState = WindowState.Normal;
-			}
+		uiDispatcher.Post(ShowOrActivateWindow);
+	}
 
-			window.Activate();
-		});
+	private void ShowOrActivateWindow()
+	{
+		System.Windows.Application application = System.Windows.Application.Current;
+		ShellWindow window = application.Windows.OfType<ShellWindow>().FirstOrDefault() ?? CreateWindow();
+
+		window.Show();
+		if (window.WindowState == WindowState.Minimized)
+		{
+			window.WindowState = WindowState.Normal;
+		}
+
+		window.Activate();
+	}
 
 	private ShellWindow CreateWindow()
 	{

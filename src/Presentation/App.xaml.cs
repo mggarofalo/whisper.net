@@ -24,6 +24,7 @@ using Microsoft.Extensions.Logging;
 using Presentation.Diagnostics;
 using Presentation.Overlay;
 using Presentation.Shell;
+using Presentation.Threading;
 using Presentation.Tray;
 using Velopack;
 
@@ -67,6 +68,11 @@ public partial class App
 		HostApplicationBuilder builder = Host.CreateApplicationBuilder();
 		builder.Services.AddSerilogLogging(builder.Configuration);
 		builder.Services.AddWhisperServices(builder.Configuration);
+
+		// UI-thread marshaling seam (WHISPER-90): the one production IUiDispatcher, wrapping the dispatcher
+		// of the UI thread OnStartup runs on. View-models and the shell presenter marshal through it instead
+		// of touching the WPF application's dispatcher by hand (null-safe at shutdown, testable with a fake).
+		builder.Services.AddSingleton<IUiDispatcher>(new WpfUiDispatcher(Dispatcher));
 
 		// Tray UI (WHISPER-18): the shell presenter (settings window), the tray coordination, and its
 		// view-model. Registered here in the composition root because they are Presentation concerns; the

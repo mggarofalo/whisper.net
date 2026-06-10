@@ -10,6 +10,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using Domain.Recording;
 using H.NotifyIcon;
+using Logic.AppManagement.Tray;
 
 namespace Presentation.Tray;
 
