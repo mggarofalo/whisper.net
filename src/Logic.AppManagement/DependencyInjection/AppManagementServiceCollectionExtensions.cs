@@ -8,6 +8,7 @@ using Logic.AppManagement.Lifecycle;
 using Logic.AppManagement.Settings;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Logic.AppManagement.DependencyInjection;
 
@@ -110,6 +111,14 @@ public static class AppManagementServiceCollectionExtensions
 		// Auto-update policy (WHISPER-29): decides check/download/apply and degrades gracefully on failure.
 		// Pure policy over the IUpdateSource port; the startup hosted service below drives it.
 		services.AddSingleton<Updates.AutoUpdateService>();
+
+		// User-visible error surfacing (WHISPER-95): backend failures route a non-technical notice through
+		// IUserNotifier; the WPF composition root attaches the tray-balloon presenter once the icon exists.
+		// The TryAdd inline dispatcher keeps headless compositions (doctor mode, host-lifecycle specs)
+		// resolvable; the WPF root registers the real dispatcher afterwards, which wins at resolution.
+		services.TryAddSingleton<IUiDispatcher, Threading.InlineUiDispatcher>();
+		services.AddSingleton<Notifications.TrayUserNotifier>();
+		services.AddSingleton<IUserNotifier>(sp => sp.GetRequiredService<Notifications.TrayUserNotifier>());
 
 		return services;
 	}

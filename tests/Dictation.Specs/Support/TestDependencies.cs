@@ -202,6 +202,13 @@ public static class TestDependencies
 		// and the scenario-scoped messenger, proving subscriptions live exactly while a section is active.
 		services.AddScoped<VmLifecycleDriver>();
 
+		// Error surfacing (WHISPER-95): the recorder overrides the production IUserNotifier mapping so the
+		// failing-pipeline scenarios assert a notification was requested; the driver also exercises the
+		// real TrayUserNotifier directly over a recording dispatcher for the marshal/degrade contract.
+		services.AddScoped<RecordingUserNotifier>();
+		services.AddScoped<IUserNotifier>(sp => sp.GetRequiredService<RecordingUserNotifier>());
+		services.AddScoped<UserNotificationDriver>();
+
 		// Model picker (WHISPER-27): the real ModelViewModel over the real Mediator pipeline (list /
 		// download / switch handlers) and the real catalog, faking only the device-facing model ports.
 		services.AddScoped<ModelPickerDriver>();

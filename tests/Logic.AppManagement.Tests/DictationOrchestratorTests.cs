@@ -40,7 +40,7 @@ public sealed class DictationOrchestratorTests
 
 	private DictationOrchestrator CreateSut() =>
 		new(_audio, _stateMachine, _activation, new AudioResampler(), new AudioBufferingOptions(), _mediator,
-			_feedback, Options.Create(_feedbackOptions), _logger);
+			_feedback, Options.Create(_feedbackOptions), Substitute.For<IUserNotifier>(), _logger);
 
 	[Fact]
 	public void Starts_idle()

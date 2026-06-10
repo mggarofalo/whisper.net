@@ -10,6 +10,7 @@ using System;
 using System.Windows.Controls;
 using System.Windows.Data;
 using H.NotifyIcon;
+using H.NotifyIcon.Core;
 using Logic.AppManagement.Tray;
 
 namespace Presentation.Tray;
@@ -41,6 +42,10 @@ public sealed class TrayIcon : IDisposable
 
 		_icon.ForceCreate();
 	}
+
+	/// <summary>Shows a tray balloon notification — the presenter the TrayUserNotifier attaches (WHISPER-95).</summary>
+	public void ShowNotification(string title, string message) =>
+		_icon.ShowNotification(title, message, NotificationIcon.Error);
 
 	public void Dispose()
 	{
