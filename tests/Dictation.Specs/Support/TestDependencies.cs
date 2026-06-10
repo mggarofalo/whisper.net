@@ -147,6 +147,11 @@ public static class TestDependencies
 		services.AddScoped<CommunityToolkit.Mvvm.Messaging.IMessenger, CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger>();
 		services.AddScoped<Application.Settings.SettingsChangeChannel>();
 
+		// Hotkey capture (WHISPER-79): the WPF-free capture interpreter feeding the validated HotkeyViewModel
+		// over the real Mediator pipeline and faked store, so the capture rules + validation + persistence gate
+		// are proven without WPF (the capture control itself is Presentation glue verified by smoke).
+		services.AddScoped<HotkeyCaptureDriver>();
+
 		// Model picker (WHISPER-27): the real ModelViewModel over the real Mediator pipeline (list /
 		// download / switch handlers) and the real catalog, faking only the device-facing model ports.
 		services.AddScoped<ModelPickerDriver>();
