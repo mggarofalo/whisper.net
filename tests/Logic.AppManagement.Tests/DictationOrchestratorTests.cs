@@ -11,9 +11,11 @@
 // the finalization — discards the capture, notifies the user, and never poisons the next utterance.
 // The soft recording limit (WHISPER-111) is pinned here at the orchestration boundary: approaching the
 // limit publishes DictationNearLimitMessage once, reaching it publishes DictationAtLimitMessage once,
-// and frames past the limit still land in the delivered clip. Every port is an NSubstitute fake (the
-// messenger is a real WeakReferenceMessenger, the repo standard), so the orchestration is exercised
-// with no real audio, model, or delivery.
+// and frames past the limit still land in the delivered clip. The hard failsafe is pinned too: a
+// recording reaching the hard ceiling publishes DictationHardLimitStopMessage once and stops ITSELF
+// through the normal stop path — the clip reaches delivery, nothing is discarded, and the pipeline
+// returns to Idle. Every port is an NSubstitute fake (the messenger is a real WeakReferenceMessenger,
+// the repo standard), so the orchestration is exercised with no real audio, model, or delivery.
 
 using Application.Configuration;
 using Application.Dictation;
@@ -452,6 +454,59 @@ public sealed class DictationOrchestratorTests
 
 		delivered.Should().NotBeNull();
 		delivered!.Samples.Should().HaveCount(12 * 160, "every frame, including those past the soft limit, is retained");
+	}
+
+	[Fact]
+	public void Reaching_the_hard_limit_stops_and_transcribes_the_recording()
+	{
+		// The hard failsafe (WHISPER-111): with no UI consuming the soft-limit warnings yet, a runaway
+		// recording must stop itself at the hard ceiling THROUGH THE NORMAL STOP PATH — the clip reaches
+		// delivery, nothing is discarded — and the pipeline returns to Idle.
+		// 200 ms hard limit at 16 kHz = 3200 samples = 20 frames of 160.
+		List<DictationHardLimitStopMessage> hardLimit = [];
+		_messenger.Register<DictationHardLimitStopMessage>(this, (_, message) => hardLimit.Add(message));
+		AudioClip? delivered = null;
+		_mediator
+			.Send(Arg.Do<DeliverTranscriptionCommand>(command => delivered = command.Clip), Arg.Any<CancellationToken>())
+			.Returns(new DeliveryResult(Delivered: true, Text: "the result"));
+		DictationOrchestrator sut = CreateSut(new AudioBufferingOptions(
+			PrerollMs: 0, MaxDurationMs: 100, PostReleaseGraceMs: 0, HardMaxDurationMs: 200));
+
+		sut.Start();
+		for (int i = 0; i < 20; i++)
+		{
+			RaiseFrame(0.5f); // the 20th frame reaches the 200 ms hard ceiling and triggers the auto-stop
+		}
+
+		hardLimit.Should().ContainSingle("the failsafe stop is signalled exactly once");
+		hardLimit[0].RecordedMs.Should().Be(200, "the message reports the recording length at the hard ceiling");
+		hardLimit[0].LimitMs.Should().Be(200);
+		delivered.Should().NotBeNull("the hard-limit stop transcribes the recording instead of discarding it");
+		delivered!.Samples.Should().HaveCount(20 * 160, "every sample recorded up to the hard limit reaches delivery");
+		sut.Stage.Should().Be(DictationStage.Idle);
+		_stateMachine.State.Should().Be(RecordingState.Idle);
+	}
+
+	[Fact]
+	public async Task Frames_arriving_after_the_hard_limit_stop_neither_restart_nor_duplicate_the_stop()
+	{
+		// The capture device keeps producing while the auto-stop drains: the late frames must not
+		// re-trigger the failsafe or open a second delivery — StopAsync's entry transition makes any
+		// duplicate a no-op, and the hard-limit signal is armed once per recording.
+		List<DictationHardLimitStopMessage> hardLimit = [];
+		_messenger.Register<DictationHardLimitStopMessage>(this, (_, message) => hardLimit.Add(message));
+		DictationOrchestrator sut = CreateSut(new AudioBufferingOptions(
+			PrerollMs: 0, MaxDurationMs: 100, PostReleaseGraceMs: 0, HardMaxDurationMs: 200));
+
+		sut.Start();
+		for (int i = 0; i < 25; i++)
+		{
+			RaiseFrame(0.5f); // five frames beyond the ceiling: the device tail keeps arriving
+		}
+
+		hardLimit.Should().ContainSingle();
+		await _mediator.Received(1).Send(Arg.Any<DeliverTranscriptionCommand>(), Arg.Any<CancellationToken>());
+		sut.Stage.Should().Be(DictationStage.Idle);
 	}
 
 	[Fact]

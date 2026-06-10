@@ -1,8 +1,11 @@
 // Inner TDD loop for CaptureBuffer: the preroll ring retains only the most recent samples, recording
 // is seeded with that preroll, the soft max-duration limit (WHISPER-111) signals once at 80% and once
-// at 100% while every sample — including those past the limit — is retained, and the buffer is
-// reusable across recordings (limit signals re-arm per recording). Uses a 1 kHz target rate so
-// 1 sample == 1 ms and the arithmetic is obvious.
+// at 100% while every sample — including those past the limit — is retained, the hard failsafe limit
+// signals once at the configured ceiling, the buffer is reusable across recordings (all limit signals
+// re-arm per recording), a discard abandons the capture without materializing it, absurd configured
+// durations clamp instead of wrapping the sample arithmetic, and the recording store survives the
+// capture-thread/orchestrator-thread interleaving (appends racing a stop). Uses a 1 kHz target rate
+// so 1 sample == 1 ms and the arithmetic is obvious.
 
 using AwesomeAssertions;
 using Domain.Audio;
@@ -14,8 +17,8 @@ public sealed class CaptureBufferTests
 {
 	private const int Rate = 1_000;
 
-	private static CaptureBuffer NewBuffer(int prerollMs, int maxMs) =>
-		new(new AudioBufferingOptions(prerollMs, maxMs, TargetSampleRate: Rate), new AudioResampler());
+	private static CaptureBuffer NewBuffer(int prerollMs, int maxMs, int hardMaxMs = 1_200_000) =>
+		new(new AudioBufferingOptions(prerollMs, maxMs, TargetSampleRate: Rate, HardMaxDurationMs: hardMaxMs), new AudioResampler());
 
 	private static void Append(CaptureBuffer buffer, params float[] samples) =>
 		buffer.Append(samples, new CaptureFormat(Rate, 1, 32, AudioSampleFormat.IeeeFloat));
@@ -183,6 +186,134 @@ public sealed class CaptureBufferTests
 		AudioClip clip = buffer.StopRecording();
 
 		clip.Samples.Should().Equal(1f, 2f);
+	}
+
+	[Fact]
+	public void The_hard_limit_fires_once_when_the_recording_reaches_it()
+	{
+		CaptureBuffer buffer = NewBuffer(prerollMs: 0, maxMs: 3, hardMaxMs: 6);
+		int fired = 0;
+		buffer.HardLimitReached += (_, _) => fired++;
+
+		buffer.StartRecording();
+		Append(buffer, 1f, 2f, 3f, 4f, 5f);
+		fired.Should().Be(0, "the recording is still below the hard limit");
+
+		Append(buffer, 6f); // exactly the hard ceiling
+		fired.Should().Be(1);
+
+		Append(buffer, 7f, 8f);
+		fired.Should().Be(1, "the hard-limit failsafe fires once per recording");
+	}
+
+	[Fact]
+	public void The_hard_limit_re_arms_for_the_next_recording()
+	{
+		CaptureBuffer buffer = NewBuffer(prerollMs: 0, maxMs: 2, hardMaxMs: 4);
+		int fired = 0;
+		buffer.HardLimitReached += (_, _) => fired++;
+
+		buffer.StartRecording();
+		Append(buffer, 1f, 2f, 3f, 4f);
+		buffer.StopRecording();
+
+		buffer.StartRecording();
+		Append(buffer, 1f, 2f, 3f, 4f);
+		buffer.StopRecording();
+
+		fired.Should().Be(2, "each recording gets its own hard-limit failsafe");
+	}
+
+	[Fact]
+	public void Discard_recording_abandons_the_capture_and_resets_for_reuse()
+	{
+		CaptureBuffer buffer = NewBuffer(prerollMs: 0, maxMs: 100);
+
+		buffer.StartRecording();
+		Append(buffer, 1f, 2f, 3f);
+		buffer.DiscardRecording();
+		buffer.IsRecording.Should().BeFalse("a discard ends the recording like a stop does");
+
+		buffer.StartRecording();
+		Append(buffer, 9f);
+		AudioClip next = buffer.StopRecording();
+
+		next.Samples.Should().Equal(9f);
+	}
+
+	[Fact]
+	public void Discarding_while_idle_is_a_harmless_no_op()
+	{
+		CaptureBuffer buffer = NewBuffer(prerollMs: 2, maxMs: 100);
+
+		Append(buffer, 1f, 2f); // preroll only
+		buffer.DiscardRecording();
+
+		buffer.StartRecording();
+		AudioClip clip = buffer.StopRecording();
+
+		// An idle discard must not disturb the retained preroll.
+		clip.Samples.Should().Equal(1f, 2f);
+	}
+
+	[Fact]
+	public void An_absurdly_large_configured_limit_is_clamped_instead_of_wrapping()
+	{
+		// (int)(int.MaxValue ms * 48 kHz / 1000) wraps negative without a clamp: the buffer would
+		// construct a negative-capacity list (throwing) or fire every limit signal on the first sample.
+		CaptureBuffer buffer = new(
+			new AudioBufferingOptions(PrerollMs: 0, MaxDurationMs: int.MaxValue, TargetSampleRate: 48_000, HardMaxDurationMs: int.MaxValue),
+			new AudioResampler());
+		int fired = 0;
+		buffer.NearMaxDuration += (_, _) => fired++;
+		buffer.MaxDurationReached += (_, _) => fired++;
+		buffer.HardLimitReached += (_, _) => fired++;
+
+		buffer.StartRecording();
+		buffer.Append([1f], new CaptureFormat(48_000, 1, 32, AudioSampleFormat.IeeeFloat));
+
+		fired.Should().Be(0, "the clamped limits sit at the array ceiling, far beyond one sample");
+	}
+
+	[Fact]
+	public async Task Concurrent_appends_and_a_stop_neither_throw_nor_tear_the_clip()
+	{
+		// The capture thread appends while the orchestrator thread finalizes — frames keep flowing
+		// through the post-release grace window (WHISPER-112), and a cancel stops mid-stream. Hammer
+		// that interleaving: every Append must land atomically (the snapshot holds whole frames only,
+		// every sample intact) and nothing may throw.
+		const int frameSize = 8;
+		const int framesPerIteration = 64;
+		CancellationToken cancellation = TestContext.Current.CancellationToken;
+		float[] frame = new float[frameSize];
+		Array.Fill(frame, 1f);
+
+		for (int iteration = 0; iteration < 200; iteration++)
+		{
+			CaptureBuffer buffer = NewBuffer(prerollMs: 0, maxMs: 1_000_000);
+			buffer.StartRecording();
+			using Barrier barrier = new(2);
+
+			Task appender = Task.Run(
+				() =>
+				{
+					barrier.SignalAndWait(cancellation);
+					for (int i = 0; i < framesPerIteration; i++)
+					{
+						Append(buffer, frame);
+					}
+				},
+				cancellation);
+
+			barrier.SignalAndWait(cancellation);
+			AudioClip clip = buffer.StopRecording();
+			await appender;
+
+			(clip.Samples.Count % frameSize).Should().Be(
+				0, "a frame lands wholly before or wholly after the stop, never torn across it");
+			clip.Samples.Should().OnlyContain(
+				sample => sample == 1f, "a torn snapshot would surface default-valued samples");
+		}
 	}
 
 	[Fact]

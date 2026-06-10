@@ -4,6 +4,8 @@
 #      be lost, and signalled at it — while recording continues
 #  AC3 unit coverage for the growable buffer + soft-limit events        -> CaptureBufferTests (Logic.AudioManagement.Tests)
 #                                                                          + DictationOrchestratorTests (Logic.AppManagement.Tests)
+#  hard failsafe: a runaway recording stops AND transcribes itself at   -> "An extremely long dictation is stopped and transcribed at the hard limit"
+#      the hard ceiling — never discarded
 
 @WHISPER-111
 Feature: Long dictation beyond the former buffer cap
@@ -28,3 +30,13 @@ Feature: Long dictation beyond the former buffer cap
     When the user keeps dictating past the soft limit
     Then an at-limit signal is published
     And the audio spoken past the limit is still retained in the recording
+
+  # The hard failsafe behind the soft limit: with no UI consuming the warnings yet, the recording
+  # cannot be allowed to grow without end. At the hard ceiling the app stops the dictation itself
+  # through the NORMAL stop path — everything recorded is transcribed and delivered, never discarded.
+  Scenario: An extremely long dictation is stopped and transcribed at the hard limit
+    Given a recording soft limit of 1000 ms
+    And a recording hard limit of 2000 ms
+    When the user dictates past the hard limit
+    Then the dictation is stopped and the clip is transcribed automatically
+    And a hard-limit stop signal is published

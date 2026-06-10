@@ -38,4 +38,16 @@ public sealed class LongDictationSteps(LongDictationDriver driver)
 
 	[Then(@"the audio spoken past the limit is still retained in the recording")]
 	public Task ThenTheAudioSpokenPastTheLimitIsStillRetained() => driver.AssertAudioPastTheLimitIsRetained();
+
+	[Given(@"a recording hard limit of (\d+) ms")]
+	public void GivenARecordingHardLimitOfMs(int milliseconds) => driver.ConfigureHardLimit(milliseconds);
+
+	[When(@"the user dictates past the hard limit")]
+	public void WhenTheUserDictatesPastTheHardLimit() => driver.DictatePastTheHardLimit();
+
+	[Then(@"the dictation is stopped and the clip is transcribed automatically")]
+	public Task ThenTheDictationIsStoppedAndTheClipIsTranscribedAutomatically() => driver.AssertStoppedAndTranscribedAtTheHardLimit();
+
+	[Then(@"a hard-limit stop signal is published")]
+	public void ThenAHardLimitStopSignalIsPublished() => driver.AssertHardLimitStopSignalPublished();
 }
