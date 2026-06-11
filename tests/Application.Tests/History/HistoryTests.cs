@@ -5,6 +5,7 @@
 using Application.Configuration;
 using Application.History;
 using Application.Ports;
+using CommunityToolkit.Mvvm.Messaging;
 using Domain.History;
 using FluentValidation.Results;
 using Microsoft.Extensions.Options;
@@ -58,8 +59,8 @@ public sealed class HistoryTests
 		Assert.False(result.IsValid);
 	}
 
-	private static RecordTranscriptionHandler NewRecordHandler(IHistoryStore store, int maxEntries = 1000) =>
-		new(store, Options.Create(new RetentionOptions { MaxEntries = maxEntries }));
+	private RecordTranscriptionHandler NewRecordHandler(IHistoryStore store, int maxEntries = 1000) =>
+		new(store, Options.Create(new RetentionOptions { MaxEntries = maxEntries }), new WeakReferenceMessenger(), _mapper);
 
 	[Fact]
 	public async Task Record_handler_saves_an_entry_built_from_the_command()

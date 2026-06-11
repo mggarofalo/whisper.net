@@ -8,6 +8,7 @@
 using Application.History;
 using Application.Ports;
 using AwesomeAssertions;
+using CommunityToolkit.Mvvm.Messaging;
 using Domain.History;
 using Logic.AppManagement.Shell;
 using Mediator;
@@ -26,11 +27,11 @@ public sealed class HistoryBrowserDriver
 
 	private string? _copiedText;
 
-	public HistoryBrowserDriver(IMediator mediator, IHistoryStore store, IClipboard clipboard, IUiCollectionSynchronizer synchronizer)
+	public HistoryBrowserDriver(IMediator mediator, IMessenger messenger, IHistoryStore store, IClipboard clipboard, IUiCollectionSynchronizer synchronizer)
 	{
 		_store = store;
 		_clipboard = clipboard;
-		_viewModel = new HistoryViewModel(mediator, synchronizer);
+		_viewModel = new HistoryViewModel(mediator, messenger, synchronizer);
 	}
 
 	// --- given ---

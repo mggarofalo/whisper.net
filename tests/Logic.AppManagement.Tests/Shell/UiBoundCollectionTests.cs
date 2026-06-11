@@ -46,7 +46,7 @@ public sealed class UiBoundCollectionTests
 	{
 		IUiCollectionSynchronizer synchronizer = Substitute.For<IUiCollectionSynchronizer>();
 
-		HistoryViewModel viewModel = new(Substitute.For<IMediator>(), synchronizer);
+		HistoryViewModel viewModel = new(Substitute.For<IMediator>(), new CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger(), synchronizer);
 
 		synchronizer.Received(1).Enable(viewModel.Entries, viewModel.Entries.Gate);
 	}

@@ -292,6 +292,10 @@ public static class TestDependencies
 		// download / switch handlers) and the real catalog, faking only the device-facing model ports.
 		services.AddScoped<ModelPickerDriver>();
 
+		// Live history feed (WHISPER-114): the real HistoryViewModel over the real Mediator pipeline and the
+		// shared messenger, so recording a transcription while History is open prepends the new entry live.
+		services.AddScoped<LiveHistoryDriver>();
+
 		// History browser (WHISPER-45): the real HistoryViewModel over the real Mediator pipeline
 		// (BrowseHistory + CopyToClipboard) and the faked IHistoryStore + IClipboard. The clipboard
 		// substitute backs the re-copy command (no real clipboard is touched in specs).
