@@ -12,8 +12,14 @@ public sealed class PushToTalkSteps(TranscriptionDriver driver)
 	[Given(@"the model will transcribe the audio to ""(.*)""")]
 	public void GivenTheModelWillTranscribeTheAudioTo(string text) => driver.ModelWillTranscribeTo(text);
 
+	[Given(@"the captured audio is silent")]
+	public void GivenTheCapturedAudioIsSilent() => driver.CapturedAudioIsSilent();
+
 	[When(@"push-to-talk is released")]
 	public Task WhenPushToTalkIsReleased() => driver.ReleasePushToTalk();
+
+	[Then(@"the model is not asked to transcribe")]
+	public void ThenTheModelIsNotAskedToTranscribe() => driver.AssertNotTranscribed();
 
 	[Then(@"the text delivered to the focused field is ""(.*)""")]
 	public void ThenTheTextDeliveredToTheFocusedFieldIs(string text) => driver.AssertDelivered(text);

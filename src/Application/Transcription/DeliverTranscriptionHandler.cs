@@ -29,6 +29,16 @@ public sealed class DeliverTranscriptionHandler(
 	public async ValueTask<DeliveryResult> Handle(DeliverTranscriptionCommand command, CancellationToken cancellationToken)
 	{
 		Domain.Audio.AudioClip trimmed = silenceTrimmer.Trim(command.Clip);
+
+		// No speech: the trimmer collapses a clip that is sub-threshold throughout to empty (WHISPER-112).
+		// Feeding empty/silent audio to Whisper makes it HALLUCINATE a phrase (WHISPER-125 — e.g. it emitted
+		// "SILENT PRACTICE" on a first, near-silent dictation), so skip transcription and deliver nothing.
+		// Quiet speech stays above the energy floor, so it is never collapsed and still transcribes.
+		if (trimmed.Samples.Count == 0)
+		{
+			return new DeliveryResult(Delivered: false, Text: string.Empty);
+		}
+
 		Domain.Audio.TranscriptionResult transcription = await transcriber.TranscribeAsync(trimmed, cancellationToken);
 
 		// Post-processing (WHISPER-41): normalize (filler/noise per config) then the optional output

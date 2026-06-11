@@ -6,6 +6,7 @@
 // and the never-throws degradation when the balloon is missing or failing. The dispatcher-exception
 // notice is asserted on the composition root artifact, like the theming/packaging drivers.
 
+using System;
 using Application.Ports;
 using AwesomeAssertions;
 using Dictation.Specs.Support;
@@ -35,6 +36,15 @@ public sealed class UserNotificationDriver(
 
 	// --- failing pipeline (AC1) ---
 
+	// Speech-level energy (not silence) so the captured clip passes the no-speech gate (WHISPER-125) and the
+	// failure path under test is actually reached; the content is irrelevant while the transcriber is faked.
+	private static float[] SpokenFrame()
+	{
+		float[] frame = new float[960];
+		Array.Fill(frame, 0.1f);
+		return frame;
+	}
+
 	public void TranscriptionWillFail() =>
 		transcriber
 			.TranscribeAsync(Arg.Any<AudioClip>(), Arg.Any<CancellationToken>())
@@ -43,14 +53,14 @@ public sealed class UserNotificationDriver(
 	public async Task RecordAndStop()
 	{
 		orchestrator.Start();
-		captureClient.ProduceFrame(new float[960]);
+		captureClient.ProduceFrame(SpokenFrame());
 		await orchestrator.StopAndElapseGraceAsync(time, bufferingOptions);
 	}
 
 	public void StartAndFailDevice()
 	{
 		orchestrator.Start();
-		captureClient.ProduceFrame(new float[960]);
+		captureClient.ProduceFrame(SpokenFrame());
 		captureClient.Fail(AudioCaptureError.DeviceUnavailable, "device unplugged");
 	}
 
