@@ -39,20 +39,23 @@
     </Window.Resources>
 
     <DockPanel>
-        <!-- Navigation region: one button per registered section, dispatching the shell's NavigateCommand. -->
+        <!-- Navigation region: one button per registered section, dispatching the shell's NavigateCommand.
+             A dark navigation rail (WHISPER-103): background and the templated nav buttons come from the
+             shared theme brushes in ShellResources.xaml — no color hex lives in this view — and every state
+             (default, hover, pressed, keyboard-focus, selected) meets WCAG AA contrast. -->
         <Border DockPanel.Dock="Left"
                 Width="160"
-                Background="#F3F3F3">
+                Background="{StaticResource NavSidebarBackgroundBrush}">
             <ItemsControl ItemsSource="{Binding Sections}"
                           Margin="8">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Button Content="{Binding}"
+                                Style="{StaticResource NavButtonStyle}"
                                 Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                 CommandParameter="{Binding}"
-                                Margin="0,2"
-                                Padding="10,6"
-                                HorizontalContentAlignment="Left" />
+                                AutomationProperties.Name="{Binding}"
+                                Margin="0,2" />
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
