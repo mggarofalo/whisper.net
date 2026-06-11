@@ -6,6 +6,25 @@
         <!-- Declared locally (WHISPER-96) so the view is self-contained: parse-time StaticResource only
              sees the view's own resources and the Application, and the smoke harness composes without one. -->
         <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+
+        <!-- Compact rating chip (WHISPER-105): a small Low/Medium/High badge that replaces the wide inline
+             rating strip, so the list reads in far less width. Theme-agnostic (semi-transparent border,
+             inherited foreground) so it works against both the light and dark Fluent themes. -->
+        <Style x:Key="RatingBadge"
+               TargetType="Border">
+            <Setter Property="BorderBrush"
+                    Value="#80808080" />
+            <Setter Property="BorderThickness"
+                    Value="1" />
+            <Setter Property="CornerRadius"
+                    Value="3" />
+            <Setter Property="Padding"
+                    Value="6,1" />
+            <Setter Property="Margin"
+                    Value="0,0,6,0" />
+            <Setter Property="VerticalAlignment"
+                    Value="Center" />
+        </Style>
     </UserControl.Resources>
     <DockPanel Margin="24">
         <StackPanel DockPanel.Dock="Top"
@@ -32,88 +51,129 @@
                        Visibility="{Binding LoadCommand.IsRunning, Converter={StaticResource BoolToVisibility}}" />
         </StackPanel>
 
-        <!-- One row per model: name, the three ratings, download progress, and a select/download action.
-             Wrapped in a ScrollViewer (WHISPER-104) so the list scrolls when rows exceed the window
-             height; the header above is DockPanel.Dock="Top" and stays fixed. Matches HistoryView. -->
+        <!-- One compact row per model (WHISPER-105): name + ratings stacked on the left, and a SINGLE
+             state-relevant action on the right (Download / Cancel / Select), never a permanent button
+             block. Wrapped in a ScrollViewer (WHISPER-104) so the list scrolls; the header above is
+             DockPanel.Dock="Top" and stays fixed. -->
         <ScrollViewer VerticalScrollBarVisibility="Auto">
             <ItemsControl ItemsSource="{Binding Models}">
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <Border BorderBrush="#E0E0E0"
-                            BorderThickness="0,0,0,1"
-                            Padding="0,8">
-                        <StackPanel>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="2*" />
-                                <ColumnDefinition Width="3*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border BorderBrush="#40808080"
+                                BorderThickness="0,0,0,1"
+                                Padding="0,6">
+                            <!-- The active model's row is tinted so the selection is visible at a glance
+                                 (WHISPER-105), in addition to the inline "Active" badge. -->
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsActive}"
+                                                     Value="True">
+                                            <Setter Property="Background"
+                                                    Value="#22308AE0" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
 
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="{Binding DisplayName}"
-                                           FontWeight="SemiBold" />
-                                <TextBlock Text="{Binding Id}"
-                                           Opacity="0.6"
-                                           FontSize="11" />
-                            </StackPanel>
+                                    <!-- Left: identity, compact rating badges, and (only while downloading)
+                                         this row's own progress. -->
+                                    <StackPanel Grid.Column="0"
+                                                Margin="0,0,12,0">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding DisplayName}"
+                                                       FontWeight="SemiBold"
+                                                       VerticalAlignment="Center" />
+                                            <!-- Selected indicator (WHISPER-105). -->
+                                            <Border Background="#308AE0"
+                                                    CornerRadius="3"
+                                                    Padding="6,1"
+                                                    Margin="8,0,0,0"
+                                                    VerticalAlignment="Center"
+                                                    Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}">
+                                                <TextBlock Text="Active"
+                                                           Foreground="White"
+                                                           FontSize="11"
+                                                           FontWeight="SemiBold"
+                                                           AutomationProperties.Name="{Binding DisplayName, StringFormat='{}{0} is the active model'}" />
+                                            </Border>
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding Id}"
+                                                   Opacity="0.6"
+                                                   FontSize="11"
+                                                   Margin="0,1,0,0" />
+                                        <StackPanel Orientation="Horizontal"
+                                                    Margin="0,4,0,0">
+                                            <Border Style="{StaticResource RatingBadge}">
+                                                <TextBlock Text="{Binding Speed, StringFormat='Speed: {0}'}"
+                                                           FontSize="11" />
+                                            </Border>
+                                            <Border Style="{StaticResource RatingBadge}">
+                                                <TextBlock Text="{Binding Accuracy, StringFormat='Accuracy: {0}'}"
+                                                           FontSize="11" />
+                                            </Border>
+                                            <Border Style="{StaticResource RatingBadge}">
+                                                <TextBlock Text="{Binding Memory, StringFormat='RAM: {0}'}"
+                                                           FontSize="11" />
+                                            </Border>
+                                        </StackPanel>
+                                        <!-- Progress: shown only while this row is downloading. -->
+                                        <StackPanel Orientation="Horizontal"
+                                                    Margin="0,4,0,0"
+                                                    Visibility="{Binding IsDownloading, Converter={StaticResource BoolToVisibility}}">
+                                            <ProgressBar Value="{Binding DownloadPercent}"
+                                                         AutomationProperties.Name="{Binding DisplayName, StringFormat='Download progress for {0}'}"
+                                                         Width="160"
+                                                         Height="6"
+                                                         VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding DownloadPercent, StringFormat='{}{0:0}%'}"
+                                                       FontSize="11"
+                                                       Margin="8,0,0,0"
+                                                       VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </StackPanel>
 
-                            <StackPanel Grid.Column="1"
-                                        Orientation="Horizontal"
-                                        VerticalAlignment="Center">
-                                <TextBlock Text="{Binding Speed, StringFormat='Speed: {0}'}"
-                                           Margin="0,0,12,0" />
-                                <TextBlock Text="{Binding Accuracy, StringFormat='Accuracy: {0}'}"
-                                           Margin="0,0,12,0" />
-                                <TextBlock Text="{Binding Memory, StringFormat='RAM: {0}'}" />
-                                <ProgressBar Value="{Binding DownloadPercent}"
-                                             AutomationProperties.Name="{Binding DisplayName, StringFormat='Download progress for {0}'}"
-                                             Width="80"
-                                             Height="6"
-                                             Margin="12,0,0,0"
-                                             VerticalAlignment="Center" />
+                                    <!-- Right: only the contextually valid action for this row (WHISPER-105). -->
+                                    <StackPanel Grid.Column="1"
+                                                Orientation="Horizontal"
+                                                VerticalAlignment="Center">
+                                        <!-- Download: only when not downloaded and not downloading. -->
+                                        <Button Content="Download"
+                                                AutomationProperties.Name="{Binding DisplayName, StringFormat='Download {0}'}"
+                                                Command="{Binding DownloadCommand}"
+                                                Padding="12,4"
+                                                Visibility="{Binding CanDownload, Converter={StaticResource BoolToVisibility}}" />
+                                        <!-- Cancel: only this row's in-flight download, only while running. -->
+                                        <Button Content="Cancel"
+                                                AutomationProperties.Name="{Binding DisplayName, StringFormat='Cancel download for {0}'}"
+                                                Command="{Binding DownloadCancelCommand}"
+                                                Padding="12,4"
+                                                Visibility="{Binding IsDownloading, Converter={StaticResource BoolToVisibility}}" />
+                                        <!-- Select: only when downloaded and not already active. -->
+                                        <Button Content="Select"
+                                                AutomationProperties.Name="{Binding DisplayName, StringFormat='Select {0}'}"
+                                                Command="{Binding DataContext.SelectCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                CommandParameter="{Binding}"
+                                                Padding="12,4"
+                                                Visibility="{Binding CanSelect, Converter={StaticResource BoolToVisibility}}" />
+                                    </StackPanel>
+                                </Grid>
+                                <!-- A failed download surfaces per row natively (WHISPER-81/107), not as a crash;
+                                     empty (and effectively invisible) when this row has no error. -->
+                                <TextBlock Text="{Binding DownloadError}"
+                                           Foreground="#C03030"
+                                           TextWrapping="Wrap"
+                                           Margin="0,4,0,0" />
                             </StackPanel>
-
-                            <StackPanel Grid.Column="2"
-                                        Orientation="Horizontal"
-                                        VerticalAlignment="Center">
-                                <TextBlock Text="Active"
-                                           Foreground="Green"
-                                           FontWeight="SemiBold"
-                                           Margin="0,0,8,0"
-                                           VerticalAlignment="Center"
-                                           Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}" />
-                                <!-- This row's own download command (WHISPER-107): disabled only while THIS row
-                                     downloads, so other rows stay interactive and can download concurrently. -->
-                                <Button Content="Download"
-                                        AutomationProperties.Name="{Binding DisplayName, StringFormat='Download {0}'}"
-                                        Command="{Binding DownloadCommand}"
-                                        Margin="0,0,8,0"
-                                        Padding="12,4" />
-                                <!-- Cancel only this row's in-flight download; shown only while this row is running. -->
-                                <Button Content="Cancel"
-                                        AutomationProperties.Name="{Binding DisplayName, StringFormat='Cancel download for {0}'}"
-                                        Command="{Binding DownloadCancelCommand}"
-                                        Margin="0,0,8,0"
-                                        Padding="12,4"
-                                        Visibility="{Binding DownloadCommand.IsRunning, Converter={StaticResource BoolToVisibility}}" />
-                                <Button Content="Select"
-                                        AutomationProperties.Name="{Binding DisplayName, StringFormat='Select {0}'}"
-                                        Command="{Binding DataContext.SelectCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                        CommandParameter="{Binding}"
-                                        Padding="12,4" />
-                            </StackPanel>
-                        </Grid>
-                        <!-- A failed download surfaces per row natively (WHISPER-81/107), not as a crash;
-                             empty (and effectively invisible) when this row has no error. -->
-                        <TextBlock Text="{Binding DownloadError}"
-                                   Foreground="#C03030"
-                                   TextWrapping="Wrap"
-                                   Margin="0,4,0,0" />
-                        </StackPanel>
-                    </Border>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
             </ItemsControl>
         </ScrollViewer>
     </DockPanel>

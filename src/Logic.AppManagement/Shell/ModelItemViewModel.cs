@@ -47,10 +47,13 @@ public sealed partial class ModelItemViewModel : ObservableObject
 
 	/// <summary>Whether the model file is already in the local cache.</summary>
 	[ObservableProperty]
+	[NotifyPropertyChangedFor(nameof(CanDownload))]
+	[NotifyPropertyChangedFor(nameof(CanSelect))]
 	private bool _isDownloaded;
 
 	/// <summary>Whether this is the currently active model.</summary>
 	[ObservableProperty]
+	[NotifyPropertyChangedFor(nameof(CanSelect))]
 	private bool _isActive;
 
 	/// <summary>Live download completion in [0, 100]; meaningful while <see cref="DownloadState"/> is in progress.</summary>
@@ -59,7 +62,23 @@ public sealed partial class ModelItemViewModel : ObservableObject
 
 	/// <summary>The terminal-aware state of this row's download.</summary>
 	[ObservableProperty]
+	[NotifyPropertyChangedFor(nameof(CanDownload))]
+	[NotifyPropertyChangedFor(nameof(IsDownloading))]
 	private ModelDownloadState _downloadState;
+
+	// Only the action that fits this row's state is shown (WHISPER-105), so the list is compact rather than
+	// a permanent three-button strip. These are derived from the observable state above and re-raise via
+	// NotifyPropertyChangedFor as it changes, so the view swaps the visible action live.
+
+	/// <summary>Show Download only when the model is not cached and not currently downloading.</summary>
+	public bool CanDownload => !IsDownloaded && DownloadState != ModelDownloadState.InProgress;
+
+	/// <summary>Show Cancel (and the progress bar) only while this row is downloading.</summary>
+	public bool IsDownloading => DownloadState == ModelDownloadState.InProgress;
+
+	/// <summary>Show Select only when the model is downloaded but not already the active one (the active row
+	/// is indicated instead of offering a redundant Select).</summary>
+	public bool CanSelect => IsDownloaded && !IsActive;
 
 	/// <summary>A user-facing error from THIS row's last download attempt, or null when none failed. The view
 	/// shows this per row rather than crashing on a failed download (WHISPER-81), and per row so one model's
