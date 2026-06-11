@@ -24,6 +24,9 @@ public sealed class ModelPickerSteps(ModelPickerDriver driver)
 	[Given(@"the user selects a model ""(.*)"" whose download will fail")]
 	public async Task GivenAModelWhoseDownloadWillFail(string id) => await driver.GivenModelWhoseDownloadWillFail(id);
 
+	[Given(@"a model ""(.*)"" is persisted as active but not yet loaded")]
+	public void GivenPersistedActiveNotLoaded(string id) => driver.GivenPersistedActiveModelNotYetLoaded(id);
+
 	[When(@"the model list is loaded")]
 	public async Task WhenTheModelListIsLoaded() => await driver.LoadList();
 

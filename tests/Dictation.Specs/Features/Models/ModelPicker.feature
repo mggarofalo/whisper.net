@@ -15,6 +15,14 @@ Feature: Model selection
     When the model list is loaded
     Then each listed model shows speed, accuracy, and memory ratings
 
+  # WHISPER-118: on a fresh launch the runtime has not loaded the model yet, but the picker must still show
+  # the persisted selection as active (the dashboard already does) — not nothing until the user re-selects.
+  @WHISPER-118
+  Scenario: The picker shows the persisted active model before it is loaded
+    Given a model "small.en" is persisted as active but not yet loaded
+    When the model list is loaded
+    Then the view shows "small.en" as active
+
   Scenario: Switching to an already-available model
     Given the model picker lists a downloaded model "small.en"
     When the user selects model "small.en"

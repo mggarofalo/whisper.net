@@ -78,6 +78,11 @@ public sealed class ModelPickerDriver
 		await LoadList();
 	}
 
+	// WHISPER-118: the model is the persisted selection but the runtime has not loaded it yet (a fresh
+	// launch); the lifecycle stays Unloaded (the ctor default), so ListModels must fall back to settings.
+	public void GivenPersistedActiveModelNotYetLoaded(string id) =>
+		_persisted = new AppSettings(id, _persisted.Hotkey, _persisted.SilenceThresholdMs, _persisted.FillerWordRemovalEnabled, _persisted.CaptureDeviceId, _persisted.AuditLogEnabled, _persisted.SetupCompleted);
+
 	public async Task SelectModel(string id) => await _viewModel.SelectCommand.ExecuteAsync(Item(id));
 
 	public Task SelectTargetModel() => SelectModel(_targetId!);
