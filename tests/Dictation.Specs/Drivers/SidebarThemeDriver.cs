@@ -22,9 +22,12 @@ public sealed class SidebarThemeDriver
 
 	public void AssertLabelsInheritTheTheme()
 	{
-		// No pinned label brush — the nav label inherits the theme's foreground, so it adapts to light/dark.
+		// The nav label uses the Fluent theme's adaptive text brush, so it follows light/dark (WHISPER-123) —
+		// not a fixed colour and not the framework default (which would read black-on-dark in dark mode).
+		_resources.Should().Contain("TextFillColorPrimaryBrush",
+			"the nav label foreground is the Fluent adaptive text brush (WHISPER-123)");
 		_resources.Should().NotContain("NavItemForegroundBrush",
-			"the nav label must inherit the theme foreground, not a fixed colour (WHISPER-122)");
+			"the nav label must not be pinned to a fixed colour (WHISPER-122)");
 		// The fixed dark palette from the original rail is gone.
 		_resources.Should().NotContain("#1E1E1E", "the rail is no longer a fixed dark panel");
 		_resources.Should().NotContain("#0E639C", "the selected tab is no longer a fixed blue");
