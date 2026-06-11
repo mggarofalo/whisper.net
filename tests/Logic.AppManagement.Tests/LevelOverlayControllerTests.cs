@@ -3,10 +3,13 @@
 // louder audio reads higher than quieter audio (smoothed), and that the meter resets when recording
 // stops. The audio source is an NSubstitute fake whose FrameAvailable the test raises directly.
 
+using Application.Dictation;
 using Application.Ports;
 using AwesomeAssertions;
+using CommunityToolkit.Mvvm.Messaging;
 using Domain.Audio;
 using Logic.AppManagement;
+using Logic.AppManagement.Tests.Support;
 using NSubstitute;
 using Xunit;
 
@@ -16,9 +19,11 @@ public sealed class LevelOverlayControllerTests
 {
 	private readonly RecordingStateMachine _stateMachine = new();
 	private readonly IAudioSource _audioSource = Substitute.For<IAudioSource>();
+	private readonly IMessenger _messenger = new WeakReferenceMessenger();
+	private readonly ManualTimeProvider _time = new();
 	private readonly LevelOverlayController _controller;
 
-	public LevelOverlayControllerTests() => _controller = new LevelOverlayController(_stateMachine, _audioSource);
+	public LevelOverlayControllerTests() => _controller = new LevelOverlayController(_stateMachine, _audioSource, _messenger, _time);
 
 	private void EmitFrame(float amplitude)
 	{
@@ -36,12 +41,19 @@ public sealed class LevelOverlayControllerTests
 	}
 
 	[Fact]
-	public void Becomes_visible_while_recording_and_hides_when_recording_stops()
+	public void Becomes_visible_while_recording_stays_visible_transcribing_and_hides_when_idle()
 	{
 		_stateMachine.RequestStart();
 		_controller.IsVisible.Should().BeTrue();
+		_controller.State.Should().Be(OverlayState.Recording);
 
+		// Stop -> Transcribing: the overlay stays up so the user sees the transcribe step (WHISPER-102).
 		_stateMachine.RequestStop();
+		_controller.IsVisible.Should().BeTrue();
+		_controller.State.Should().Be(OverlayState.Transcribing);
+
+		// Complete -> Idle: only now does the overlay hide.
+		_stateMachine.CompleteTranscription();
 		_controller.IsVisible.Should().BeFalse();
 	}
 
@@ -157,5 +169,126 @@ public sealed class LevelOverlayControllerTests
 
 		_controller.Level.Should().BeGreaterThan(0.70, "loud speech approaches full scale");
 		_controller.Level.Should().BeLessThan(1.0, "without constantly pegging");
+	}
+
+	// --- WHISPER-102: state, elapsed, near-cap, and error feedback ---
+
+	[Fact]
+	public void Returning_to_idle_resets_state_and_hides()
+	{
+		_stateMachine.RequestStart();
+		_stateMachine.RequestStop();
+		_stateMachine.CompleteTranscription();
+
+		_controller.IsVisible.Should().BeFalse();
+		_controller.NearCap.Should().BeFalse();
+		_controller.Elapsed.Should().Be(TimeSpan.Zero);
+	}
+
+	[Fact]
+	public void Elapsed_time_advances_while_recording()
+	{
+		_stateMachine.RequestStart();
+
+		_time.Advance(TimeSpan.FromSeconds(3));
+
+		_controller.Elapsed.Should().BeGreaterThanOrEqualTo(TimeSpan.FromSeconds(3));
+	}
+
+	[Fact]
+	public void Elapsed_resets_when_a_new_recording_starts()
+	{
+		_stateMachine.RequestStart();
+		_time.Advance(TimeSpan.FromSeconds(5));
+		_stateMachine.RequestStop();
+		_stateMachine.CompleteTranscription();
+
+		_stateMachine.RequestStart();
+
+		_controller.Elapsed.Should().Be(TimeSpan.Zero);
+	}
+
+	[Fact]
+	public void A_near_limit_message_raises_the_near_cap_warning()
+	{
+		_stateMachine.RequestStart();
+
+		_messenger.Send(new DictationNearLimitMessage(8000, 10000));
+
+		_controller.NearCap.Should().BeTrue();
+	}
+
+	[Fact]
+	public void An_at_limit_message_raises_the_near_cap_warning()
+	{
+		_stateMachine.RequestStart();
+
+		_messenger.Send(new DictationAtLimitMessage(10000, 10000));
+
+		_controller.NearCap.Should().BeTrue();
+	}
+
+	[Fact]
+	public void A_hard_limit_stop_message_raises_the_near_cap_warning()
+	{
+		_stateMachine.RequestStart();
+
+		_messenger.Send(new DictationHardLimitStopMessage(20000, 20000));
+
+		_controller.NearCap.Should().BeTrue();
+	}
+
+	[Fact]
+	public void Near_cap_resets_on_the_next_recording()
+	{
+		_stateMachine.RequestStart();
+		_messenger.Send(new DictationAtLimitMessage(10000, 10000));
+		_controller.NearCap.Should().BeTrue();
+		_stateMachine.RequestStop();
+		_stateMachine.CompleteTranscription();
+
+		_stateMachine.RequestStart();
+
+		_controller.NearCap.Should().BeFalse();
+	}
+
+	[Fact]
+	public void A_failure_message_shows_the_error_state_and_keeps_the_overlay_visible()
+	{
+		_stateMachine.RequestStart();
+
+		_messenger.Send(new DictationFailedMessage());
+
+		_controller.State.Should().Be(OverlayState.Error);
+		_controller.IsVisible.Should().BeTrue();
+	}
+
+	[Fact]
+	public void The_error_state_auto_dismisses_after_the_timeout()
+	{
+		_stateMachine.RequestStart();
+		_messenger.Send(new DictationFailedMessage());
+		_controller.IsVisible.Should().BeTrue();
+
+		_time.Advance(TimeSpan.FromSeconds(5));
+
+		_controller.IsVisible.Should().BeFalse();
+		_controller.State.Should().Be(OverlayState.Recording);
+	}
+
+	[Fact]
+	public void An_error_lingers_past_the_return_to_idle_until_it_dismisses()
+	{
+		_stateMachine.RequestStart();
+		_stateMachine.RequestStop();          // Transcribing
+		_messenger.Send(new DictationFailedMessage());
+		_stateMachine.CompleteTranscription(); // Idle — but the error must linger, not vanish
+
+		_controller.IsVisible.Should().BeTrue("the error lingers until its dismiss timeout, not the return to Idle");
+		_controller.State.Should().Be(OverlayState.Error);
+
+		_time.Advance(TimeSpan.FromSeconds(5));
+
+		_controller.IsVisible.Should().BeFalse();
 	}
 }

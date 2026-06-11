@@ -8,6 +8,7 @@
 
 using Application.Ports;
 using AwesomeAssertions;
+using CommunityToolkit.Mvvm.Messaging;
 using Dictation.Specs.Support;
 using Domain.Audio;
 using Domain.Recording;
@@ -38,7 +39,9 @@ public sealed class UiDispatcherDriver : IDisposable
 
 	public void CreateOverlayViewModel()
 	{
-		_overlayController = new LevelOverlayController(_stateMachine, _audioSource);
+		// The messenger and clock are incidental here (this driver tests the dispatcher seam, WHISPER-90);
+		// the overlay's limit/failure feedback is exercised by the @WHISPER-102 driver.
+		_overlayController = new LevelOverlayController(_stateMachine, _audioSource, new WeakReferenceMessenger(), new ManualTimeProvider());
 		_overlayViewModel = new LevelOverlayViewModel(_overlayController, _dispatcher);
 	}
 

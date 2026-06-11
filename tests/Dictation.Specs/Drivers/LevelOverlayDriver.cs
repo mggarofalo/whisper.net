@@ -4,8 +4,11 @@
 // audio frame to simulate speech, and asserts the controller's visibility and level. The controller is
 // the unit-testable, WPF-free view-model logic the thin overlay binds to.
 
+using Application.Dictation;
 using Application.Ports;
 using AwesomeAssertions;
+using CommunityToolkit.Mvvm.Messaging;
+using Dictation.Specs.Support;
 using Domain.Audio;
 using Logic.AppManagement;
 using NSubstitute;
@@ -16,9 +19,19 @@ public sealed class LevelOverlayDriver : IDisposable
 {
 	private readonly RecordingStateMachine _stateMachine = new();
 	private readonly IAudioSource _audioSource = Substitute.For<IAudioSource>();
+	private readonly IMessenger _messenger;
+	private readonly ManualTimeProvider _time;
 	private readonly LevelOverlayController _controller;
 
-	public LevelOverlayDriver() => _controller = new LevelOverlayController(_stateMachine, _audioSource);
+	// The scenario-scoped messenger and manual clock are the same seams the orchestrator publishes the
+	// WHISPER-111 limit / WHISPER-102 failure signals on and times the recording with, so driving them here
+	// exercises the real overlay feedback path.
+	public LevelOverlayDriver(IMessenger messenger, ManualTimeProvider time)
+	{
+		_messenger = messenger;
+		_time = time;
+		_controller = new LevelOverlayController(_stateMachine, _audioSource, messenger, time);
+	}
 
 	// Recording starts and a frame of speech-level audio flows, as it would during a real capture.
 	public void StartRecording()
@@ -73,6 +86,27 @@ public sealed class LevelOverlayDriver : IDisposable
 		_controller.Level.Should().BeGreaterThan(0.70, "loud speech approaches full scale");
 		_controller.Level.Should().BeLessThan(1.0, "without constantly pegging");
 	}
+
+	// --- WHISPER-102 feedback: state, elapsed, near-cap, error ---
+
+	public void CompleteTranscription() => _stateMachine.CompleteTranscription();
+
+	public void AdvanceSeconds(int seconds) => _time.Advance(TimeSpan.FromSeconds(seconds));
+
+	// Publish the WHISPER-111 soft-limit signal on the shared messenger, exactly as the orchestrator does.
+	public void PublishNearLimit() => _messenger.Send(new DictationNearLimitMessage(8_000, 10_000));
+
+	// Publish the WHISPER-102 failure signal on the shared messenger, as the orchestrator does on a failure.
+	public void PublishFailure() => _messenger.Send(new DictationFailedMessage());
+
+	public void AssertState(OverlayState state) => _controller.State.Should().Be(state);
+
+	public void AssertNearCap() => _controller.NearCap.Should().BeTrue("the overlay warns before any audio is dropped");
+
+	public void AssertElapsedAtLeast(int seconds) =>
+		_controller.Elapsed.Should().BeGreaterThanOrEqualTo(TimeSpan.FromSeconds(seconds));
+
+	public void AssertVisible() => _controller.IsVisible.Should().BeTrue();
 
 	public void Dispose() => _controller.Dispose();
 }

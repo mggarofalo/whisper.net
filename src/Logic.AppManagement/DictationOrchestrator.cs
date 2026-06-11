@@ -264,6 +264,9 @@ public sealed class DictationOrchestrator
 			_userNotifier.NotifyError(
 				"Dictation failed",
 				"Your speech could not be transcribed or delivered. The app is still running — please try again.");
+
+			// Tell the overlay to show a brief error state (WHISPER-102), sent before the finally returns to Idle.
+			_messenger.Send(new DictationFailedMessage());
 		}
 		finally
 		{
@@ -416,10 +419,15 @@ public sealed class DictationOrchestrator
 
 	// Surface a capture-device failure to the user (WHISPER-95): the recording is discarded either way,
 	// and in a windowless app a log-only failure reads as "nothing was typed".
-	private void NotifyCaptureFailure() =>
+	private void NotifyCaptureFailure()
+	{
 		_userNotifier.NotifyError(
 			"Microphone problem",
 			"Audio capture stopped unexpectedly, so the recording was discarded. Check your microphone and try again.");
+
+		// Show the overlay's brief error state (WHISPER-102) on a capture failure too.
+		_messenger.Send(new DictationFailedMessage());
+	}
 
 	// Guarded conditional transition: advance only from the expected stage. Returns whether it moved, and
 	// raises StageChanged outside the lock so a subscriber can never re-enter the gate.

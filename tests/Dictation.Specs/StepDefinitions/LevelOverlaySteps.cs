@@ -21,8 +21,14 @@ public sealed class LevelOverlaySteps(LevelOverlayDriver driver)
 	[When(@"recording starts")]
 	public void WhenRecordingStarts() => driver.StartRecording();
 
-	[When(@"recording stops")]
-	public void WhenRecordingStops() => driver.StopRecording();
+	[When(@"the dictation finishes")]
+	public void WhenTheDictationFinishes()
+	{
+		// Stop -> Transcribing -> (complete) Idle: the overlay only hides once the dictation is fully done;
+		// it now stays visible through the transcribing step (WHISPER-102).
+		driver.StopRecording();
+		driver.CompleteTranscription();
+	}
 
 	[Then(@"the level overlay becomes visible")]
 	public void ThenTheLevelOverlayBecomesVisible() => driver.AssertOverlayVisible();

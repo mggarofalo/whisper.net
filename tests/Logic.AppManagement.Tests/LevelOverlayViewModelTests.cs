@@ -6,7 +6,9 @@
 
 using Application.Ports;
 using AwesomeAssertions;
+using CommunityToolkit.Mvvm.Messaging;
 using Domain.Audio;
+using Logic.AppManagement.Tests.Support;
 using NSubstitute;
 using Xunit;
 
@@ -16,13 +18,15 @@ public sealed class LevelOverlayViewModelTests
 {
 	private readonly RecordingStateMachine _stateMachine = new();
 	private readonly IAudioSource _audioSource = Substitute.For<IAudioSource>();
+	private readonly IMessenger _messenger = new WeakReferenceMessenger();
+	private readonly ManualTimeProvider _time = new();
 	private readonly TestUiDispatcher _dispatcher = new();
 	private readonly LevelOverlayController _controller;
 	private readonly LevelOverlayViewModel _viewModel;
 
 	public LevelOverlayViewModelTests()
 	{
-		_controller = new LevelOverlayController(_stateMachine, _audioSource);
+		_controller = new LevelOverlayController(_stateMachine, _audioSource, _messenger, _time);
 		_viewModel = new LevelOverlayViewModel(_controller, _dispatcher);
 	}
 
@@ -42,9 +46,12 @@ public sealed class LevelOverlayViewModelTests
 		_stateMachine.RequestStart();
 		EmitFrame(0.5f);
 
-		_dispatcher.PostCount.Should().Be(2, "one visibility change and one level change were marshaled");
+		// Starting recording marshals visibility, state, and the initial elapsed update; the frame marshals
+		// the level — four Posts, never a blocking InvokeAsync (WHISPER-102 added the state/elapsed updates).
+		_dispatcher.PostCount.Should().Be(4);
 		_dispatcher.InvokeAsyncCount.Should().Be(0, "per-frame updates must never block the audio thread");
 		_viewModel.IsOverlayVisible.Should().BeTrue();
+		_viewModel.State.Should().Be(OverlayState.Recording);
 		_viewModel.Level.Should().BeGreaterThan(0);
 	}
 

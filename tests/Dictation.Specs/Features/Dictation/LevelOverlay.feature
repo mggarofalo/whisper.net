@@ -1,5 +1,6 @@
 # Coverage map (acceptance criterion -> scenario / test):
-#  AC1 overlay appears while recording, hides when recording stops -> both scenarios (IsVisible)
+#  AC1 overlay appears while recording, hides when the dictation finishes (returns to idle; it now stays
+#      visible through the transcribing step, WHISPER-102) -> both scenarios (IsVisible)
 #  AC2 live mic-level indicator from pipeline audio, smoothed       -> "Overlay appears... reflects input level" + unit smoothing test
 #  AC3 MVVM view-model has no WPF/Infra deps, unit-testable         -> LevelOverlayController (Logic) drives the scenarios + unit tests
 #  AC4 show/hide wired to recording state, never stalls pipeline    -> controller observes RecordingStateMachine; level math only reads frames
@@ -16,7 +17,7 @@ Feature: Live recording level overlay
     Then the level overlay becomes visible
     And it reflects the current microphone input level
 
-  Scenario: Overlay hides when recording stops
+  Scenario: Overlay hides when the dictation finishes
     Given the level overlay is visible while recording
-    When recording stops
+    When the dictation finishes
     Then the level overlay is hidden
