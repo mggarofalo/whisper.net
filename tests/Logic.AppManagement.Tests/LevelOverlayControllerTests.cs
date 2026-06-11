@@ -89,4 +89,73 @@ public sealed class LevelOverlayControllerTests
 
 		_controller.Level.Should().Be(0);
 	}
+
+	// --- WHISPER-101: perceptual (dBFS) mapping ---
+
+	// Emit enough constant frames that the exponential smoothing has converged to the per-frame level, so
+	// the resulting band can be asserted regardless of the smoothing factor.
+	private void EmitSustained(float amplitude)
+	{
+		for (int i = 0; i < 60; i++)
+		{
+			EmitFrame(amplitude);
+		}
+	}
+
+	[Theory]
+	[InlineData(0.0)]      // digital silence
+	[InlineData(0.0008)]   // ~-62 dBFS, below the floor
+	public void Rms_at_or_below_the_floor_maps_to_zero(double rms) =>
+		LevelOverlayController.ToPerceptualLevel(rms).Should().Be(0);
+
+	[Theory]
+	[InlineData(0.02)]   // ~-34 dBFS
+	[InlineData(0.05)]   // ~-26 dBFS
+	[InlineData(0.10)]   // ~-20 dBFS
+	public void Normal_speech_rms_maps_to_mid_range(double rms) =>
+		LevelOverlayController.ToPerceptualLevel(rms).Should().BeInRange(0.40, 0.70);
+
+	[Fact]
+	public void Mapping_is_monotonic_and_full_scale_reaches_the_top()
+	{
+		double quiet = LevelOverlayController.ToPerceptualLevel(0.01);
+		double normal = LevelOverlayController.ToPerceptualLevel(0.05);
+		double loud = LevelOverlayController.ToPerceptualLevel(0.5);
+
+		quiet.Should().BeLessThan(normal);
+		normal.Should().BeLessThan(loud);
+		loud.Should().BeLessThan(1.0, "loud speech approaches full scale without pegging");
+		LevelOverlayController.ToPerceptualLevel(1.0).Should().Be(1.0, "only full digital scale pegs the meter");
+	}
+
+	[Fact]
+	public void Speaking_at_normal_volume_drives_the_meter_to_mid_range()
+	{
+		_stateMachine.RequestStart();
+
+		EmitSustained(0.05f);
+
+		_controller.Level.Should().BeInRange(0.40, 0.70, "normal-volume speech should fill the meter to mid-range");
+	}
+
+	[Fact]
+	public void Silence_keeps_the_meter_at_or_near_zero()
+	{
+		_stateMachine.RequestStart();
+
+		EmitSustained(0.0005f);
+
+		_controller.Level.Should().BeLessThanOrEqualTo(0.02);
+	}
+
+	[Fact]
+	public void Loud_speech_approaches_full_scale_without_pegging()
+	{
+		_stateMachine.RequestStart();
+
+		EmitSustained(0.5f);
+
+		_controller.Level.Should().BeGreaterThan(0.70, "loud speech approaches full scale");
+		_controller.Level.Should().BeLessThan(1.0, "without constantly pegging");
+	}
 }
