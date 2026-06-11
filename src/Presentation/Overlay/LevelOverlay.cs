@@ -41,7 +41,8 @@ public sealed class LevelOverlay : IDisposable
 			ShowActivated = false,
 			ResizeMode = ResizeMode.NoResize,
 			SizeToContent = SizeToContent.WidthAndHeight,
-			WindowStartupLocation = WindowStartupLocation.CenterScreen,
+			// Positioned manually, bottom-center of the work area (WHISPER-100); see Reposition.
+			WindowStartupLocation = WindowStartupLocation.Manual,
 			// Click-through tolerant: the overlay never steals focus or absorbs clicks from the app below.
 			Focusable = false,
 			IsHitTestVisible = false,
@@ -59,7 +60,51 @@ public sealed class LevelOverlay : IDisposable
 		// lifecycle is one binding.
 		_window.SetBinding(UIElement.VisibilityProperty,
 			new Binding(nameof(LevelOverlayViewModel.IsOverlayVisible)) { Converter = new BooleanToVisibilityConverter() });
+
+		// Place the overlay bottom-center of the work area (WHISPER-100) each time it is shown and once its
+		// size settles. The overlay is transient — shown only while recording — so resolving the work area
+		// on every show keeps it correct after the work area changes (taskbar moved/resized) between
+		// recordings; a change DURING an active recording is the manual remainder. The placement math is the
+		// WPF-free OverlayPlacement in Logic; this resolves the work area and applies the result.
+		_window.IsVisibleChanged += OnVisibleChanged;
+		_window.SizeChanged += OnSizeChanged;
 	}
 
-	public void Dispose() => _window.Close();
+	private void OnVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+	{
+		if (_window.IsVisible)
+		{
+			Reposition();
+		}
+	}
+
+	private void OnSizeChanged(object sender, SizeChangedEventArgs e) => Reposition();
+
+	// Resolve the work area (of the monitor holding the focused window, falling back to the primary) and
+	// apply the bottom-center placement. Sizes are read after layout, so ActualWidth/Height are final.
+	private void Reposition()
+	{
+		if (_window.ActualWidth <= 0 || _window.ActualHeight <= 0)
+		{
+			return;
+		}
+
+		OverlayRect workArea = ForegroundMonitor.WorkArea(_window) ?? PrimaryWorkArea();
+		(double left, double top) = OverlayPlacement.BottomCenter(workArea, _window.ActualWidth, _window.ActualHeight);
+		_window.Left = left;
+		_window.Top = top;
+	}
+
+	private static OverlayRect PrimaryWorkArea()
+	{
+		Rect workArea = SystemParameters.WorkArea;
+		return new OverlayRect(workArea.Left, workArea.Top, workArea.Width, workArea.Height);
+	}
+
+	public void Dispose()
+	{
+		_window.IsVisibleChanged -= OnVisibleChanged;
+		_window.SizeChanged -= OnSizeChanged;
+		_window.Close();
+	}
 }

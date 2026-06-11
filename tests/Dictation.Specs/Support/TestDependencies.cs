@@ -157,6 +157,10 @@ public static class TestDependencies
 		// view-model logic) over a real state machine and a faked audio source, so it owns its own wiring.
 		services.AddScoped<LevelOverlayDriver>();
 
+		// Overlay placement (WHISPER-100): the driver exercises the real, WPF-free OverlayPlacement geometry
+		// (bottom-center of the work area). The WPF window that resolves the monitor work area is manual.
+		services.AddScoped<OverlayPlacementDriver>();
+
 		// UI dispatcher seam (WHISPER-90): the driver builds the real tray/overlay view-models over their
 		// real controllers and a synchronous recording dispatcher, so the marshaling contract (post vs
 		// CheckAccess fast-path, never blocking) is proven with no live WPF Application.
