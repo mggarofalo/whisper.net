@@ -62,7 +62,21 @@ public sealed partial class ModelViewModel : FeatureViewModel
 
 		if (!item.IsDownloaded)
 		{
-			await item.DownloadCommand.ExecuteAsync(null);
+			// Drive the row's own download — but never via ExecuteAsync while it is already running. For a
+			// cancelable command ExecuteAsync cancels the in-flight token and restarts, which would silently
+			// kill a download the user just started from the row's own Download button (then click Select on
+			// the same row). If one is already in flight, await it instead of restarting it (WHISPER-107).
+			// (SelectCommand is not itself cancelable, so its cancellationToken never fires; the download owns
+			// its own cancellation via the row's Cancel button.)
+			if (item.DownloadCommand.IsRunning)
+			{
+				await (item.DownloadCommand.ExecutionTask ?? Task.CompletedTask);
+			}
+			else
+			{
+				await item.DownloadCommand.ExecuteAsync(null);
+			}
+
 			if (item.DownloadState != ModelDownloadState.Succeeded)
 			{
 				return;
