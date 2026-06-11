@@ -45,6 +45,11 @@ public sealed partial class HistoryViewModel : FeatureViewModel
 	[ObservableProperty]
 	private bool _hasMorePages = true;
 
+	// Auto-load the first page on first activation (WHISPER-108): the browser opens populated (or in its
+	// first-class empty state), the cached instance does not re-query on later tab switches — so the page
+	// the user browsed to survives a tab switch — and Refresh stays the manual re-query.
+	protected override IAsyncRelayCommand FirstActivationLoadCommand => LoadCommand;
+
 	// Load the first page through Mediator, replacing whatever was shown.
 	[RelayCommand]
 	private async Task LoadAsync(CancellationToken cancellationToken)

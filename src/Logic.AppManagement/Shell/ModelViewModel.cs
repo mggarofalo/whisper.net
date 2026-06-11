@@ -33,6 +33,10 @@ public sealed partial class ModelViewModel : FeatureViewModel
 	[ObservableProperty]
 	private string? _downloadError;
 
+	// Auto-load the catalog on first activation (WHISPER-108): the section opens populated, the cached
+	// instance does not re-query on later tab switches, and Refresh stays the manual re-query.
+	protected override IAsyncRelayCommand FirstActivationLoadCommand => LoadCommand;
+
 	// Load the model list through Mediator and project each into a row; mark which one is active.
 	[RelayCommand]
 	private async Task LoadAsync(CancellationToken cancellationToken)

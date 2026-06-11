@@ -25,6 +25,12 @@
                     IsEnabled="{Binding HasMorePages}"
                     Margin="8,0,0,0"
                     Padding="12,4" />
+            <!-- Lightweight loading state (WHISPER-108): visible while the activation-triggered load runs. -->
+            <TextBlock Text="Loading…"
+                       Opacity="0.7"
+                       Margin="16,0,0,0"
+                       VerticalAlignment="Center"
+                       Visibility="{Binding LoadCommand.IsRunning, Converter={StaticResource BoolToVisibility}}" />
         </StackPanel>
 
         <!-- Empty state: shown instead of the list when there is no history. -->

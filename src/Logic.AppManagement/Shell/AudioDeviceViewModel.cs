@@ -48,6 +48,10 @@ public sealed partial class AudioDeviceViewModel : FeatureViewModel
 	/// against to tell a real user pick from the programmatic selection a reload performs.</summary>
 	public string? CommittedDeviceId => _settings?.CaptureDeviceId;
 
+	// Auto-load the device list on first activation (WHISPER-108): the picker opens populated, the cached
+	// instance does not re-query on later tab switches, and Refresh stays the manual re-query.
+	protected override IAsyncRelayCommand FirstActivationLoadCommand => LoadCommand;
+
 	// The commit decision that used to live in the view's SelectionChanged code-behind (WHISPER-92):
 	// the ComboBox two-way binds SelectedDeviceId, and a change commits only when it is a genuine user
 	// pick — never while a load repopulates the picker, and only when the choice differs from what is

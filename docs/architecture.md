@@ -164,6 +164,13 @@ instead of recreating. The lifecycle rule:
   subscriptions and gets no callbacks — it is dormant state, not a background listener.
 - **Cached view-models are deactivated on navigate-away and disposed only at shell teardown**, when
   the UI scope that owns them is disposed. Navigation never disposes a section.
+- **Data sections auto-load on FIRST activation** (WHISPER-108): a section that shows queried data
+  (Model, Audio, History, Stats) overrides `FirstActivationLoadCommand` with its load command, and
+  the base executes it once — after `OnActivated`, so subscriptions are live before the first load
+  runs. The once-per-instance guard keeps a cached instance from re-querying on every tab switch;
+  Refresh stays the explicit manual re-query, and the views show a lightweight "Loading…" state bound
+  to the command's `IsRunning`. A section that must re-sync on EVERY activation (Hotkey, WHISPER-109)
+  keeps its own `OnActivated` trigger and leaves the hook null.
 - The messenger standard is CommunityToolkit's **`WeakReferenceMessenger`** (registered once by
   `AddApplication`), so even a missed unregister can degrade freshness but can never root a cached
   view-model — leaks are impossible by construction, and the activate/deactivate discipline is about

@@ -58,7 +58,18 @@ public static class TestDependencies
 			store.LoadAsync(Arg.Any<CancellationToken>()).Returns(Domain.Settings.AppSettings.Default);
 			return store;
 		});
-		services.AddScoped(_ => Substitute.For<IHistoryStore>());
+		// The history-store substitute honors the port contract out of the box: an empty history (never a
+		// null list), exactly as a fresh install would. Opening the History or Stats section triggers a
+		// load on first activation (WHISPER-108), so scenarios that merely navigate the shell — without
+		// configuring the store — must still compose a contract-respecting read. Drivers that need entries
+		// re-configure GetEntriesAsync, which overrides this default.
+		services.AddScoped(_ =>
+		{
+			IHistoryStore store = Substitute.For<IHistoryStore>();
+			store.GetEntriesAsync(Arg.Any<DateTimeOffset?>(), Arg.Any<DateTimeOffset?>(), Arg.Any<int?>(), Arg.Any<CancellationToken>())
+				.Returns(Array.Empty<Domain.History.TranscriptEntry>());
+			return store;
+		});
 		services.AddScoped(_ => Substitute.For<IAuditLog>());
 		services.AddScoped(_ => Substitute.For<IGpuProbe>());
 
@@ -158,7 +169,17 @@ public static class TestDependencies
 		// real singleton from AddModelManagement for the scenarios that resolve it.
 		services.AddScoped(_ => Substitute.For<IModelCache>());
 		services.AddScoped(_ => Substitute.For<IModelDownloader>());
-		services.AddScoped(_ => Substitute.For<IModelLifecycle>());
+
+		// Like the settings store above, the lifecycle substitute honors its contract out of the box:
+		// Status is never null (no model loaded). Opening the Model section triggers a load on first
+		// activation (WHISPER-108), so the ListModels handler must read a contract-respecting status even
+		// in scenarios that merely navigate the shell. Drivers re-configure Status as needed.
+		services.AddScoped(_ =>
+		{
+			IModelLifecycle lifecycle = Substitute.For<IModelLifecycle>();
+			lifecycle.Status.Returns(Domain.Models.ModelStatus.Unloaded);
+			return lifecycle;
+		});
 
 		// MVVM shell navigation (WHISPER-19): the real ShellViewModel + NavigationService + feature
 		// view-models (registered by AddAppManagement) resolved from the scenario scope, so navigation and
@@ -230,6 +251,11 @@ public static class TestDependencies
 		// VM activation lifecycle (WHISPER-94): real shell navigation over the cached feature view-models
 		// and the scenario-scoped messenger, proving subscriptions live exactly while a section is active.
 		services.AddScoped<VmLifecycleDriver>();
+
+		// Section auto-load on first activation (WHISPER-108): real shell navigation over the cached
+		// feature view-models, proving each data section populates itself when first opened, that rapid
+		// tab switching never re-queries, and that an in-flight load reports it cannot execute again.
+		services.AddScoped<SectionAutoLoadDriver>();
 
 		// Error surfacing (WHISPER-95): the recorder overrides the production IUserNotifier mapping so the
 		// failing-pipeline scenarios assert a notification was requested; the driver also exercises the
