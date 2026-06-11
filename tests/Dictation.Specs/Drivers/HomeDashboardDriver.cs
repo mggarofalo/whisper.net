@@ -58,12 +58,29 @@ public sealed class HomeDashboardDriver
 
 	public void GivenNoHistory() => ReturnEntries();
 
-	// Enter the section through the real activation lifecycle so the first-activation load runs, then await
-	// the load it kicked off (the FirstActivationLoadCommand is RefreshCommand).
+	// Enter the section through the real activation lifecycle so the activation refresh runs, then await it.
 	public async Task OpenDashboard()
 	{
 		_viewModel.OnNavigatedTo();
 		await _viewModel.RefreshCommand.ExecutionTask!;
+	}
+
+	// WHISPER-119: simulate activity since Home was last open, then switch away and back; the dashboard
+	// must re-query on activation rather than show a stale snapshot.
+	public void ANewTranscriptionIsRecorded(string text) =>
+		ReturnEntries(new TranscriptEntry(Guid.NewGuid(), text, new DateTimeOffset(2026, 6, 11, 21, 0, 0, TimeSpan.Zero)));
+
+	public async Task ReopenDashboard()
+	{
+		_viewModel.OnNavigatedFrom();
+		_viewModel.OnNavigatedTo();
+		await _viewModel.RefreshCommand.ExecutionTask!;
+	}
+
+	public void AssertMostRecentIs(string text)
+	{
+		_viewModel.Recent.Should().NotBeEmpty();
+		_viewModel.Recent[0].Text.Should().Be(text);
 	}
 
 	public void AssertActiveModel(string modelId) => _viewModel.ActiveModel.Should().Be(modelId);

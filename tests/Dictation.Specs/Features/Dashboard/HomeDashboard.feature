@@ -27,3 +27,14 @@ Feature: The Home section is a live status dashboard
     When the Home section is opened
     Then the dashboard shows zero usage totals
     And the dashboard shows its empty recent state
+
+  # WHISPER-119: the dashboard is a live overview — reopening it must re-query, not show a stale snapshot.
+  @WHISPER-119
+  Scenario: Reopening Home shows transcriptions recorded since it was last open
+    Given the dashboard's settings select model "small.en" and the system default input device
+    And the dashboard has no recorded transcriptions
+    When the Home section is opened
+    Then the dashboard shows its empty recent state
+    When a transcription "brand new note" is recorded and the Home section is reopened
+    Then the dashboard lists 1 recent transcriptions
+    And the most recent dashboard transcription is "brand new note"
