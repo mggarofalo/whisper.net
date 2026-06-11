@@ -124,8 +124,11 @@ public sealed class LevelOverlay : IDisposable
 
 	private void OnSizeChanged(object sender, SizeChangedEventArgs e) => Reposition();
 
-	// Resolve the work area (of the monitor holding the focused window, falling back to the primary) and
-	// apply the bottom-center placement. Sizes are read after layout, so ActualWidth/Height are final.
+	// Apply the bottom-center placement against the primary work area (WHISPER-117). SystemParameters.WorkArea
+	// is already in DIPs, so the window lands on-screen regardless of the display scale — unlike the earlier
+	// physical-pixel monitor probe (WHISPER-100), which mis-scaled on a non-100% display and pushed the
+	// overlay off-screen. Sizes are read after layout, so ActualWidth/Height are final. (Placing on the
+	// focused window's monitor on multi-monitor setups is a future enhancement that needs per-monitor DPI.)
 	private void Reposition()
 	{
 		if (_window.ActualWidth <= 0 || _window.ActualHeight <= 0)
@@ -133,16 +136,11 @@ public sealed class LevelOverlay : IDisposable
 			return;
 		}
 
-		OverlayRect workArea = ForegroundMonitor.WorkArea(_window) ?? PrimaryWorkArea();
+		Rect area = SystemParameters.WorkArea;
+		OverlayRect workArea = new(area.Left, area.Top, area.Width, area.Height);
 		(double left, double top) = OverlayPlacement.BottomCenter(workArea, _window.ActualWidth, _window.ActualHeight);
 		_window.Left = left;
 		_window.Top = top;
-	}
-
-	private static OverlayRect PrimaryWorkArea()
-	{
-		Rect workArea = SystemParameters.WorkArea;
-		return new OverlayRect(workArea.Left, workArea.Top, workArea.Width, workArea.Height);
 	}
 
 	public void Dispose()
