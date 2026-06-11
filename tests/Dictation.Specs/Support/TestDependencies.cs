@@ -222,6 +222,11 @@ public static class TestDependencies
 		// once and one can be cancelled without affecting the other — proving per-row download ownership.
 		services.AddScoped<ConcurrentModelDownloadDriver>();
 
+		// Compact model table (WHISPER-105): the real ModelViewModel over the real Mediator pipeline +
+		// catalog with the cache/lifecycle faked, so each row's contextual action (Download / Cancel /
+		// Select) is asserted from genuine downloaded/active/downloading state.
+		services.AddScoped<ModelRowActionsDriver>();
+
 		// First-run setup decision (WHISPER-82): the real GetSetupStatusQuery + SwitchActiveModel over the
 		// real Mediator pipeline and catalog, faking the store + cache, so the launch decision (open settings
 		// when unconfigured; mark done when a model is activated) is proven WPF-free. The App.xaml wiring that
