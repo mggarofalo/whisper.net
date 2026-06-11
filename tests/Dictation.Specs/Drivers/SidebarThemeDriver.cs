@@ -1,12 +1,13 @@
-// Exercises the @WHISPER-103 sidebar-contrast requirement. The sidebar restyle is pure WPF Presentation,
-// so — like the theming/accessibility drivers — this inspects repository artifacts directly rather than
-// driving behavior through IMediator. It proves the two checkable facts behind the issue: every nav
-// foreground/background pair clears WCAG 2.1 AA contrast (computed from the ACTUAL brush colours shipped
-// in ShellResources.xaml, so the numbers can't drift from what renders), and the sidebar takes its colours
-// from shared brush resources with no view-local hex (AC3), with the nav button style declaring every
-// required state (AC2). The live rendered states are verified by smoke + a manual check.
+// Exercises the navigation-sidebar theming requirement (WHISPER-103, made theme-adaptive in WHISPER-122).
+// The restyle is pure WPF Presentation, so — like the theming/accessibility drivers — this inspects
+// repository artifacts directly rather than driving behavior through IMediator. It proves the checkable
+// facts: the sidebar follows the active theme (labels inherit the theme foreground; the rail is a
+// theme-neutral overlay rather than a fixed dark panel), the selected tab uses the system accent colour
+// (the Fluent AccentFillColorDefault brush + on-accent text), the sidebar carries no view-local colour
+// hex, and the nav button style declares every interaction state. WCAG AA in both light and dark is the
+// Fluent theme's guarantee (default text on the themed surface; on-accent text on the accent) plus a
+// manual visual check, not a fixed computed value.
 
-using System.Globalization;
 using System.Text.RegularExpressions;
 using AwesomeAssertions;
 
@@ -19,24 +20,27 @@ public sealed class SidebarThemeDriver
 	private readonly string _resources = File.ReadAllText(Path.Combine(RepositoryRoot, "src", "Presentation", "Shell", "ShellResources.xaml"));
 	private readonly string _window = File.ReadAllText(Path.Combine(RepositoryRoot, "src", "Presentation", "Shell", "ShellWindow.xaml"));
 
-	public void AssertLabelContrastMeetsAa()
+	public void AssertLabelsInheritTheTheme()
 	{
-		string rail = Hex("NavSidebarBackgroundBrush");
-		string label = Hex("NavItemForegroundBrush");
-		string hover = Hex("NavItemHoverBackgroundBrush");
-		string pressed = Hex("NavItemPressedBackgroundBrush");
-		string selectedBackground = Hex("NavItemSelectedBackgroundBrush");
-		string selectedForeground = Hex("NavItemSelectedForegroundBrush");
-
-		Contrast(label, rail).Should().BeGreaterThanOrEqualTo(4.5, "default nav labels must meet WCAG AA against the rail");
-		Contrast(label, hover).Should().BeGreaterThanOrEqualTo(4.5, "hovered nav labels must meet WCAG AA");
-		Contrast(label, pressed).Should().BeGreaterThanOrEqualTo(4.5, "pressed nav labels must meet WCAG AA");
-		Contrast(selectedForeground, selectedBackground).Should().BeGreaterThanOrEqualTo(4.5, "the selected nav label must meet WCAG AA");
+		// No pinned label brush — the nav label inherits the theme's foreground, so it adapts to light/dark.
+		_resources.Should().NotContain("NavItemForegroundBrush",
+			"the nav label must inherit the theme foreground, not a fixed colour (WHISPER-122)");
+		// The fixed dark palette from the original rail is gone.
+		_resources.Should().NotContain("#1E1E1E", "the rail is no longer a fixed dark panel");
+		_resources.Should().NotContain("#0E639C", "the selected tab is no longer a fixed blue");
 	}
 
-	public void AssertSelectedAccentIsDistinct() =>
-		Contrast(Hex("NavItemAccentBrush"), Hex("NavSidebarBackgroundBrush"))
-			.Should().BeGreaterThanOrEqualTo(3.0, "the selected-item accent must be a visible non-text indicator (WCAG 1.4.11)");
+	public void AssertSidebarSurfaceIsThemeNeutral() =>
+		Regex.IsMatch(_resources, "x:Key=\"NavSidebarBackgroundBrush\"\\s+Color=\"#[0-3][0-9A-Fa-f]808080\"")
+			.Should().BeTrue("the rail surface is a low-alpha neutral gray that reads on both light and dark themes");
+
+	public void AssertSelectedTabUsesTheSystemAccent() =>
+		_resources.Should().Contain("AccentFillColorDefaultBrush",
+			"the selected tab is painted with the system accent (Fluent AccentFillColorDefault)");
+
+	public void AssertSelectedLabelUsesOnAccentText() =>
+		_resources.Should().Contain("TextOnAccentFillColorPrimaryBrush",
+			"the selected tab's label uses the theme's on-accent text colour");
 
 	public void AssertSidebarUsesSharedBrushesNoHex()
 	{
@@ -45,7 +49,7 @@ public sealed class SidebarThemeDriver
 		_window.Should().Contain("Style=\"{StaticResource NavButtonStyle}\"",
 			"the nav buttons use the shared templated style");
 		Regex.IsMatch(_window, "\"#[0-9A-Fa-f]{6,8}\"").Should().BeFalse(
-			"no view-local colour hex may remain in the shell window (WHISPER-103 AC3)");
+			"no view-local colour hex may remain in the shell window");
 	}
 
 	public void AssertNavStyleDefinesAllStates()
@@ -55,38 +59,6 @@ public sealed class SidebarThemeDriver
 		_resources.Should().Contain("IsPressed", "the nav style defines a visible pressed state");
 		_resources.Should().Contain("IsKeyboardFocused", "the nav style defines a visible keyboard-focus state");
 		_resources.Should().Contain("CurrentSectionKey", "the selected state is driven by the active section key");
-	}
-
-	private string Hex(string brushKey)
-	{
-		Match match = Regex.Match(_resources, $"x:Key=\"{Regex.Escape(brushKey)}\"\\s+Color=\"(#[0-9A-Fa-f]{{6}})\"");
-		match.Success.Should().BeTrue($"the '{brushKey}' brush must be defined in ShellResources.xaml with an explicit colour");
-		return match.Groups[1].Value;
-	}
-
-	// --- WCAG 2.1 relative-luminance contrast ---
-
-	private static double Contrast(string hexA, string hexB)
-	{
-		double a = Luminance(hexA);
-		double b = Luminance(hexB);
-		double lighter = Math.Max(a, b);
-		double darker = Math.Min(a, b);
-		return (lighter + 0.05) / (darker + 0.05);
-	}
-
-	private static double Luminance(string hex)
-	{
-		int r = int.Parse(hex.Substring(1, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture);
-		int g = int.Parse(hex.Substring(3, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture);
-		int b = int.Parse(hex.Substring(5, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture);
-		return (0.2126 * Channel(r)) + (0.7152 * Channel(g)) + (0.0722 * Channel(b));
-	}
-
-	private static double Channel(int component)
-	{
-		double s = component / 255.0;
-		return s <= 0.03928 ? s / 12.92 : Math.Pow((s + 0.055) / 1.055, 2.4);
 	}
 
 	private static string FindRepositoryRoot()

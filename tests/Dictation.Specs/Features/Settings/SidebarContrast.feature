@@ -1,24 +1,23 @@
-# Coverage map (acceptance criterion -> scenario):
-#  AC1 all nav labels meet WCAG AA contrast
-#         -> "Every nav label/background pair meets WCAG AA contrast" (contrast computed from the actual
-#            shipped brush colours)
-#  AC2 hover, selected, and focus states are visible
-#         -> "The nav button style defines visible hover, pressed, focus, and selected states" +
-#            Logic.AppManagement.Tests/Shell/ShellViewModelSelectionTests (the selected-key data) +
-#            the WHISPER-96 smoke harness (the styled view parses and binds)
-#  AC3 colours come from shared theme resources, not view-local hex
-#         -> "The sidebar takes its colours from shared theme resources, not view-local hex"
+# Coverage map (acceptance criterion -> scenario / test):
+#  The sidebar follows the active light/dark theme (WHISPER-122) rather than a fixed dark rail
+#  (WHISPER-103), and the selected tab uses the system accent. WCAG AA in both themes is the Fluent
+#  theme's guarantee (default text on the themed surface; on-accent text on the accent) + a manual check.
 
 @WHISPER-103
-Feature: The navigation sidebar meets dark-theme contrast
-  As someone using the settings window
-  I want the nav sidebar styled for the dark theme with legible labels and clear states
-  So that the navigation is readable and accessible, not a near-white panel with faint text
+@WHISPER-122
+Feature: The navigation sidebar follows the active theme
+  As someone who switches Windows between light and dark
+  I want the nav sidebar to follow the active theme and highlight the selected tab with my accent colour
+  So that the navigation matches the rest of the window and never stays dark in light mode
 
-  Scenario: Every nav label/background pair meets WCAG AA contrast
-    Then each nav label colour has at least 4.5 to 1 contrast against its background
-    And the selected-item accent has at least 3 to 1 contrast against the sidebar
+  Scenario: The sidebar adapts to the theme rather than using a fixed dark palette
+    Then the nav labels inherit the theme foreground rather than a fixed colour
+    And the sidebar surface is a theme-neutral overlay, not a fixed dark panel
 
-  Scenario: The sidebar takes its colours from shared theme resources, not view-local hex
+  Scenario: The selected tab uses the system accent colour
+    Then the selected nav tab is painted with the system accent
+    And the selected nav label uses the on-accent text colour
+
+  Scenario: The nav button style is shared and defines every interaction state
     Then the shell window's sidebar uses shared brush resources with no hardcoded colour hex
     And the nav button style defines visible hover, pressed, focus, and selected states
