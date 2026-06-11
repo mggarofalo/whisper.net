@@ -11,6 +11,8 @@ using System.Windows;
 using Application.Diagnostics;
 using Application.Ports;
 using Application.Settings;
+using CommunityToolkit.Mvvm.Messaging;
+using Domain.Settings;
 using Infrastructure.DependencyInjection;
 using Logic.AppManagement;
 using Logic.AppManagement.Diagnostics;
@@ -134,6 +136,11 @@ public partial class App
 		// The level overlay lives for the app's lifetime, hidden until recording starts (WHISPER-26).
 		_levelOverlay = new LevelOverlay(_host.Services.GetRequiredService<LevelOverlayViewModel>());
 
+		// Theme (WHISPER-121): apply the persisted Light/Dark/System preference, and re-apply it live when
+		// the user changes it in the sidebar switcher (a settings change is broadcast on the instant-apply
+		// channel). The System default set in OnStartup stands until the async settings read completes.
+		WatchThemePreference();
+
 		logger.LogInformation("Whisper host started; running tray-resident with no startup window.");
 
 		// First-run setup (WHISPER-82): there is no separate onboarding window any more — settings IS the
@@ -193,6 +200,47 @@ public partial class App
 
 		logger.LogInformation("App is unconfigured; opening the settings window for first-run setup.");
 		_host!.Services.GetRequiredService<IShellPresenter>().ShowSettings();
+	}
+
+	// Apply the persisted theme preference and re-apply it whenever settings change (WHISPER-121). The
+	// switcher persists via UpdateSettings, which broadcasts SettingsChangedMessage; ThemeMode must be set
+	// on the UI thread, and the message can arrive on a background thread, so both paths marshal.
+	private void WatchThemePreference()
+	{
+		IMessenger messenger = _host!.Services.GetRequiredService<IMessenger>();
+		messenger.Register<App, SettingsChangedMessage>(this, static (app, message) =>
+			app.Dispatcher.Invoke(() => app.ApplyTheme(message.Value.ThemePreference)));
+
+		_ = ApplyPersistedThemeAsync();
+	}
+
+	private async Task ApplyPersistedThemeAsync()
+	{
+		try
+		{
+			using IServiceScope scope = _host!.Services.CreateScope();
+			IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+			AppSettingsDto settings = await mediator.Send(new GetSettingsQuery());
+			Dispatcher.Invoke(() => ApplyTheme(settings.ThemePreference));
+		}
+		catch (Exception ex)
+		{
+			// A failed read must not strand the app; the System default applied in OnStartup stands.
+			_host!.Services.GetRequiredService<ILogger<App>>()
+				.LogWarning(ex, "Could not read the persisted theme preference; staying on the system theme.");
+		}
+	}
+
+	private void ApplyTheme(ThemePreference preference)
+	{
+#pragma warning disable WPF0001
+		ThemeMode = preference switch
+		{
+			ThemePreference.Light => ThemeMode.Light,
+			ThemePreference.Dark => ThemeMode.Dark,
+			_ => ThemeMode.System,
+		};
+#pragma warning restore WPF0001
 	}
 
 	protected override void OnExit(ExitEventArgs e)

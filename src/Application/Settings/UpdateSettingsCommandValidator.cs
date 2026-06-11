@@ -31,6 +31,9 @@ public sealed class UpdateSettingsCommandValidator : AbstractValidator<UpdateSet
 
 			RuleFor(command => command.Settings.SilenceThresholdMs)
 				.InclusiveBetween(0, MaxSilenceThresholdMs);
+
+			RuleFor(command => command.Settings.ThemePreference)
+				.IsInEnum();
 		});
 	}
 

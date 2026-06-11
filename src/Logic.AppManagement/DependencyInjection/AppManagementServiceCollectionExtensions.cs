@@ -81,6 +81,7 @@ public static class AppManagementServiceCollectionExtensions
 		// first (Home).
 		services.AddScoped<Shell.INavigationService, Shell.NavigationService>();
 		services.AddScoped<Shell.ShellViewModel>();
+		services.AddScoped<Shell.ThemeViewModel>();
 		services.AddSingleton(new Shell.NavigationSection("Home", typeof(Shell.HomeViewModel)));
 		services.AddSingleton(new Shell.NavigationSection("Model", typeof(Shell.ModelViewModel)));
 		services.AddSingleton(new Shell.NavigationSection("Audio", typeof(Shell.AudioDeviceViewModel)));

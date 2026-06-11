@@ -14,9 +14,10 @@ public sealed partial class ShellViewModel : ObservableObject
 {
 	private readonly INavigationService _navigation;
 
-	public ShellViewModel(INavigationService navigation)
+	public ShellViewModel(INavigationService navigation, ThemeViewModel theme)
 	{
 		_navigation = navigation;
+		Theme = theme;
 		_navigation.CurrentViewModelChanged += OnCurrentViewModelChanged;
 
 		// Open the shell on its first registered section so the window always has content on show.
@@ -26,7 +27,14 @@ public sealed partial class ShellViewModel : ObservableObject
 			_navigation.NavigateTo(first);
 			CurrentSectionKey = first;
 		}
+
+		// Load the persisted theme so the sidebar-footer switcher shows the current choice on open
+		// (WHISPER-121). The shell is created once, on the UI thread, so this runs at startup.
+		Theme.LoadCommand.Execute(null);
 	}
+
+	/// <summary>The theme switcher shown in the sidebar footer (WHISPER-121).</summary>
+	public ThemeViewModel Theme { get; }
 
 	/// <summary>The feature view-model currently shown in the shell's content region.</summary>
 	[ObservableProperty]
