@@ -38,8 +38,11 @@
                        TextWrapping="Wrap" />
         </StackPanel>
 
-        <!-- One row per model: name, the three ratings, download progress, and a select/download action. -->
-        <ItemsControl ItemsSource="{Binding Models}">
+        <!-- One row per model: name, the three ratings, download progress, and a select/download action.
+             Wrapped in a ScrollViewer (WHISPER-104) so the list scrolls when rows exceed the window
+             height; the header above is DockPanel.Dock="Top" and stays fixed. Matches HistoryView. -->
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding Models}">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
                     <Border BorderBrush="#E0E0E0"
@@ -109,6 +112,7 @@
                     </Border>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
-        </ItemsControl>
+            </ItemsControl>
+        </ScrollViewer>
     </DockPanel>
 </UserControl>
