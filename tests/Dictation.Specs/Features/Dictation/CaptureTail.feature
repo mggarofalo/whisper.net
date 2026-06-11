@@ -1,6 +1,7 @@
 # Coverage map (acceptance criterion -> scenario):
 #  AC1 audio still in flight at chord release is captured into the clip      -> "A short dictation transcribes audio captured after chord release"
 #  AC2 quiet trailing speech survives the trim; sustained dead air does not  -> "Quiet trailing speech is preserved by the trimmer",
+#                                                                               "Sustained quiet trailing speech is preserved by the trimmer",
 #                                                                               "Genuine trailing dead air is trimmed"
 #  AC3 unit coverage for the grace-window drain and the sustained-silence    -> DictationOrchestratorTests (Logic.AppManagement.Tests)
 #      trim                                                                     + SilenceTrimmerTests (Logic.AudioManagement.Tests)
@@ -25,6 +26,13 @@ Feature: Capture tail after chord release
   # dead air — trimming it swallows the word ending the user actually spoke.
   Scenario: Quiet trailing speech is preserved by the trimmer
     Given a clip that ends in 100 ms of quiet trailing speech
+    When trailing silence is trimmed
+    Then the quiet trailing speech is preserved
+
+  # The reopen: a SUSTAINED quiet tail (longer than the silence window) was wrongly cut by the per-sample
+  # amplitude bar even though it carries real speech energy. Energy-aware end-of-speech keeps it.
+  Scenario: Sustained quiet trailing speech is preserved by the trimmer
+    Given a clip that ends in 400 ms of quiet trailing speech
     When trailing silence is trimmed
     Then the quiet trailing speech is preserved
 
