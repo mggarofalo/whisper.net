@@ -30,12 +30,6 @@
                        Margin="16,0,0,0"
                        VerticalAlignment="Center"
                        Visibility="{Binding LoadCommand.IsRunning, Converter={StaticResource BoolToVisibility}}" />
-            <!-- A failed download surfaces here natively (WHISPER-81), not as a crash. -->
-            <TextBlock Text="{Binding DownloadError}"
-                       Foreground="#C03030"
-                       Margin="16,0,0,0"
-                       VerticalAlignment="Center"
-                       TextWrapping="Wrap" />
         </StackPanel>
 
         <!-- One row per model: name, the three ratings, download progress, and a select/download action.
@@ -48,6 +42,7 @@
                     <Border BorderBrush="#E0E0E0"
                             BorderThickness="0,0,0,1"
                             Padding="0,8">
+                        <StackPanel>
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="2*" />
@@ -88,20 +83,20 @@
                                            Margin="0,0,8,0"
                                            VerticalAlignment="Center"
                                            Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}" />
-                                <!-- Download with progress; auto-disabled while a download runs (no concurrent runs). -->
+                                <!-- This row's own download command (WHISPER-107): disabled only while THIS row
+                                     downloads, so other rows stay interactive and can download concurrently. -->
                                 <Button Content="Download"
                                         AutomationProperties.Name="{Binding DisplayName, StringFormat='Download {0}'}"
-                                        Command="{Binding DataContext.DownloadCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                        CommandParameter="{Binding}"
+                                        Command="{Binding DownloadCommand}"
                                         Margin="0,0,8,0"
                                         Padding="12,4" />
-                                <!-- Cancel the in-flight download; only shown while one is running. -->
+                                <!-- Cancel only this row's in-flight download; shown only while this row is running. -->
                                 <Button Content="Cancel"
-                                        AutomationProperties.Name="Cancel download"
-                                        Command="{Binding DataContext.DownloadCancelCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                        AutomationProperties.Name="{Binding DisplayName, StringFormat='Cancel download for {0}'}"
+                                        Command="{Binding DownloadCancelCommand}"
                                         Margin="0,0,8,0"
                                         Padding="12,4"
-                                        Visibility="{Binding DataContext.DownloadCommand.IsRunning, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource BoolToVisibility}}" />
+                                        Visibility="{Binding DownloadCommand.IsRunning, Converter={StaticResource BoolToVisibility}}" />
                                 <Button Content="Select"
                                         AutomationProperties.Name="{Binding DisplayName, StringFormat='Select {0}'}"
                                         Command="{Binding DataContext.SelectCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
@@ -109,6 +104,13 @@
                                         Padding="12,4" />
                             </StackPanel>
                         </Grid>
+                        <!-- A failed download surfaces per row natively (WHISPER-81/107), not as a crash;
+                             empty (and effectively invisible) when this row has no error. -->
+                        <TextBlock Text="{Binding DownloadError}"
+                                   Foreground="#C03030"
+                                   TextWrapping="Wrap"
+                                   Margin="0,4,0,0" />
+                        </StackPanel>
                     </Border>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>

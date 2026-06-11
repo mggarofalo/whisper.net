@@ -217,6 +217,11 @@ public static class TestDependencies
 		// ProgressBar + Cancel button are smoke-only).
 		services.AddScoped<ModelDownloadDriver>();
 
+		// Concurrent model downloads (WHISPER-107): the real ModelViewModel over the real Mediator pipeline
+		// + catalog with the downloader gated PER MODEL ID, so two downloads can be observed in flight at
+		// once and one can be cancelled without affecting the other — proving per-row download ownership.
+		services.AddScoped<ConcurrentModelDownloadDriver>();
+
 		// First-run setup decision (WHISPER-82): the real GetSetupStatusQuery + SwitchActiveModel over the
 		// real Mediator pipeline and catalog, faking the store + cache, so the launch decision (open settings
 		// when unconfigured; mark done when a model is activated) is proven WPF-free. The App.xaml wiring that
