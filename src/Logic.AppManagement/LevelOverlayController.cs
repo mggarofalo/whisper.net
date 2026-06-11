@@ -19,6 +19,13 @@ public sealed class LevelOverlayController : IDisposable
 	// does not jitter frame-to-frame (no jank), high enough that it still feels live.
 	private const double SmoothingFactor = 0.3;
 
+	// The dBFS window the meter spans (WHISPER-101). Raw RMS is near 0 for silence and ~1 only at full
+	// digital scale, but speech sits around 0.02-0.1 RMS, so a linear meter barely moves. Mapping RMS to
+	// dBFS and normalizing this window to [0, 1] puts normal speech (~-26 dBFS) mid-bar, floors anything
+	// below -60 dBFS at silence, and lets loud speech approach full scale without pegging unless it is
+	// actually at 0 dBFS.
+	private const double MinimumDecibels = -60.0;
+
 	public LevelOverlayController(RecordingStateMachine stateMachine, IAudioSource audioSource)
 	{
 		_stateMachine = stateMachine;
@@ -68,12 +75,28 @@ public sealed class LevelOverlayController : IDisposable
 		}
 
 		double rms = RootMeanSquare(e.Samples.Span);
-		Level = (SmoothingFactor * rms) + ((1 - SmoothingFactor) * Level);
+		double perceptual = ToPerceptualLevel(rms);
+		Level = (SmoothingFactor * perceptual) + ((1 - SmoothingFactor) * Level);
 		LevelChanged?.Invoke(this, EventArgs.Empty);
 	}
 
-	// Peak-normalized loudness of a frame: the RMS of its float samples, clamped to [0, 1] so the meter
-	// maps directly to a 0-100% indicator without the view needing to know the audio scale.
+	// Map a frame's RMS to a perceptual 0-1 meter level (WHISPER-101): convert to dBFS and normalize the
+	// MinimumDecibels..0 dBFS window to [0, 1]. Digital silence (rms <= 0) and anything below the floor
+	// read 0; full digital scale (0 dBFS) reads 1. This is what makes normal speech land mid-bar instead
+	// of a couple of unreadable pixels.
+	public static double ToPerceptualLevel(double rms)
+	{
+		if (rms <= 0)
+		{
+			return 0;
+		}
+
+		double decibels = 20 * Math.Log10(rms);
+		return Math.Clamp((decibels - MinimumDecibels) / -MinimumDecibels, 0, 1);
+	}
+
+	// The RMS of a frame's float samples. Left unclamped: the perceptual mapping handles the range, and a
+	// clipped frame (rms > 1) simply maps to full scale.
 	private static double RootMeanSquare(ReadOnlySpan<float> samples)
 	{
 		if (samples.IsEmpty)
@@ -87,7 +110,7 @@ public sealed class LevelOverlayController : IDisposable
 			sumOfSquares += (double)sample * sample;
 		}
 
-		return Math.Clamp(Math.Sqrt(sumOfSquares / samples.Length), 0, 1);
+		return Math.Sqrt(sumOfSquares / samples.Length);
 	}
 
 	public void Dispose()
