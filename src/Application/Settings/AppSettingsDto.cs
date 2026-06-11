@@ -4,6 +4,7 @@
 // capture-device selection is defaulted so existing construction sites need not change.
 
 using Domain.Audio;
+using Domain.Settings;
 
 namespace Application.Settings;
 
@@ -14,4 +15,5 @@ public sealed record AppSettingsDto(
 	bool FillerWordRemovalEnabled,
 	string CaptureDeviceId = AudioDevice.SystemDefault,
 	bool AuditLogEnabled = false,
-	bool SetupCompleted = false);
+	bool SetupCompleted = false,
+	ThemePreference ThemePreference = ThemePreference.System);

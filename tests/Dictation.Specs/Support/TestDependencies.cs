@@ -251,6 +251,11 @@ public static class TestDependencies
 		// The live rendered states are smoke + manual.
 		services.AddScoped<SidebarThemeDriver>();
 
+		// Theme switcher (WHISPER-121): the real ThemeViewModel over the real Mediator pipeline (GetSettings /
+		// UpdateSettings) and a round-tripping settings store, so choosing a theme persists and survives a
+		// reload. Applying it to WPF's ThemeMode is the App's job and a manual remainder.
+		services.AddScoped<ThemeSwitcherDriver>();
+
 		// View resolution convention (WHISPER-92): inspects the documented standard, the shell's implicit
 		// DataTemplates (against the real registered sections), and the code-behind discipline; the commit
 		// decision that moved out of the device view's code-behind is driven via the picker driver.

@@ -27,6 +27,10 @@ public sealed record AppSettings
 	// onboarding flow is shown until the user finishes it. Defaulted so existing sites need not change.
 	public bool SetupCompleted { get; }
 
+	// The chosen app theme (WHISPER-121): System (follow the OS), Light, or Dark. Defaulted to System so
+	// existing sites need not change and a fresh install follows the OS preference.
+	public ThemePreference ThemePreference { get; }
+
 	public AppSettings(
 		string modelId,
 		HotkeyBinding hotkey,
@@ -34,7 +38,8 @@ public sealed record AppSettings
 		bool fillerWordRemovalEnabled,
 		string captureDeviceId = AudioDevice.SystemDefault,
 		bool auditLogEnabled = false,
-		bool setupCompleted = false)
+		bool setupCompleted = false,
+		ThemePreference themePreference = ThemePreference.System)
 	{
 		if (string.IsNullOrWhiteSpace(modelId))
 		{
@@ -63,6 +68,7 @@ public sealed record AppSettings
 		CaptureDeviceId = captureDeviceId;
 		AuditLogEnabled = auditLogEnabled;
 		SetupCompleted = setupCompleted;
+		ThemePreference = themePreference;
 	}
 
 	// The settings a fresh install starts from.

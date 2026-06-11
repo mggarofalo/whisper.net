@@ -6,6 +6,7 @@
 
 using AwesomeAssertions;
 using Logic.AppManagement.Shell;
+using Mediator;
 using NSubstitute;
 using Xunit;
 
@@ -20,12 +21,17 @@ public sealed class ShellViewModelSelectionTests
 		return navigation;
 	}
 
+	// The shell loads the theme switcher on construction; a substitute mediator (no settings) is harmless
+	// here — these tests only assert the navigation selected-key behavior.
+	private static ShellViewModel NewShell(INavigationService navigation) =>
+		new(navigation, new ThemeViewModel(Substitute.For<IMediator>()));
+
 	[Fact]
 	public void Opens_on_the_first_section_and_marks_it_selected()
 	{
 		INavigationService navigation = NavWith("Home", "Model", "History");
 
-		ShellViewModel viewModel = new(navigation);
+		ShellViewModel viewModel = NewShell(navigation);
 
 		viewModel.CurrentSectionKey.Should().Be("Home");
 		navigation.Received().NavigateTo("Home");
@@ -35,7 +41,7 @@ public sealed class ShellViewModelSelectionTests
 	public void Navigating_updates_the_selected_section_key()
 	{
 		INavigationService navigation = NavWith("Home", "Model", "History");
-		ShellViewModel viewModel = new(navigation);
+		ShellViewModel viewModel = NewShell(navigation);
 
 		viewModel.NavigateCommand.Execute("History");
 
@@ -46,7 +52,7 @@ public sealed class ShellViewModelSelectionTests
 	[Fact]
 	public void No_section_selected_when_none_are_registered()
 	{
-		ShellViewModel viewModel = new(NavWith());
+		ShellViewModel viewModel = NewShell(NavWith());
 
 		viewModel.CurrentSectionKey.Should().BeNull();
 	}

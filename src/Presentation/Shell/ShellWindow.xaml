@@ -40,25 +40,37 @@
 
     <DockPanel>
         <!-- Navigation region: one button per registered section, dispatching the shell's NavigateCommand.
-             A dark navigation rail (WHISPER-103): background and the templated nav buttons come from the
-             shared theme brushes in ShellResources.xaml — no color hex lives in this view — and every state
-             (default, hover, pressed, keyboard-focus, selected) meets WCAG AA contrast. -->
+             The rail follows the active theme and highlights the selected tab with the system accent
+             (WHISPER-103/122); a theme switcher is pinned to its footer (WHISPER-121). -->
         <Border DockPanel.Dock="Left"
                 Width="160"
                 Background="{StaticResource NavSidebarBackgroundBrush}">
-            <ItemsControl ItemsSource="{Binding Sections}"
-                          Margin="8">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <Button Content="{Binding}"
-                                Style="{StaticResource NavButtonStyle}"
-                                Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                CommandParameter="{Binding}"
-                                AutomationProperties.Name="{Binding}"
-                                Margin="0,2" />
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+            <DockPanel>
+                <!-- Theme switcher (WHISPER-121): System / Light / Dark, persisted and applied live. -->
+                <StackPanel DockPanel.Dock="Bottom"
+                            Margin="8,4,8,8">
+                    <TextBlock Text="Theme"
+                               Opacity="0.7"
+                               FontSize="11"
+                               Margin="4,0,0,2" />
+                    <ComboBox ItemsSource="{Binding Theme.Themes}"
+                              SelectedItem="{Binding Theme.SelectedTheme, Mode=TwoWay}"
+                              AutomationProperties.Name="Theme" />
+                </StackPanel>
+                <ItemsControl ItemsSource="{Binding Sections}"
+                              Margin="8">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Content="{Binding}"
+                                    Style="{StaticResource NavButtonStyle}"
+                                    Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                    CommandParameter="{Binding}"
+                                    AutomationProperties.Name="{Binding}"
+                                    Margin="0,2" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </DockPanel>
         </Border>
 
         <!-- Content region: the active feature view-model, rendered via the data templates above. -->
