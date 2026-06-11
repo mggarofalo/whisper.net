@@ -72,7 +72,7 @@ public sealed class SettingsViewModelObservabilityTests
 		nameof(ModelViewModel) => new ModelViewModel(Substitute.For<IMediator>()),
 		nameof(AudioDeviceViewModel) => new AudioDeviceViewModel(Substitute.For<IMediator>()),
 		nameof(HotkeyViewModel) => new HotkeyViewModel(Substitute.For<IMediator>(), new CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger()),
-		nameof(HistoryViewModel) => new HistoryViewModel(Substitute.For<IMediator>(), Substitute.For<IUiCollectionSynchronizer>()),
+		nameof(HistoryViewModel) => new HistoryViewModel(Substitute.For<IMediator>(), new CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger(), Substitute.For<IUiCollectionSynchronizer>()),
 		nameof(StatsViewModel) => new StatsViewModel(Substitute.For<IMediator>()),
 		_ => throw new ArgumentOutOfRangeException(nameof(viewModelName), viewModelName, "unknown view-model"),
 	};

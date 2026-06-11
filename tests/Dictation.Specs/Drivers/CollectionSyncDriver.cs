@@ -7,6 +7,7 @@
 using Application.History;
 using Application.Ports;
 using AwesomeAssertions;
+using CommunityToolkit.Mvvm.Messaging;
 using Dictation.Specs.Support;
 using Domain.History;
 using Logic.AppManagement.Shell;
@@ -18,6 +19,7 @@ namespace Dictation.Specs.Drivers;
 public sealed class CollectionSyncDriver(
 	IMediator mediator,
 	IHistoryStore store,
+	IMessenger messenger,
 	RecordingCollectionSynchronizer synchronizer) : IDisposable
 {
 	private static readonly string RepositoryRoot = FindRepositoryRoot();
@@ -29,7 +31,7 @@ public sealed class CollectionSyncDriver(
 	private Task? _lockHolder;
 	private Task? _pendingAdd;
 
-	public void CreateHistoryViewModel() => _viewModel = new HistoryViewModel(mediator, synchronizer);
+	public void CreateHistoryViewModel() => _viewModel = new HistoryViewModel(mediator, messenger, synchronizer);
 
 	public void AssertEntriesRegisteredWithGate()
 	{

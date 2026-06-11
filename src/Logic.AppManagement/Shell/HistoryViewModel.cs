@@ -4,13 +4,16 @@
 // empty state, not an error, and HasMorePages (WHISPER-110) tells the view when Load More can no
 // longer produce anything so the control disables instead of silently no-opping. Built on CommunityToolkit.Mvvm and WPF-free so the behavior is driven for
 // real in specs; the thin view binds to it. Entries is a UiBoundCollection registered through the
-// collection-sync seam at construction (WHISPER-91), so a future off-UI-thread mutation (live feed,
-// background load) binds safely instead of throwing.
+// collection-sync seam at construction (WHISPER-91), so an off-UI-thread mutation (the WHISPER-114 live
+// feed, published from the record path) binds safely instead of throwing. The live feed is subscribed
+// only while the section is active (WHISPER-94 messenger discipline) and prepends the new entry without
+// re-querying, so the user's browsed page and scroll position are preserved.
 
 using Application.History;
 using Application.Ports;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using Mediator;
 
 namespace Logic.AppManagement.Shell;
@@ -20,11 +23,36 @@ public sealed partial class HistoryViewModel : FeatureViewModel
 	private const int PageSize = 50;
 
 	private readonly IMediator _mediator;
+	private readonly IMessenger _messenger;
 
-	public HistoryViewModel(IMediator mediator, IUiCollectionSynchronizer synchronizer)
+	public HistoryViewModel(IMediator mediator, IMessenger messenger, IUiCollectionSynchronizer synchronizer)
 	{
 		_mediator = mediator;
+		_messenger = messenger;
 		synchronizer.Enable(Entries);
+	}
+
+	// Live history feed (WHISPER-114): subscribe to the "transcription recorded" message only while this
+	// section is active (WHISPER-94), so an inactive cached instance holds no subscription. The shared
+	// WeakReferenceMessenger means even a missed deactivation could not root this cached view-model.
+	protected override void OnActivated() =>
+		_messenger.Register<HistoryViewModel, TranscriptionRecordedMessage>(this, (recipient, message) => recipient.OnTranscriptionRecorded(message.Entry));
+
+	protected override void OnDeactivated() => _messenger.UnregisterAll(this);
+
+	// Prepend a newly recorded entry so it shows newest-first without a Refresh, leaving the already-loaded
+	// pages and scroll position untouched. The collection-sync seam makes this safe off the UI thread (the
+	// record path publishes from a background thread). Dedupe by id so a redelivery (or an entry already on
+	// the loaded page) never doubles up.
+	private void OnTranscriptionRecorded(TranscriptEntryDto entry)
+	{
+		if (Entries.Any(existing => existing.Id == entry.Id))
+		{
+			return;
+		}
+
+		Entries.Insert(0, entry);
+		IsEmpty = false;
 	}
 
 	/// <summary>The loaded history entries, newest first, growing as further pages are browsed.</summary>
@@ -85,6 +113,13 @@ public sealed partial class HistoryViewModel : FeatureViewModel
 		Page++;
 		foreach (TranscriptEntryDto entry in next)
 		{
+			// A live-prepended entry (WHISPER-114) shifts the store's page boundary by one, so the next page
+			// can repeat an entry already shown; skip any id already loaded so the list never doubles up.
+			if (Entries.Any(existing => existing.Id == entry.Id))
+			{
+				continue;
+			}
+
 			Entries.Add(entry);
 		}
 
