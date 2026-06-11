@@ -55,7 +55,10 @@
              state-relevant action on the right (Download / Cancel / Select), never a permanent button
              block. Wrapped in a ScrollViewer (WHISPER-104) so the list scrolls; the header above is
              DockPanel.Dock="Top" and stays fixed. -->
-        <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <!-- Right padding reserves room for the vertical scrollbar (the Fluent overlay scrollbar otherwise
+             draws over the row's Download/Select buttons at the right edge) — WHISPER-120. -->
+        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                      Padding="0,0,16,0">
             <ItemsControl ItemsSource="{Binding Models}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
