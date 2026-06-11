@@ -13,6 +13,14 @@ public sealed class ManualTimeProvider : TimeProvider
 	private readonly List<ManualTimer> _timers = [];
 	private DateTimeOffset _now = DateTimeOffset.UnixEpoch;
 
+	// Default UTC so day-bucketing tests that don't care about the zone (WHISPER-116) are deterministic and
+	// match the prior UTC behavior; tests that pin a non-UTC zone call SetLocalTimeZone.
+	private TimeZoneInfo _localTimeZone = TimeZoneInfo.Utc;
+
+	public override TimeZoneInfo LocalTimeZone => _localTimeZone;
+
+	public void SetLocalTimeZone(TimeZoneInfo zone) => _localTimeZone = zone;
+
 	public override DateTimeOffset GetUtcNow()
 	{
 		lock (_gate)

@@ -1,6 +1,9 @@
 // Aggregates transcript history into usage statistics: total words dictated (summed from each entry's
 // word count) and total sessions (one per entry). The derived time-saved estimate is computed inside
-// UsageStats. Deterministic and total — empty history yields zeroed stats and never throws.
+// UsageStats. Deterministic and total — empty history yields zeroed stats and never throws. The per-day
+// breakdown (Summarize) buckets by the user's LOCAL calendar day via the injected TimeProvider's
+// LocalTimeZone (WHISPER-116) — not the UTC day — so a dictation just before local midnight lands on the
+// correct day; the zone is injected (not the ambient ToLocalTime) so it stays deterministic in tests.
 
 using Application.Ports;
 using Domain.History;
@@ -8,7 +11,7 @@ using Domain.Statistics;
 
 namespace Logic.AppManagement;
 
-public sealed class UsageStatsCalculator : IUsageStatsCalculator
+public sealed class UsageStatsCalculator(TimeProvider timeProvider) : IUsageStatsCalculator
 {
 	public UsageStats Aggregate(IReadOnlyList<TranscriptEntry> entries)
 	{
@@ -41,9 +44,12 @@ public sealed class UsageStatsCalculator : IUsageStatsCalculator
 			totalAudio += entry.AudioDuration;
 		}
 
-		// Group by the calendar day the transcription happened on (in its own offset), most-recent day first.
+		// Group by the user's LOCAL calendar day (WHISPER-116), most-recent day first. The entry's offset is
+		// UTC, so converting through the injected LocalTimeZone is what puts a late-evening dictation on the
+		// right local day instead of tomorrow's UTC day.
+		TimeZoneInfo zone = timeProvider.LocalTimeZone;
 		List<DailyUsage> byDay = entries
-			.GroupBy(entry => DateOnly.FromDateTime(entry.CreatedAt.Date))
+			.GroupBy(entry => DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(entry.CreatedAt, zone).Date))
 			.Select(group => new DailyUsage(
 				group.Key,
 				group.Count(),

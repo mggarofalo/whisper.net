@@ -333,6 +333,11 @@ public static class TestDependencies
 		// over the real SQLite store against a private temp database, so it owns its own wiring.
 		services.AddScoped<HistoryRetentionDriver>();
 
+		// Usage stats local-day bucketing (WHISPER-116): the driver exercises the real UsageStatsCalculator
+		// with a pinned non-UTC zone, so two dictations sharing a UTC day but straddling local midnight fall
+		// on different local days deterministically.
+		services.AddScoped<UsageStatsLocalDayDriver>();
+
 		// Usage stats recording + aggregation (WHISPER-24): the driver builds its own real Mediator pipeline
 		// and Logic aggregator over the real SQLite store against a private temp database, so a restart truly
 		// reloads persisted measures from disk.

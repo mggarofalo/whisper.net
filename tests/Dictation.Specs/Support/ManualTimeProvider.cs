@@ -13,6 +13,14 @@ public sealed class ManualTimeProvider : TimeProvider
 	private readonly List<ManualTimer> _timers = [];
 	private DateTimeOffset _now = DateTimeOffset.UnixEpoch;
 
+	// Default UTC so scenarios that don't pin a zone stay deterministic (and match the prior UTC
+	// day-bucketing); the WHISPER-116 driver pins a non-UTC zone via SetLocalTimeZone.
+	private TimeZoneInfo _localTimeZone = TimeZoneInfo.Utc;
+
+	public override TimeZoneInfo LocalTimeZone => _localTimeZone;
+
+	public void SetLocalTimeZone(TimeZoneInfo zone) => _localTimeZone = zone;
+
 	public override DateTimeOffset GetUtcNow()
 	{
 		lock (_gate)

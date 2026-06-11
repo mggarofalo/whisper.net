@@ -6,6 +6,7 @@ using AwesomeAssertions;
 using Domain.History;
 using Domain.Statistics;
 using Logic.AppManagement;
+using Logic.AppManagement.Tests.Support;
 using Xunit;
 
 namespace Logic.AppManagement.Tests;
@@ -13,7 +14,10 @@ namespace Logic.AppManagement.Tests;
 public sealed class UsageStatsCalculatorTests
 {
 	private static readonly DateTimeOffset When = new(2026, 1, 1, 10, 0, 0, TimeSpan.Zero);
-	private readonly UsageStatsCalculator _calculator = new();
+
+	// Aggregate (all-time totals) is zone-independent; the injected provider is only used by the per-day
+	// Summarize path.
+	private readonly UsageStatsCalculator _calculator = new(new ManualTimeProvider());
 
 	// Builds an entry whose word count is exactly `words`.
 	private static TranscriptEntry EntryWith(int words) =>
