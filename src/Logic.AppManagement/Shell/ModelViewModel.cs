@@ -1,16 +1,17 @@
 // The shell's model picker (WHISPER-27, growing the WHISPER-19 representative section): it lists the
-// catalog models with speed/accuracy/memory ratings, lets the user download one with live progress, and
+// catalog models with speed/accuracy/memory ratings, lets the user download them with live progress, and
 // switches the active model on selection. It depends on nothing but IMediator — no ports, no handlers,
-// no Infrastructure: it loads via ListModelsQuery, downloads via DownloadModelCommand (forwarding a
-// progress sink it owns), and activates via SwitchActiveModelCommand. Selecting an un-downloaded model
-// downloads it first and only activates on success. Built on CommunityToolkit.Mvvm and WPF-free so the
-// behavior is driven for real in specs; the thin WPF view binds to it.
+// no Infrastructure: it loads via ListModelsQuery and activates via SwitchActiveModelCommand. Downloads
+// are owned per row (WHISPER-107): each ModelItemViewModel has its own Download/Cancel command and state,
+// so several models can download concurrently; this section coordinates only the list and the active
+// model. Selecting an un-downloaded model drives that row's download first and only activates on success.
+// Built on CommunityToolkit.Mvvm and WPF-free so the behavior is driven for real in specs; the thin WPF
+// view binds to it.
 
 using System.Collections.ObjectModel;
 using Application.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Domain.Models;
 using Mediator;
 
 namespace Logic.AppManagement.Shell;
@@ -28,16 +29,12 @@ public sealed partial class ModelViewModel : FeatureViewModel
 	[ObservableProperty]
 	private string? _activeModelId;
 
-	/// <summary>A user-facing error from the last download attempt, or null when none failed. The view shows
-	/// this natively rather than crashing on a failed download (WHISPER-81).</summary>
-	[ObservableProperty]
-	private string? _downloadError;
-
 	// Auto-load the catalog on first activation (WHISPER-108): the section opens populated, the cached
 	// instance does not re-query on later tab switches, and Refresh stays the manual re-query.
 	protected override IAsyncRelayCommand FirstActivationLoadCommand => LoadCommand;
 
-	// Load the model list through Mediator and project each into a row; mark which one is active.
+	// Load the model list through Mediator and project each into a row; mark which one is active. Each row
+	// gets the mediator so it can own its download (WHISPER-107).
 	[RelayCommand]
 	private async Task LoadAsync(CancellationToken cancellationToken)
 	{
@@ -46,14 +43,15 @@ public sealed partial class ModelViewModel : FeatureViewModel
 		Models.Clear();
 		foreach (ModelListItemDto item in items)
 		{
-			Models.Add(new ModelItemViewModel(item));
+			Models.Add(new ModelItemViewModel(item, _mediator));
 		}
 
 		ActiveModelId = items.FirstOrDefault(item => item.IsActive)?.Id;
 	}
 
-	// Selecting a model activates it. If it is not yet downloaded, download it first (with progress) and
-	// only switch on a successful download — a failed download leaves the active model unchanged.
+	// Selecting a model activates it. If it is not yet downloaded, drive that row's own download first (with
+	// progress) and only switch on a successful download — a failed download leaves the active model
+	// unchanged. The download lives on the row (WHISPER-107); this only coordinates the active switch.
 	[RelayCommand]
 	private async Task SelectAsync(ModelItemViewModel? item, CancellationToken cancellationToken)
 	{
@@ -64,7 +62,21 @@ public sealed partial class ModelViewModel : FeatureViewModel
 
 		if (!item.IsDownloaded)
 		{
-			await DownloadAsync(item, cancellationToken);
+			// Drive the row's own download — but never via ExecuteAsync while it is already running. For a
+			// cancelable command ExecuteAsync cancels the in-flight token and restarts, which would silently
+			// kill a download the user just started from the row's own Download button (then click Select on
+			// the same row). If one is already in flight, await it instead of restarting it (WHISPER-107).
+			// (SelectCommand is not itself cancelable, so its cancellationToken never fires; the download owns
+			// its own cancellation via the row's Cancel button.)
+			if (item.DownloadCommand.IsRunning)
+			{
+				await (item.DownloadCommand.ExecutionTask ?? Task.CompletedTask);
+			}
+			else
+			{
+				await item.DownloadCommand.ExecuteAsync(null);
+			}
+
 			if (item.DownloadState != ModelDownloadState.Succeeded)
 			{
 				return;
@@ -75,49 +87,6 @@ public sealed partial class ModelViewModel : FeatureViewModel
 		SetActive(item.Id);
 	}
 
-	// Download a model through Mediator, surfacing live determinate progress and a terminal success/failure
-	// state. The command is async end-to-end (no .Result/.Wait, so the UI thread never blocks), cannot run
-	// concurrently with itself, and is cancelable: IncludeCancelCommand generates DownloadCancelCommand,
-	// which cancels this invocation's token. IsRunning (on DownloadCommand) drives the progress bar and
-	// button enablement in the view.
-	[RelayCommand(IncludeCancelCommand = true, AllowConcurrentExecutions = false)]
-	private async Task DownloadAsync(ModelItemViewModel? item, CancellationToken cancellationToken)
-	{
-		if (item is null)
-		{
-			return;
-		}
-
-		DownloadError = null;
-		item.DownloadPercent = 0;
-		item.DownloadState = ModelDownloadState.InProgress;
-
-		// A synchronous progress sink: it updates the row inline as each report arrives. WPF marshals the
-		// scalar property change to the UI thread; the specs see deterministic, ordered updates.
-		IProgress<ModelDownloadProgress> progress = new InlineProgress(report =>
-			item.DownloadPercent = report.Percent ?? item.DownloadPercent);
-
-		try
-		{
-			await _mediator.Send(new DownloadModelCommand(item.Id, progress), cancellationToken);
-			item.DownloadPercent = 100;
-			item.IsDownloaded = true;
-			item.DownloadState = ModelDownloadState.Succeeded;
-		}
-		catch (OperationCanceledException)
-		{
-			// The user cancelled: reset the row to its pre-download state, leaving no half-finished progress.
-			item.DownloadPercent = 0;
-			item.DownloadState = ModelDownloadState.NotStarted;
-		}
-		catch (Exception)
-		{
-			// A failed download is a terminal state the view surfaces natively; the active model is unchanged.
-			item.DownloadState = ModelDownloadState.Failed;
-			DownloadError = $"Couldn't download '{item.DisplayName}'. Check your connection and try again.";
-		}
-	}
-
 	private void SetActive(string modelId)
 	{
 		ActiveModelId = modelId;
@@ -125,12 +94,5 @@ public sealed partial class ModelViewModel : FeatureViewModel
 		{
 			model.IsActive = string.Equals(model.Id, modelId, StringComparison.OrdinalIgnoreCase);
 		}
-	}
-
-	// Reports progress synchronously (inline with each Report call), unlike Progress<T> which marshals to
-	// a captured context and would race the specs' assertions.
-	private sealed class InlineProgress(Action<ModelDownloadProgress> report) : IProgress<ModelDownloadProgress>
-	{
-		public void Report(ModelDownloadProgress value) => report(value);
 	}
 }

@@ -21,6 +21,7 @@ public sealed class ModelDownloadDriver
 	private readonly TaskCompletionSource _gate = new();
 
 	private Task? _download;
+	private string? _downloadingId;
 
 	public ModelDownloadDriver(IMediator mediator, IModelDownloader downloader, IModelLifecycle lifecycle)
 	{
@@ -48,19 +49,27 @@ public sealed class ModelDownloadDriver
 			.Returns<ValueTask<string>>(_ => throw new InvalidOperationException("download failed"));
 
 	// Begin the download but do not await it — it is in flight (blocked) so the test can inspect the running
-	// state and then cancel.
-	public void StartDownload(string id) => _download = _viewModel.DownloadCommand.ExecuteAsync(Item(id));
+	// state and then cancel. The download is owned by the row (WHISPER-107).
+	public void StartDownload(string id)
+	{
+		_downloadingId = id;
+		_download = Item(id).DownloadCommand.ExecuteAsync(null);
+	}
 
 	// Download synchronously to its (failed) terminal state.
-	public Task DownloadToCompletion(string id) => _viewModel.DownloadCommand.ExecuteAsync(Item(id));
+	public Task DownloadToCompletion(string id)
+	{
+		_downloadingId = id;
+		return Item(id).DownloadCommand.ExecuteAsync(null);
+	}
 
-	public void Cancel() => _viewModel.DownloadCancelCommand.Execute(null);
+	public void Cancel() => Item(_downloadingId!).DownloadCancelCommand.Execute(null);
 
 	public async Task AwaitDownload() => await _download!;
 
 	public void AssertRunningWithProgress(string id)
 	{
-		_viewModel.DownloadCommand.IsRunning.Should().BeTrue("the download is in flight");
+		Item(id).DownloadCommand.IsRunning.Should().BeTrue("the download is in flight");
 		Item(id).DownloadState.Should().Be(ModelDownloadState.InProgress);
 		Item(id).DownloadPercent.Should().Be(50d, "determinate progress is reported live");
 	}
@@ -72,7 +81,7 @@ public sealed class ModelDownloadDriver
 		_viewModel.ActiveModelId.Should().NotBe(id);
 	}
 
-	public void AssertNativeErrorShown() => _viewModel.DownloadError.Should().NotBeNullOrEmpty();
+	public void AssertNativeErrorShown() => Item(_downloadingId!).DownloadError.Should().NotBeNullOrEmpty();
 
 	public void AssertNotActivated(string id)
 	{
