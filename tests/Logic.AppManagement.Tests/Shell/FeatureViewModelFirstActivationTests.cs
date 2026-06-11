@@ -2,7 +2,8 @@
 // scenarios. Pins the base mechanism on a minimal counting view-model: the hook command runs exactly
 // once per cached instance (first activation only — re-activation must never re-query), it runs AFTER
 // OnActivated so a section's live subscriptions exist before its first load, and a section that
-// declares no load (Home; Hotkey keeps its own every-activation trigger, WHISPER-109) activates cleanly.
+// declares no load (the default null hook) activates cleanly. (Home grew its own dashboard load in
+// WHISPER-106, so the no-load case is pinned on a minimal stub here rather than on a real section.)
 
 using AwesomeAssertions;
 using CommunityToolkit.Mvvm.Input;
@@ -51,11 +52,11 @@ public sealed class FeatureViewModelFirstActivationTests
 	[Fact]
 	public void A_section_without_a_load_activates_cleanly()
 	{
-		HomeViewModel home = new();
+		PlainViewModel plain = new();
 
-		home.OnNavigatedTo();
+		plain.OnNavigatedTo();
 
-		home.IsActive.Should().BeTrue("the null default hook must leave plain sections untouched");
+		plain.IsActive.Should().BeTrue("the null default hook must leave plain sections untouched");
 	}
 
 	// Internal (not private): the ObservableValidator source generator emits assembly-level code that
@@ -82,4 +83,8 @@ public sealed class FeatureViewModelFirstActivationTests
 
 		protected override void OnActivated() => _activated = true;
 	}
+
+	// A section that declares no first-activation load — the default null hook. Stands in for the old
+	// empty Home section (which became a loading dashboard in WHISPER-106).
+	internal sealed class PlainViewModel : FeatureViewModel;
 }

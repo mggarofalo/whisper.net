@@ -304,6 +304,11 @@ public static class TestDependencies
 		// dashboard's totals are genuinely computed by the Application layer.
 		services.AddScoped<StatsDashboardDriver>();
 
+		// Home status dashboard (WHISPER-106): the real HomeViewModel over the real Mediator pipeline
+		// (GetSettings / ListCaptureDevices / GetUsageStats / BrowseHistory) and the faked store/enumerator,
+		// so the landing dashboard surfaces genuinely live status from settings and history.
+		services.AddScoped<HomeDashboardDriver>();
+
 		// Input-permission probe: substituted so the diagnostics hotkey check can be driven (the onboarding
 		// flow that also used it was removed in WHISPER-82; settings is now the single first-run surface).
 		services.AddScoped(_ => Substitute.For<IPermissionProbe>());
