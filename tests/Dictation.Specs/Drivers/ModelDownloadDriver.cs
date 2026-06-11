@@ -27,8 +27,11 @@ public sealed class ModelDownloadDriver
 	{
 		_downloader = downloader;
 
-		// Nothing loaded by default, so ListModels can read a non-null status and mark nothing active.
-		lifecycle.Status.Returns(ModelStatus.Unloaded);
+		// A DIFFERENT model is the loaded/active one, so the model under test here (base.en, which also
+		// happens to be the persisted default) is cleanly not-active — the @WHISPER-81 assertions then mean
+		// "the download did not activate it" rather than colliding with the persisted-active fallback
+		// (WHISPER-118).
+		lifecycle.Status.Returns(new ModelStatus("small.en", ModelState.Ready));
 
 		_viewModel = new ModelViewModel(mediator);
 	}
