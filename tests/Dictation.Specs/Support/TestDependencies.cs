@@ -242,6 +242,11 @@ public static class TestDependencies
 		// ThemeMode.System opt-in and the recorded theming decision. The themed window is smoke-only.
 		services.AddScoped<ThemingDriver>();
 
+		// Sidebar contrast (WHISPER-103): inspects the presentation artifacts to compute WCAG AA contrast
+		// from the actual nav brush colours and assert the sidebar uses shared brushes (no view-local hex).
+		// The live rendered states are smoke + manual.
+		services.AddScoped<SidebarThemeDriver>();
+
 		// View resolution convention (WHISPER-92): inspects the documented standard, the shell's implicit
 		// DataTemplates (against the real registered sections), and the code-behind discipline; the commit
 		// decision that moved out of the device view's code-behind is driven via the picker driver.

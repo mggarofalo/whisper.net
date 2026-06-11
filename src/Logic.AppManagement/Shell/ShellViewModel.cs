@@ -22,7 +22,9 @@ public sealed partial class ShellViewModel : ObservableObject
 		// Open the shell on its first registered section so the window always has content on show.
 		if (_navigation.Sections.Count > 0)
 		{
-			_navigation.NavigateTo(_navigation.Sections[0]);
+			string first = _navigation.Sections[0];
+			_navigation.NavigateTo(first);
+			CurrentSectionKey = first;
 		}
 	}
 
@@ -30,12 +32,21 @@ public sealed partial class ShellViewModel : ObservableObject
 	[ObservableProperty]
 	private object? _currentViewModel;
 
+	/// <summary>The key of the section currently shown, so the nav region can mark the active item
+	/// (WHISPER-103). NavigateTo is only ever driven from here, so tracking the key here is authoritative.</summary>
+	[ObservableProperty]
+	private string? _currentSectionKey;
+
 	/// <summary>The section keys the nav region renders, in registration order.</summary>
 	public IReadOnlyList<string> Sections => _navigation.Sections;
 
 	/// <summary>Navigates the shell to the named section; bound to the nav region's buttons.</summary>
 	[RelayCommand]
-	private void Navigate(string sectionKey) => _navigation.NavigateTo(sectionKey);
+	private void Navigate(string sectionKey)
+	{
+		_navigation.NavigateTo(sectionKey);
+		CurrentSectionKey = sectionKey;
+	}
 
 	private void OnCurrentViewModelChanged(object? sender, EventArgs e) =>
 		CurrentViewModel = _navigation.CurrentViewModel;
