@@ -94,13 +94,22 @@ public sealed class LevelOverlay : IDisposable
 			FontSize = 12,
 			Margin = new Thickness(8, 0, 0, 0),
 			VerticalAlignment = VerticalAlignment.Center,
-			MinWidth = 32,
+			// A fixed slot (not MinWidth) so the elapsed text never overflows and the layout width is
+			// deterministic; centred so the time reads tidily and is never clipped (WHISPER-124).
+			Width = 44,
+			TextAlignment = TextAlignment.Center,
 		};
 		elapsed.SetBinding(TextBlock.TextProperty, new Binding(nameof(LevelOverlayViewModel.ElapsedText)));
 		elapsed.SetBinding(UIElement.VisibilityProperty,
 			new Binding(nameof(LevelOverlayViewModel.State)) { Converter = new RecordingToVisibilityConverter() });
 
-		StackPanel row = new() { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+		// Centre the pill's content so it stays balanced when the elapsed time collapses (transcribing/error).
+		StackPanel row = new()
+		{
+			Orientation = Orientation.Horizontal,
+			VerticalAlignment = VerticalAlignment.Center,
+			HorizontalAlignment = HorizontalAlignment.Center,
+		};
 		row.Children.Add(stateDot);
 		row.Children.Add(meter);
 		row.Children.Add(elapsed);
@@ -110,6 +119,10 @@ public sealed class LevelOverlay : IDisposable
 			Background = new SolidColorBrush(Color.FromArgb(170, 16, 16, 16)),
 			CornerRadius = new CornerRadius(8),
 			Padding = new Thickness(14, 10, 14, 10),
+			// A deterministic width so the SizeToContent window adopts a stable size and the rounded pill is
+			// never cut off on the right (WHISPER-124): dot(10+8) + meter(120) + elapsed(8+44) + padding(28)
+			// = 218; 224 leaves a little slack. Stays within the compact-pill footprint (WHISPER-102 AC4).
+			Width = 224,
 			Child = row,
 		};
 	}

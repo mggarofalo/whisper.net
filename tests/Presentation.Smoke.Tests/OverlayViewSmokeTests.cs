@@ -39,7 +39,9 @@ public sealed class OverlayViewSmokeTests
 			"path the WPF-free specs cannot see (WHISPER-96 AC1)");
 
 		// The footprint stays a compact pill (WHISPER-102 AC4): the feedback fits within the original bounds.
-		content.DesiredSize.Width.Should().BeInRange(160, 230, "the overlay keeps its compact width");
+		// The width is now a deterministic 224 (WHISPER-124) so the SizeToContent window can't under-size and
+		// clip the right edge; still a compact pill, not a panel.
+		content.DesiredSize.Width.Should().BeInRange(160, 240, "the overlay keeps its compact width");
 		content.DesiredSize.Height.Should().BeInRange(20, 48, "the overlay stays a compact pill, not a panel");
 	});
 
