@@ -4,6 +4,7 @@
 // substituting only the Infrastructure ports (transcriber, injectors). Assertions are made at those
 // port boundaries plus the orchestrator's own pipeline stage and structured log.
 
+using System;
 using Application.Ports;
 using AwesomeAssertions;
 using Dictation.Specs.Support;
@@ -24,9 +25,16 @@ public sealed class DictationOrchestratorDriver(
 	ManualTimeProvider time,
 	AudioBufferingOptions bufferingOptions)
 {
-	// One buffer of (silent) interleaved stereo samples at the fake device's 48 kHz/2ch default — its
-	// content is irrelevant while the transcriber is faked; it only has to flow through capture.
-	private static float[] SpokenFrame() => new float[960];
+	// One buffer of interleaved stereo samples at the fake device's 48 kHz/2ch default. Filled with
+	// speech-level energy (not silence) so the captured clip survives the no-speech gate (WHISPER-125) —
+	// the trimmer collapses all-silence to empty and the pipeline would skip transcription. The exact
+	// content is otherwise irrelevant while the transcriber is faked; it only has to flow through capture.
+	private static float[] SpokenFrame()
+	{
+		float[] frame = new float[960];
+		Array.Fill(frame, 0.1f);
+		return frame;
+	}
 
 	public void ModelWillTranscribeTo(string text) =>
 		transcriber

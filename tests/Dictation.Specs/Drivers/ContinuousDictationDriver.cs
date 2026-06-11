@@ -4,6 +4,7 @@
 // full utterance, and asserts the orchestrator auto-restarts recording — or, on Esc, exits to idle without
 // restarting. Only the Infrastructure ports (transcriber, injectors) are faked.
 
+using System;
 using Application.Ports;
 using AwesomeAssertions;
 using Dictation.Specs.Support;
@@ -22,7 +23,14 @@ public sealed class ContinuousDictationDriver(
 	ManualTimeProvider time,
 	AudioBufferingOptions bufferingOptions)
 {
-	private static float[] SpokenFrame() => new float[960];
+	// Speech-level energy (not silence) so the captured clip passes the no-speech gate (WHISPER-125); the
+	// content is otherwise irrelevant while the transcriber is faked.
+	private static float[] SpokenFrame()
+	{
+		float[] frame = new float[960];
+		Array.Fill(frame, 0.1f);
+		return frame;
+	}
 
 	// An active continuous-dictation session: the mode is on and the user is recording the first utterance.
 	public void EnterActiveContinuousMode()

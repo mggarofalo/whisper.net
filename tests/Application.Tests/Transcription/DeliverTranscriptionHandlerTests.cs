@@ -140,4 +140,20 @@ public sealed class DeliverTranscriptionHandlerTests
 		_pasteInjector.DidNotReceive().Inject(Arg.Any<string>());
 		_integrityProbe.DidNotReceive().CompareForegroundToCurrent();
 	}
+
+	[Fact]
+	public async Task Skips_transcription_entirely_when_the_clip_has_no_speech()
+	{
+		// The trimmer collapses an all-silence clip to empty (WHISPER-112); feeding that to Whisper makes it
+		// hallucinate a phrase (WHISPER-125), so the handler must not call the transcriber at all.
+		_silenceTrimmer.Trim(Arg.Any<AudioClip>()).Returns(AudioClip.OneSecondOfSilence() with { Samples = [] });
+
+		DeliveryResult result = await Deliver();
+
+		Assert.False(result.Delivered);
+		Assert.Equal(DeliveryBlock.None, result.Block);
+		await _transcriber.DidNotReceive().TranscribeAsync(Arg.Any<AudioClip>(), Arg.Any<CancellationToken>());
+		_typingInjector.DidNotReceive().Inject(Arg.Any<string>());
+		_integrityProbe.DidNotReceive().CompareForegroundToCurrent();
+	}
 }
