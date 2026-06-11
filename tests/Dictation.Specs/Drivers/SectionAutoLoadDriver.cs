@@ -88,7 +88,10 @@ public sealed class SectionAutoLoadDriver
 	{
 		for (int i = 0; i < 2; i++)
 		{
-			_shell.NavigateCommand.Execute("Home");
+			// Switch away to a section that does NOT touch the history store (Model reads catalog/cache/
+			// settings), so this counts only the section-under-test's queries — the Home dashboard now
+			// re-queries history on every activation (WHISPER-119) and would otherwise inflate the count.
+			_shell.NavigateCommand.Execute("Model");
 			_shell.NavigateCommand.Execute(section);
 		}
 

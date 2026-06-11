@@ -24,6 +24,16 @@ public sealed class HomeDashboardSteps(HomeDashboardDriver driver)
 	[When(@"the Home section is opened")]
 	public Task WhenOpened() => driver.OpenDashboard();
 
+	[When(@"a transcription ""(.*)"" is recorded and the Home section is reopened")]
+	public async Task WhenRecordedAndReopened(string text)
+	{
+		driver.ANewTranscriptionIsRecorded(text);
+		await driver.ReopenDashboard();
+	}
+
+	[Then(@"the most recent dashboard transcription is ""(.*)""")]
+	public void ThenMostRecent(string text) => driver.AssertMostRecentIs(text);
+
 	[Then(@"the dashboard shows ""(.*)"" as the active model")]
 	public void ThenModel(string modelId) => driver.AssertActiveModel(modelId);
 

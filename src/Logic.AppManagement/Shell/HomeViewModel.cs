@@ -63,9 +63,12 @@ public sealed partial class HomeViewModel : FeatureViewModel
 	[ObservableProperty]
 	private bool _isEmpty;
 
-	// Auto-load the overview on first activation (WHISPER-108): the dashboard opens populated, the cached
-	// instance does not re-query on later tab switches, and Refresh stays the manual re-query.
-	protected override IAsyncRelayCommand FirstActivationLoadCommand => RefreshCommand;
+	// Refresh the overview on EVERY activation (WHISPER-119). Unlike the data sections — which load once and
+	// keep their browsed page/scroll across tab switches (WHISPER-108) — the dashboard is a live overview,
+	// so opening Home always re-queries settings/usage/history rather than showing a stale snapshot (e.g.
+	// last night's most-recent transcription). RefreshCommand disallows concurrent runs, so a rapid
+	// re-activation while a refresh is in flight is a no-op, never a duplicate query.
+	protected override void OnActivated() => RefreshCommand.Execute(null);
 
 	// Compose the overview from existing read queries; Refresh re-runs it so the dashboard reflects new
 	// activity. Awaiting each query keeps the UI thread free.
