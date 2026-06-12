@@ -118,6 +118,11 @@ public sealed class DictationOrchestrator
 		// because it is async; StopAsync owns its error handling, so a faulted task never escapes unobserved.
 		activation.RecordingStartRequested += (_, _) => Start();
 		activation.RecordingStopRequested += (_, _) => _ = StopAsync();
+
+		// The binding was reconfigured while a recording was live (WHISPER-126): discard the in-flight
+		// capture and return to Idle. Without this the recording would be orphaned — the old chord can no
+		// longer stop it — wedging the pipeline so the next start is a no-op and no overlay ever appears.
+		activation.RecordingCancelRequested += (_, _) => Cancel();
 	}
 
 	/// <summary>The current pipeline stage. Idle at rest.</summary>

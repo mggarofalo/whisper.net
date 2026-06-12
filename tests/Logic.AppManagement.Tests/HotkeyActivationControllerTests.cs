@@ -17,11 +17,13 @@ public sealed class HotkeyActivationControllerTests
 	private readonly HotkeyActivationController _controller = new();
 	private int _starts;
 	private int _stops;
+	private int _cancels;
 
 	public HotkeyActivationControllerTests()
 	{
 		_controller.RecordingStartRequested += (_, _) => _starts++;
 		_controller.RecordingStopRequested += (_, _) => _stops++;
+		_controller.RecordingCancelRequested += (_, _) => _cancels++;
 	}
 
 	[Fact]
@@ -117,6 +119,64 @@ public sealed class HotkeyActivationControllerTests
 		FullPressF13();
 		_starts.Should().Be(1);
 		_stops.Should().Be(0);
+	}
+
+	// WHISPER-126: a reconfigure that lands while a chord is actively driving a recording must not silently
+	// drop it (that orphans the recording in the orchestrator). It asks the live recording to cancel —
+	// discarding, not stopping-and-transcribing — so the pipeline can return to a clean Idle.
+	[Fact]
+	public void Reconfiguring_while_push_to_talk_is_recording_requests_a_cancel()
+	{
+		Configure("Ctrl+Win", ActivationMode.PushToTalk);
+		Hold(KeyboardKey.Control, KeyModifiers.Control);
+		Hold(KeyboardKey.Win, KeyModifiers.Control | KeyModifiers.Win); // chord satisfied -> recording
+		_starts.Should().Be(1);
+
+		Configure("Ctrl+Alt+J", ActivationMode.PushToTalk);
+
+		_cancels.Should().Be(1);
+		_stops.Should().Be(0, "a reconfigured-out recording is discarded, not transcribed");
+	}
+
+	[Fact]
+	public void Reconfiguring_while_a_toggle_is_engaged_requests_a_cancel()
+	{
+		Configure("F13", ActivationMode.Toggle);
+		FullPressF13(); // engages the toggle -> recording
+		_starts.Should().Be(1);
+
+		Configure("F14", ActivationMode.Toggle);
+
+		_cancels.Should().Be(1);
+		_stops.Should().Be(0);
+	}
+
+	[Fact]
+	public void Reconfiguring_while_idle_does_not_request_a_cancel()
+	{
+		Configure("Ctrl+Win", ActivationMode.PushToTalk);
+
+		Configure("Ctrl+Alt+J", ActivationMode.PushToTalk);
+
+		_cancels.Should().Be(0);
+	}
+
+	[Fact]
+	public void After_a_reconfigure_under_a_live_recording_the_new_chord_starts_a_fresh_recording()
+	{
+		Configure("Ctrl+Win", ActivationMode.PushToTalk);
+		Hold(KeyboardKey.Control, KeyModifiers.Control);
+		Hold(KeyboardKey.Win, KeyModifiers.Control | KeyModifiers.Win);
+		Configure("Ctrl+Alt+J", ActivationMode.PushToTalk); // cancels the orphan
+		_cancels.Should().Be(1);
+
+		// The new chord drives a clean new recording (the controller is not left half-latched).
+		Hold(KeyboardKey.Control, KeyModifiers.Control);
+		Hold(KeyboardKey.Alt, KeyModifiers.Control | KeyModifiers.Alt);
+		Hold(KeyboardKey.J, KeyModifiers.Control | KeyModifiers.Alt);
+
+		_starts.Should().Be(2);
+		_cancels.Should().Be(1);
 	}
 
 	private void Configure(string binding, ActivationMode mode) =>

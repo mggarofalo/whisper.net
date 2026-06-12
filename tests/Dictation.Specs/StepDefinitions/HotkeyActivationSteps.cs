@@ -28,9 +28,15 @@ public sealed class HotkeyActivationSteps(HotkeyActivationDriver driver)
 	[When(@"the key ""(.*)"" is pressed and released")]
 	public void WhenTheKeyIsPressedAndReleased(string key) => driver.PressUnrelatedKey(key);
 
+	[When(@"the hotkey is reassigned to ""(.*)""")]
+	public void WhenTheHotkeyIsReassignedTo(string binding) => driver.Reassign(binding, ActivationMode.PushToTalk);
+
 	[Then(@"recording start is requested (\d+) times?")]
 	public void ThenRecordingStartIsRequested(int times) => driver.AssertStartRequested(times);
 
 	[Then(@"recording stop is requested (\d+) times?")]
 	public void ThenRecordingStopIsRequested(int times) => driver.AssertStopRequested(times);
+
+	[Then(@"recording cancel is requested (\d+) times?")]
+	public void ThenRecordingCancelIsRequested(int times) => driver.AssertCancelRequested(times);
 }

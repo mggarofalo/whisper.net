@@ -47,3 +47,15 @@ Feature: Hotkey activation modes
     Given push-to-talk mode with the binding "Ctrl+Alt+Space"
     When the chord "Ctrl+Alt+D" is held
     Then recording start is requested 0 times
+
+  # WHISPER-126: reassigning the hotkey while a recording is live must cancel that recording (so the
+  # orchestrator returns to Idle) rather than silently drop it — otherwise the pipeline wedges and the
+  # overlay never appears for any later dictation. A cancel discards the capture; it is not a stop.
+  @WHISPER-126
+  Scenario: Reassigning the hotkey while recording cancels the in-flight recording
+    Given push-to-talk mode with the binding "Ctrl+Win"
+    When the chord "Ctrl+Win" is held
+    Then recording start is requested 1 time
+    When the hotkey is reassigned to "Ctrl+Alt+J"
+    Then recording cancel is requested 1 time
+    And recording stop is requested 0 times

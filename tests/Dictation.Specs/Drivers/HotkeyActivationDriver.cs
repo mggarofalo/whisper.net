@@ -17,12 +17,14 @@ public sealed class HotkeyActivationDriver
 	private KeyModifiers _held;
 	private int _starts;
 	private int _stops;
+	private int _cancels;
 
 	public HotkeyActivationDriver(HotkeyActivationController controller)
 	{
 		_controller = controller;
 		_controller.RecordingStartRequested += (_, _) => _starts++;
 		_controller.RecordingStopRequested += (_, _) => _stops++;
+		_controller.RecordingCancelRequested += (_, _) => _cancels++;
 	}
 
 	public void Configure(string binding, ActivationMode mode)
@@ -30,6 +32,11 @@ public sealed class HotkeyActivationDriver
 		_controller.Configure(HotkeyBinding.Parse(binding), mode);
 		_held = KeyModifiers.None;
 	}
+
+	// Reassign the binding without resetting the live modifier set we are tracking — modelling the user
+	// assigning a new hotkey while the old chord is still physically held (WHISPER-126).
+	public void Reassign(string binding, ActivationMode mode) =>
+		_controller.Configure(HotkeyBinding.Parse(binding), mode);
 
 	// Press each token of the chord in order, accumulating modifiers into the live set just like the
 	// real listener so the controller sees consistent (key, modifiers) snapshots.
@@ -72,6 +79,8 @@ public sealed class HotkeyActivationDriver
 	public void AssertStartRequested(int times) => _starts.Should().Be(times);
 
 	public void AssertStopRequested(int times) => _stops.Should().Be(times);
+
+	public void AssertCancelRequested(int times) => _cancels.Should().Be(times);
 
 	// --- test-only parsing ---
 
