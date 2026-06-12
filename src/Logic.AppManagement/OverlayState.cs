@@ -15,4 +15,8 @@ public enum OverlayState
 
 	/// <summary>The last dictation failed (capture or pipeline error); shown briefly, then dismissed.</summary>
 	Error,
+
+	/// <summary>The dictation model is warming up (WHISPER-129); shown while the warm-up runs, until it
+	/// clears. A background state — any active recording/transcribing/error takes precedence over it.</summary>
+	Warming,
 }

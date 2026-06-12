@@ -9,11 +9,13 @@
 
 using Application.Audio;
 using Application.History;
+using Application.Models;
 using Application.Ports;
 using Application.Settings;
 using Application.Statistics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using Domain.Audio;
 using Mediator;
 
@@ -25,10 +27,12 @@ public sealed partial class HomeViewModel : FeatureViewModel
 	private const int RecentCount = 5;
 
 	private readonly IMediator _mediator;
+	private readonly IMessenger _messenger;
 
-	public HomeViewModel(IMediator mediator, IUiCollectionSynchronizer synchronizer)
+	public HomeViewModel(IMediator mediator, IMessenger messenger, IUiCollectionSynchronizer synchronizer)
 	{
 		_mediator = mediator;
+		_messenger = messenger;
 		synchronizer.Enable(Recent);
 	}
 
@@ -63,12 +67,25 @@ public sealed partial class HomeViewModel : FeatureViewModel
 	[ObservableProperty]
 	private bool _isEmpty;
 
+	/// <summary>True while the dictation model is warming up (WHISPER-129); the dashboard shows a status line
+	/// until the app-wide warm-up cleared event lifts it.</summary>
+	[ObservableProperty]
+	private bool _isModelWarming;
+
 	// Refresh the overview on EVERY activation (WHISPER-119). Unlike the data sections — which load once and
 	// keep their browsed page/scroll across tab switches (WHISPER-108) — the dashboard is a live overview,
 	// so opening Home always re-queries settings/usage/history rather than showing a stale snapshot (e.g.
 	// last night's most-recent transcription). RefreshCommand disallows concurrent runs, so a rapid
-	// re-activation while a refresh is in flight is a no-op, never a duplicate query.
-	protected override void OnActivated() => RefreshCommand.Execute(null);
+	// re-activation while a refresh is in flight is a no-op, never a duplicate query. The model warm-up
+	// status (WHISPER-129) is reflected only while Home is active (WHISPER-94 messenger discipline): the
+	// app-wide ModelWarmupChangedMessage drives the status line and its cleared event lifts it.
+	protected override void OnActivated()
+	{
+		_messenger.Register<HomeViewModel, ModelWarmupChangedMessage>(this, static (recipient, message) => recipient.IsModelWarming = message.IsWarming);
+		RefreshCommand.Execute(null);
+	}
+
+	protected override void OnDeactivated() => _messenger.UnregisterAll(this);
 
 	// Compose the overview from existing read queries; Refresh re-runs it so the dashboard reflects new
 	// activity. Awaiting each query keeps the UI thread free.

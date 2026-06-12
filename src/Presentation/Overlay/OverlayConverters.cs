@@ -12,12 +12,14 @@ using Logic.AppManagement;
 
 namespace Presentation.Overlay;
 
-// The state dot's colour: green while recording, blue while transcribing, red on error.
+// The state dot's colour: green while recording, blue while transcribing, red on error, amber while the
+// model is warming up (WHISPER-129).
 public sealed class OverlayStateToBrushConverter : IValueConverter
 {
 	private static readonly Brush Recording = Frozen(Color.FromRgb(0x4C, 0xAF, 0x50));
 	private static readonly Brush Transcribing = Frozen(Color.FromRgb(0x42, 0xA5, 0xF5));
 	private static readonly Brush Error = Frozen(Color.FromRgb(0xE5, 0x39, 0x35));
+	private static readonly Brush Warming = Frozen(Color.FromRgb(0xFB, 0x8C, 0x00));
 
 	public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
 		value is OverlayState state
@@ -25,6 +27,7 @@ public sealed class OverlayStateToBrushConverter : IValueConverter
 			{
 				OverlayState.Transcribing => Transcribing,
 				OverlayState.Error => Error,
+				OverlayState.Warming => Warming,
 				_ => Recording,
 			}
 			: Recording;
@@ -79,9 +82,32 @@ public sealed class OverlayStateToNameConverter : IValueConverter
 			{
 				OverlayState.Transcribing => "Transcribing",
 				OverlayState.Error => "Dictation error",
+				OverlayState.Warming => "Warming up the model",
 				_ => "Recording",
 			}
 			: "Recording";
+
+	public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+		throw new NotSupportedException();
+}
+
+// The warming label is shown only while the model is warming up (WHISPER-129) — it carries the on-screen
+// "Warming up…" text, so the cue is not colour-only and the pill reads at a glance.
+public sealed class WarmingToVisibilityConverter : IValueConverter
+{
+	public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+		value is OverlayState.Warming ? Visibility.Visible : Visibility.Collapsed;
+
+	public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+		throw new NotSupportedException();
+}
+
+// The level meter is hidden while warming (WHISPER-129) — there is no input level to show before a
+// recording — so the pill collapses to the dot + the "Warming up…" label; it is shown for every other state.
+public sealed class MeterVisibilityConverter : IValueConverter
+{
+	public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+		value is OverlayState.Warming ? Visibility.Collapsed : Visibility.Visible;
 
 	public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
 		throw new NotSupportedException();

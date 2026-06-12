@@ -9,6 +9,7 @@
 // after a model change is fast too, not only the first after launch. Singleton dependencies only, so the
 // Generic Host owns it directly; registered only in the production composition (the specs fake ITranscriber).
 
+using Application.Models;
 using Application.Ports;
 using Application.Settings;
 using CommunityToolkit.Mvvm.Messaging;
@@ -72,6 +73,11 @@ public sealed class ModelWarmupHostedService(
 
 	private async Task WarmAsync(string reason)
 	{
+		// Announce the warm-up so the UI can show a "warming up" cue (WHISPER-129). The matching clear is in
+		// the finally, so warming is lifted app-wide whether the warm-up succeeds, fails, or is cancelled —
+		// no surface is ever left stuck "warming". A discrete model warm-up is the realistic case (the load
+		// gate inside the transcriber serializes overlapping warm-ups), so a plain started/ended pair is enough.
+		messenger.Send(new ModelWarmupChangedMessage(true));
 		try
 		{
 			await transcriber.PreloadAsync(_cts.Token).ConfigureAwait(false);
@@ -86,6 +92,10 @@ public sealed class ModelWarmupHostedService(
 			// Best-effort: typically no usable model yet (fresh install / onboarding) or a transient load
 			// failure. Dictation still works — the first utterance just loads the model lazily as before.
 			logger.LogInformation(ex, "Model warm-up ({Reason}) did not complete; the model will load lazily on first dictation.", reason);
+		}
+		finally
+		{
+			messenger.Send(new ModelWarmupChangedMessage(false));
 		}
 	}
 }

@@ -4,6 +4,7 @@
 // re-warms; an unrelated settings change does not; and a warm-up failure is swallowed (never crashes the
 // host). The warm-up runs on the thread pool, so the assertions await the recorded call count.
 
+using Application.Models;
 using Application.Ports;
 using Application.Settings;
 using AwesomeAssertions;
@@ -101,5 +102,83 @@ public sealed class ModelWarmupHostedServiceTests
 		await start.Should().NotThrowAsync("warm-up is best-effort and runs in the background");
 		(await WaitForPreloadsAsync(1)).Should().BeTrue("the warm-up was attempted");
 		await service.StopAsync(CancellationToken.None);
+	}
+
+	// --- WHISPER-129: the app-wide warm-up status signal ---
+
+	// Records the IsWarming flags published on the shared messenger, in order. The recipient is kept alive
+	// by the test (the weak messenger would otherwise drop it), and the list is guarded because the warm-up
+	// publishes from the thread pool.
+	private List<bool> RecordWarmings(out object recipient)
+	{
+		List<bool> warmings = [];
+		object keepAlive = new();
+		recipient = keepAlive;
+		_messenger.Register<object, ModelWarmupChangedMessage>(keepAlive, (_, message) =>
+		{
+			lock (warmings)
+			{
+				warmings.Add(message.IsWarming);
+			}
+		});
+		return warmings;
+	}
+
+	private static async Task<bool> WaitForWarmingsAsync(List<bool> warmings, int expected)
+	{
+		for (int i = 0; i < 200; i++)
+		{
+			lock (warmings)
+			{
+				if (warmings.Count >= expected)
+				{
+					return true;
+				}
+			}
+
+			await Task.Delay(10);
+		}
+
+		return false;
+	}
+
+	[Fact]
+	public async Task Broadcasts_warming_started_then_cleared_on_startup()
+	{
+		List<bool> warmings = RecordWarmings(out object recipient);
+
+		ModelWarmupHostedService service = NewService();
+		await service.StartAsync(CancellationToken.None);
+
+		(await WaitForWarmingsAsync(warmings, 2)).Should().BeTrue("warm-up announces it started, then clears the status");
+		await service.StopAsync(CancellationToken.None);
+
+		lock (warmings)
+		{
+			warmings.Should().Equal(new[] { true, false }, "the overlay/dashboard light up while warming, then the cleared event lifts them");
+		}
+
+		GC.KeepAlive(recipient);
+	}
+
+	[Fact]
+	public async Task Always_clears_the_warming_status_even_when_the_warm_up_fails()
+	{
+		_transcriber.PreloadAsync(Arg.Any<CancellationToken>())
+			.Returns(_ => new ValueTask(Task.FromException(new ModelNotFoundException("none"))));
+		List<bool> warmings = RecordWarmings(out object recipient);
+
+		ModelWarmupHostedService service = NewService();
+		await service.StartAsync(CancellationToken.None);
+
+		(await WaitForWarmingsAsync(warmings, 2)).Should().BeTrue("a failed warm-up must still clear the status so no surface is stuck warming");
+		await service.StopAsync(CancellationToken.None);
+
+		lock (warmings)
+		{
+			warmings.Should().Equal(new[] { true, false });
+		}
+
+		GC.KeepAlive(recipient);
 	}
 }

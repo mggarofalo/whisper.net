@@ -10,6 +10,7 @@
 // already raises).
 
 using Application.Dictation;
+using Application.Models;
 using Application.Ports;
 using CommunityToolkit.Mvvm.Messaging;
 using Domain.Recording;
@@ -46,6 +47,11 @@ public sealed class LevelOverlayController : IDisposable
 
 	private DateTimeOffset _recordingStartedAt;
 
+	// The model warm-up signal (WHISPER-129), tracked independently of the recording state: a background
+	// reason to show the pill. Recording/transcribing/error always take precedence; warming only owns the
+	// pill while the pipeline is otherwise at rest.
+	private bool _isWarming;
+
 	public LevelOverlayController(
 		RecordingStateMachine stateMachine,
 		IAudioSource audioSource,
@@ -72,6 +78,10 @@ public sealed class LevelOverlayController : IDisposable
 		_messenger.Register<LevelOverlayController, DictationAtLimitMessage>(this, (recipient, _) => recipient.RaiseNearCap());
 		_messenger.Register<LevelOverlayController, DictationHardLimitStopMessage>(this, (recipient, _) => recipient.RaiseNearCap());
 		_messenger.Register<LevelOverlayController, DictationFailedMessage>(this, (recipient, _) => recipient.RaiseError());
+
+		// Model warm-up (WHISPER-129): the warm-up service broadcasts started/cleared on the same messenger,
+		// so the pill can announce "warming up" until the model is ready. Weak registration; removed on Dispose.
+		_messenger.Register<LevelOverlayController, ModelWarmupChangedMessage>(this, (recipient, message) => recipient.OnWarmupChanged(message.IsWarming));
 	}
 
 	/// <summary>Whether the overlay should be shown — true while recording, transcribing, or briefly on error.</summary>
@@ -158,9 +168,10 @@ public sealed class LevelOverlayController : IDisposable
 		ResetLevel();
 		Elapsed = TimeSpan.Zero;
 		NearCap = false;
-		State = OverlayState.Recording;
-		SetVisible(false);
-		StateChanged?.Invoke(this, EventArgs.Empty);
+
+		// The recording is over; if the model is still warming, the pill stays up showing that instead of
+		// vanishing — otherwise it hides. ShowWarmingOrHide owns the State + visibility for both outcomes.
+		ShowWarmingOrHide();
 	}
 
 	private void OnFrameAvailable(object? sender, AudioFrameAvailableEventArgs e)
@@ -221,10 +232,51 @@ public sealed class LevelOverlayController : IDisposable
 			return;
 		}
 
-		State = OverlayState.Recording;
 		NearCap = false;
 		Elapsed = TimeSpan.Zero;
-		SetVisible(false);
+
+		// The error has run its course; show the warming pill if the model is still warming, otherwise hide.
+		ShowWarmingOrHide();
+	}
+
+	// React to the app-wide warm-up signal (WHISPER-129). Warming is a BACKGROUND cue: if a dictation is
+	// already using the pill (recording/transcribing, or an error on its dismiss timer), just remember the
+	// flag — it is applied when that releases the pill (ReturnToRest / OnErrorDismissed). Otherwise reflect it
+	// now. The "owned by a dictation" test is what is currently on the pill, not the recording state machine:
+	// a failure arrives as a message without a state transition, so the machine can still read "Recording".
+	private void OnWarmupChanged(bool isWarming)
+	{
+		if (_isWarming == isWarming)
+		{
+			return;
+		}
+
+		_isWarming = isWarming;
+
+		if (IsVisible && State is OverlayState.Recording or OverlayState.Transcribing or OverlayState.Error)
+		{
+			return;
+		}
+
+		ShowWarmingOrHide();
+	}
+
+	// Show the warming pill while the model is warming, otherwise return the overlay to its hidden rest state.
+	// Called only when no dictation owns the pill, so it never fights the recording feedback.
+	private void ShowWarmingOrHide()
+	{
+		if (_isWarming)
+		{
+			State = OverlayState.Warming;
+			ResetLevel();
+			SetVisible(true);
+		}
+		else
+		{
+			State = OverlayState.Recording;
+			SetVisible(false);
+		}
+
 		StateChanged?.Invoke(this, EventArgs.Empty);
 	}
 

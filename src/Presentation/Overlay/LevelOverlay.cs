@@ -87,6 +87,10 @@ public sealed class LevelOverlay : IDisposable
 		meter.SetBinding(ProgressBar.ValueProperty, new Binding(nameof(LevelOverlayViewModel.Level)));
 		meter.SetBinding(Control.ForegroundProperty,
 			new Binding(nameof(LevelOverlayViewModel.IsNearCap)) { Converter = new NearCapToBrushConverter() });
+		// Hidden while the model is warming up (WHISPER-129) — there is no input level yet, so the pill
+		// collapses to the dot + the "Warming up…" label; shown for every other state.
+		meter.SetBinding(UIElement.VisibilityProperty,
+			new Binding(nameof(LevelOverlayViewModel.State)) { Converter = new MeterVisibilityConverter() });
 
 		TextBlock elapsed = new()
 		{
@@ -103,6 +107,20 @@ public sealed class LevelOverlay : IDisposable
 		elapsed.SetBinding(UIElement.VisibilityProperty,
 			new Binding(nameof(LevelOverlayViewModel.State)) { Converter = new RecordingToVisibilityConverter() });
 
+		// The warming label (WHISPER-129): the on-screen "Warming up…" text the pill shows while the model
+		// warms, so the cue is not colour-only. Hidden for every other state (the meter/elapsed show then), so
+		// the Recording/Transcribing/Error layouts — and the smoke harness's compact-footprint check — are
+		// unchanged. The dot's automation name already announces "Warming up the model" for screen readers.
+		TextBlock warming = new()
+		{
+			Foreground = Brushes.White,
+			FontSize = 12,
+			VerticalAlignment = VerticalAlignment.Center,
+			Text = "Warming up…",
+		};
+		warming.SetBinding(UIElement.VisibilityProperty,
+			new Binding(nameof(LevelOverlayViewModel.State)) { Converter = new WarmingToVisibilityConverter() });
+
 		// Centre the pill's content so it stays balanced when the elapsed time collapses (transcribing/error).
 		StackPanel row = new()
 		{
@@ -113,6 +131,7 @@ public sealed class LevelOverlay : IDisposable
 		row.Children.Add(stateDot);
 		row.Children.Add(meter);
 		row.Children.Add(elapsed);
+		row.Children.Add(warming);
 
 		return new Border
 		{
