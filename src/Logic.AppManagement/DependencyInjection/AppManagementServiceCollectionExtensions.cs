@@ -149,6 +149,10 @@ public static class AppManagementServiceCollectionExtensions
 		// the activation controller so a real key press drives capture -> transcribe -> deliver.
 		services.AddHostedService<DictationOrchestratorHostedService>();
 
+		// Model warm-up (WHISPER-127): on launch (and on an active-model switch) preload + warm the
+		// dictation model in the background so the first dictation isn't slowed by the cold model load.
+		services.AddHostedService<ModelWarmupHostedService>();
+
 		// Auto-update check (WHISPER-29): on launch, check the release channel in the background (when the
 		// user has opted in). Production-only — the specs drive the update policy directly.
 		services.AddHostedService<AutoUpdateHostedService>();

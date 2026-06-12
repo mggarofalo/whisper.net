@@ -25,6 +25,10 @@ public sealed class WhisperTranscriber(
 	IModelCache cache,
 	IOptions<WhisperOptions> options) : ITranscriber, IAsyncDisposable
 {
+	// A tenth of a second of digital silence — enough to force the native init (shader compilation /
+	// model upload) during warm-up so the first real utterance pays none of that lazy-init cost (WHISPER-127).
+	private static readonly AudioClip WarmupClip = new(new float[1_600], 16_000);
+
 	private readonly WhisperOptions _options = options.Value;
 	private readonly SemaphoreSlim _loadGate = new(1, 1);
 	private IWhisperEngine? _engine;
@@ -50,6 +54,24 @@ public sealed class WhisperTranscriber(
 		}
 
 		return new TranscriptionResult(text.ToString().Trim(), segments);
+	}
+
+	// Warm-up (WHISPER-127): load the active model now and run one throwaway inference over silence so the
+	// FIRST real dictation isn't slowed by the cold load + native init. Reuses the same load path as a real
+	// transcription, so a missing/absent model surfaces ModelNotFoundException for the caller (the startup
+	// warm-up service) to swallow — warm-up is best-effort and must never crash the host or block startup.
+	public async ValueTask PreloadAsync(CancellationToken cancellationToken)
+	{
+		IWhisperEngine engine = await EnsureEngineLoadedAsync(cancellationToken).ConfigureAwait(false);
+
+		// Drain the warm-up inference; its output is discarded. DecodingOptions.Default keeps warm-up
+		// independent of the live custom vocabulary, which conditions only real transcriptions.
+		await foreach (WhisperSegment _ in engine
+			.TranscribeAsync(WarmupClip.Samples, WarmupClip.SampleRate, DecodingOptions.Default, cancellationToken)
+			.ConfigureAwait(false))
+		{
+			// Warm-up output is intentionally ignored.
+		}
 	}
 
 	// Loads the ACTIVE model on first use and caches the engine; reloads when the active model changes. The

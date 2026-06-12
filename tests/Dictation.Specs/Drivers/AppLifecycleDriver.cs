@@ -59,6 +59,10 @@ public sealed class AppLifecycleDriver : IDisposable
 		builder.Services.AddSingleton(Substitute.For<IAudioSource>());
 		builder.Services.AddSingleton(Substitute.For<IAudioFeedback>());
 
+		// The model warm-up hosted service (WHISPER-127) preloads the dictation model via ITranscriber; a
+		// substitute that no-ops keeps the host composing without a real model or native library.
+		builder.Services.AddSingleton(Substitute.For<ITranscriber>());
+
 		// The host also runs the auto-update check hosted service (WHISPER-29); supply a stub source so the
 		// host composes without any network. This driver asserts the hosted-service lifecycle, not updates.
 		builder.Services.AddSingleton(Substitute.For<IUpdateSource>());
