@@ -4,6 +4,7 @@
 // stops. The audio source is an NSubstitute fake whose FrameAvailable the test raises directly.
 
 using Application.Dictation;
+using Application.Models;
 using Application.Ports;
 using AwesomeAssertions;
 using CommunityToolkit.Mvvm.Messaging;
@@ -290,5 +291,59 @@ public sealed class LevelOverlayControllerTests
 		_time.Advance(TimeSpan.FromSeconds(5));
 
 		_controller.IsVisible.Should().BeFalse();
+	}
+
+	// --- WHISPER-129: model warm-up status ---
+
+	[Fact]
+	public void A_warm_up_started_message_shows_the_overlay_in_the_warming_state()
+	{
+		_messenger.Send(new ModelWarmupChangedMessage(true));
+
+		_controller.IsVisible.Should().BeTrue();
+		_controller.State.Should().Be(OverlayState.Warming);
+	}
+
+	[Fact]
+	public void The_warm_up_cleared_message_hides_the_overlay()
+	{
+		_messenger.Send(new ModelWarmupChangedMessage(true));
+		_messenger.Send(new ModelWarmupChangedMessage(false));
+
+		_controller.IsVisible.Should().BeFalse();
+	}
+
+	[Fact]
+	public void A_recording_takes_precedence_over_a_concurrent_warm_up()
+	{
+		_messenger.Send(new ModelWarmupChangedMessage(true));   // the pill is showing "warming up"
+		_stateMachine.RequestStart();                           // a recording begins mid warm-up
+
+		_controller.State.Should().Be(OverlayState.Recording, "an active recording owns the pill, not the warm-up cue");
+		_controller.IsVisible.Should().BeTrue();
+	}
+
+	[Fact]
+	public void The_warming_pill_returns_after_a_recording_when_the_warm_up_is_still_running()
+	{
+		_messenger.Send(new ModelWarmupChangedMessage(true));
+		_stateMachine.RequestStart();
+		_stateMachine.RequestStop();
+		_stateMachine.CompleteTranscription();   // back to idle, but the warm-up never cleared
+
+		_controller.State.Should().Be(OverlayState.Warming);
+		_controller.IsVisible.Should().BeTrue();
+	}
+
+	[Fact]
+	public void A_warm_up_that_clears_during_a_recording_leaves_nothing_lingering_after_it()
+	{
+		_stateMachine.RequestStart();
+		_messenger.Send(new ModelWarmupChangedMessage(true));
+		_messenger.Send(new ModelWarmupChangedMessage(false));  // warm-up finished while recording
+		_stateMachine.RequestStop();
+		_stateMachine.CompleteTranscription();
+
+		_controller.IsVisible.Should().BeFalse("the warm-up cleared while recording, so no warming pill lingers after it");
 	}
 }

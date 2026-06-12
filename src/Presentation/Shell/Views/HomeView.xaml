@@ -15,6 +15,19 @@
                        FontSize="18"
                        FontWeight="SemiBold" />
 
+            <!-- Model warm-up status (WHISPER-129): a status line shown while the dictation model is warming
+                 up, lifted by the app-wide cleared event so it never lingers. Amber to match the overlay cue. -->
+            <Border Background="#1FFB8C00"
+                    BorderBrush="#FB8C00"
+                    BorderThickness="1"
+                    CornerRadius="4"
+                    Padding="10,6"
+                    Margin="0,12,0,0"
+                    Visibility="{Binding IsModelWarming, Converter={StaticResource BoolToVisibility}}">
+                <TextBlock Text="Warming up the model so your first dictation is fast…"
+                           TextWrapping="Wrap" />
+            </Border>
+
             <!-- Current configuration at a glance (WHISPER-106): live from settings. -->
             <Grid Margin="0,16,0,0">
                 <Grid.ColumnDefinitions>

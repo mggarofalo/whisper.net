@@ -68,7 +68,7 @@ public sealed class SettingsViewModelObservabilityTests
 	// notification and base type, neither of which needs a real Mediator round-trip.
 	private static object Create(string viewModelName) => viewModelName switch
 	{
-		nameof(HomeViewModel) => new HomeViewModel(Substitute.For<IMediator>(), Substitute.For<IUiCollectionSynchronizer>()),
+		nameof(HomeViewModel) => new HomeViewModel(Substitute.For<IMediator>(), new CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger(), Substitute.For<IUiCollectionSynchronizer>()),
 		nameof(ModelViewModel) => new ModelViewModel(Substitute.For<IMediator>()),
 		nameof(AudioDeviceViewModel) => new AudioDeviceViewModel(Substitute.For<IMediator>()),
 		nameof(HotkeyViewModel) => new HotkeyViewModel(Substitute.For<IMediator>(), new CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger()),

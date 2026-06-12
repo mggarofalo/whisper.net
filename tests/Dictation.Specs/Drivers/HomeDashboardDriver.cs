@@ -8,6 +8,7 @@
 
 using Application.Ports;
 using AwesomeAssertions;
+using CommunityToolkit.Mvvm.Messaging;
 using Dictation.Specs.Support;
 using Domain.Audio;
 using Domain.History;
@@ -27,12 +28,12 @@ public sealed class HomeDashboardDriver
 	private readonly IHistoryStore _history;
 	private readonly FakeAudioDeviceEnumerator _devices;
 
-	public HomeDashboardDriver(IMediator mediator, ISettingsStore settings, IHistoryStore history, FakeAudioDeviceEnumerator devices, IUiCollectionSynchronizer synchronizer)
+	public HomeDashboardDriver(IMediator mediator, IMessenger messenger, ISettingsStore settings, IHistoryStore history, FakeAudioDeviceEnumerator devices, IUiCollectionSynchronizer synchronizer)
 	{
 		_settings = settings;
 		_history = history;
 		_devices = devices;
-		_viewModel = new HomeViewModel(mediator, synchronizer);
+		_viewModel = new HomeViewModel(mediator, messenger, synchronizer);
 	}
 
 	public void GivenSettings(string modelId, string deviceName)

@@ -322,6 +322,11 @@ public static class TestDependencies
 		// so the landing dashboard surfaces genuinely live status from settings and history.
 		services.AddScoped<HomeDashboardDriver>();
 
+		// Model warm-up status (WHISPER-129): the real LevelOverlayController + real HomeViewModel over the
+		// shared scenario messenger, so a single app-wide warm-up event is proven to light both surfaces and
+		// a second to clear them — the same messenger the warm-up service publishes on.
+		services.AddScoped<ModelWarmupStatusDriver>();
+
 		// Input-permission probe: substituted so the diagnostics hotkey check can be driven (the onboarding
 		// flow that also used it was removed in WHISPER-82; settings is now the single first-run surface).
 		services.AddScoped(_ => Substitute.For<IPermissionProbe>());
