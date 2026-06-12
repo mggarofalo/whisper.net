@@ -526,6 +526,31 @@ public sealed class DictationOrchestratorTests
 	}
 
 	[Fact]
+	public void Reassigning_the_hotkey_mid_recording_returns_to_idle_so_the_next_dictation_records()
+	{
+		// WHISPER-126: the live hotkey starts a recording, then the binding is reconfigured under it (the
+		// user assigns a new hotkey while the old one is still held / armed). The orchestrator must discard
+		// the orphaned capture and return to Idle — otherwise it stays stuck Recording, the next start is a
+		// no-op, and the overlay never appears for any later dictation.
+		DictationOrchestrator sut = CreateSut();
+		_activation.Configure(HotkeyBinding.FromKeys(KeyModifiers.None, KeyboardKey.F13), ActivationMode.PushToTalk);
+		_activation.HandleKeyDown(KeyboardKey.F13, KeyModifiers.None); // chord satisfied -> recording
+		sut.Stage.Should().Be(DictationStage.Recording);
+
+		// Reassign the hotkey while the recording is live.
+		_activation.Configure(HotkeyBinding.FromKeys(KeyModifiers.Control, KeyboardKey.J), ActivationMode.PushToTalk);
+
+		sut.Stage.Should().Be(DictationStage.Idle);
+		_stateMachine.State.Should().Be(RecordingState.Idle);
+		_mediator.DidNotReceive().Send(Arg.Any<DeliverTranscriptionCommand>(), Arg.Any<CancellationToken>());
+
+		// The new hotkey now drives a fresh recording — the pipeline is not wedged.
+		_activation.HandleKeyDown(KeyboardKey.Control, KeyModifiers.Control);
+		_activation.HandleKeyDown(KeyboardKey.J, KeyModifiers.Control);
+		sut.Stage.Should().Be(DictationStage.Recording);
+	}
+
+	[Fact]
 	public async Task Continuous_mode_auto_restarts_recording_after_a_delivery()
 	{
 		DictationOrchestrator sut = CreateSut();
