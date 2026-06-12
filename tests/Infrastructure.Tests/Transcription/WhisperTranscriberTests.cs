@@ -213,6 +213,47 @@ public sealed class WhisperTranscriberTests : IDisposable
 	}
 
 	[Fact]
+	public async Task Preload_loads_the_model_and_runs_a_warm_up_inference()
+	{
+		// WHISPER-127: warm-up loads the model and runs one throwaway inference so the first real dictation
+		// pays no cold-load cost. It is independent of the live custom vocabulary (warm-up uses defaults).
+		FakeWhisperEngineFactory factory = new(new WhisperSegment("x", TimeSpan.Zero, TimeSpan.Zero, 1f));
+		await using WhisperTranscriber transcriber = CreateTranscriber(factory, ExistingModelFile(), vocabulary: ["Reqnroll"]);
+
+		await transcriber.PreloadAsync(CancellationToken.None);
+
+		factory.CreateCount.Should().Be(1);
+		factory.LastDecodingOptions.Should().Be(DecodingOptions.Default);
+	}
+
+	[Fact]
+	public async Task Preload_then_transcribe_reuses_the_warmed_engine_without_a_cold_load()
+	{
+		// WHISPER-127: the whole point — the first real dictation after warm-up reuses the loaded engine.
+		FakeWhisperEngineFactory factory = new(new WhisperSegment("hi", TimeSpan.Zero, TimeSpan.Zero, 1f));
+		await using WhisperTranscriber transcriber = CreateTranscriber(factory, ExistingModelFile());
+
+		await transcriber.PreloadAsync(CancellationToken.None);
+		TranscriptionResult result = await transcriber.TranscribeAsync(Clip(), CancellationToken.None);
+
+		factory.CreateCount.Should().Be(1);
+		result.Text.Should().Be("hi");
+	}
+
+	[Fact]
+	public async Task Preload_raises_a_typed_error_when_no_model_is_available()
+	{
+		// A fresh install has no model yet; warm-up surfaces the same typed error a transcription would, for
+		// the startup warm-up service to swallow.
+		FakeWhisperEngineFactory factory = new();
+		await using WhisperTranscriber transcriber = CreateTranscriber(factory, modelPath: string.Empty);
+
+		Func<Task> act = async () => await transcriber.PreloadAsync(CancellationToken.None);
+
+		await act.Should().ThrowAsync<ModelNotFoundException>();
+	}
+
+	[Fact]
 	public async Task Honors_cancellation()
 	{
 		FakeWhisperEngineFactory factory = new(new WhisperSegment("x", TimeSpan.Zero, TimeSpan.Zero, 1f));
