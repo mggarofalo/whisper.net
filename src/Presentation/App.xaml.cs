@@ -120,6 +120,14 @@ public partial class App
 		IHostApplicationLifetime lifetime = _host.Services.GetRequiredService<IHostApplicationLifetime>();
 		lifetime.ApplicationStopping.Register(() => Dispatcher.Invoke(ShutdownApplication));
 
+		// Subscribe the overlay controller to the app-wide signals BEFORE the host starts (WHISPER-131). It is
+		// a lazily-resolved singleton, and the model warm-up hosted service broadcasts ModelWarmupChangedMessage
+		// during _host.Start() below. Resolved (as it was) only when the overlay window is created after Start,
+		// it would miss that first "warming" broadcast — the messenger does not replay — so the warming pill
+		// never appeared. Forcing its construction here makes the subscription live before any hosted service
+		// runs; new LevelOverlay(...) reuses this same singleton instance.
+		_host.Services.GetRequiredService<LevelOverlayController>();
+
 		// Start the host: every IHostedService (the hotkey listener today) starts now. No StartupUri and
 		// no window — the process runs tray-resident.
 		_host.Start();
