@@ -1,4 +1,4 @@
-// Verifies the Generic Host composition (WHISPER-57): a host built from the per-layer registration
+// Verifies the Generic Host composition: a host built from the per-layer registration
 // extensions resolves the Mediator that dispatches handlers, and Serilog's minimum level is honored
 // from configuration (proving the layered config -> logging path). The host uses the exact same
 // AddWhisperServices / AddSerilogLogging extensions the WPF app calls.
@@ -41,7 +41,7 @@ public sealed class HostCompositionTests
 		Assert.NotNull(scope.ServiceProvider.GetService<IMediator>());
 	}
 
-	// WHISPER-7 AC6: the WASAPI capture port is registered by the Infrastructure layer and resolvable
+	// The WASAPI capture port is registered by the Infrastructure layer and resolvable
 	// from the production composition (constructing it must not require a real device).
 	[Fact]
 	public void Resolves_the_wasapi_audio_capture_port_from_infrastructure()
@@ -53,7 +53,7 @@ public sealed class HostCompositionTests
 		Assert.IsType<WasapiAudioSource>(source);
 	}
 
-	// WHISPER-31: the Silero VAD port is registered by Infrastructure and resolvable from the
+	// The Silero VAD port is registered by Infrastructure and resolvable from the
 	// production composition (the ONNX model loads lazily, so resolution needs no asset present).
 	[Fact]
 	public void Resolves_the_silero_vad_port_from_infrastructure()
@@ -65,7 +65,7 @@ public sealed class HostCompositionTests
 		Assert.IsType<SileroVad>(vad);
 	}
 
-	// WHISPER-13 AC6: enumeration and the default-device notification client are wired through the
+	// Enumeration and the default-device notification client are wired through the
 	// Infrastructure DI extension (both create their NAudio enumerator lazily, so resolution is safe).
 	[Fact]
 	public void Resolves_the_audio_device_enumeration_and_watcher_from_infrastructure()
@@ -76,7 +76,7 @@ public sealed class HostCompositionTests
 		Assert.NotNull(host.Services.GetService<IDefaultDeviceWatcher>());
 	}
 
-	// WHISPER-10 AC2: the global hotkey listener is registered by Infrastructure and resolvable from the
+	// The global hotkey listener is registered by Infrastructure and resolvable from the
 	// production composition (constructing the SharpHook hook is deferred-native, so resolution is safe).
 	[Fact]
 	public void Resolves_the_global_hotkey_listener_from_infrastructure()
@@ -88,7 +88,7 @@ public sealed class HostCompositionTests
 		Assert.IsType<EventLoopHotkeyListener>(listener);
 	}
 
-	// WHISPER-12 AC1/AC3: the long-lived background components are registered as IHostedService so the
+	// The long-lived background components are registered as IHostedService so the
 	// Generic Host owns their lifetime. The global hotkey listener is the first such component; resolving
 	// the hosted-service set must surface it (constructing it installs no OS hook — Start does that).
 	[Fact]
@@ -101,7 +101,7 @@ public sealed class HostCompositionTests
 		Assert.Contains(hostedServices, service => service is HotkeyListenerHostedService);
 	}
 
-	// WHISPER-11 AC1: the SQLite-backed settings and history stores are wired through the Infrastructure DI
+	// The SQLite-backed settings and history stores are wired through the Infrastructure DI
 	// extension (constructing them opens no database — the schema is initialized lazily on first use).
 	[Fact]
 	public void Resolves_the_sqlite_backed_persistence_ports_from_infrastructure()
@@ -113,7 +113,7 @@ public sealed class HostCompositionTests
 		Assert.IsType<SqliteAuditLog>(host.Services.GetRequiredService<IAuditLog>());
 	}
 
-	// WHISPER-11 AC2: the database file defaults to a per-user application-data path when not configured.
+	// The database file defaults to a per-user application-data path when not configured.
 	[Fact]
 	public void Defaults_the_database_path_to_the_per_user_app_data_location()
 	{

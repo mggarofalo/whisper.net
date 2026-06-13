@@ -1,4 +1,4 @@
-// Drives the @WHISPER-129 model warm-up status scenarios. It proves the feature's core promise — that ONE
+// Drives the model warm-up status scenarios. It proves the feature's core promise — that ONE
 // app-wide event lights up every surface and a second one clears them all — by wiring the REAL
 // LevelOverlayController and the REAL HomeViewModel to the SAME scenario-scoped messenger the warm-up
 // service publishes on, then publishing the warm-up started/cleared signals exactly as the service does.
@@ -28,7 +28,7 @@ public sealed class ModelWarmupStatusDriver : IDisposable
 		_messenger = messenger;
 
 		// Both surfaces listen on the SAME messenger the warm-up service publishes on. The overlay subscribes
-		// in its constructor (always listening); the dashboard subscribes only while active (WHISPER-94), so
+		// in its constructor (always listening); the dashboard subscribes only while active, so
 		// the Given opens it. A faked audio source / fresh state machine keep the overlay self-contained — this
 		// scenario is about warm-up, not recording.
 		_overlay = new LevelOverlayController(new RecordingStateMachine(), Substitute.For<IAudioSource>(), messenger, time);

@@ -1,4 +1,4 @@
-// Pins the WHISPER-115 display-boundary conversion: history/dashboard timestamps are stored UTC but
+// Pins the display-boundary conversion: history/dashboard timestamps are stored UTC but
 // rendered in the user's local time. The converter must return the SAME instant in the local offset, so
 // the wall-clock shown is local — independent of the host's time zone (asserted against TimeZoneInfo.Local).
 

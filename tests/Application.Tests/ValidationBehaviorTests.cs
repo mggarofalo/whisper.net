@@ -1,7 +1,7 @@
-// Verifies the ValidationBehavior pipeline (WHISPER-55): a request whose validator fails never
+// Verifies the ValidationBehavior pipeline: a request whose validator fails never
 // reaches its handler and surfaces a validation failure; a request that passes (or has no validator)
 // flows through to the handler. The `next` delegate stands in for the handler, so "next was not
-// invoked" is exactly "the handler did not run". Full IMediator dispatch is exercised in WHISPER-58.
+// invoked" is exactly "the handler did not run". Full IMediator dispatch is exercised in the BDD specs.
 
 using Application.Behaviors;
 using FluentValidation;

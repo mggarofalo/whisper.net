@@ -1,4 +1,4 @@
-// WHISPER-66 (validates WHISPER-31 AC2 "real on-device inference"): runs the bundled Silero VAD ONNX
+// Validates real on-device inference: runs the bundled Silero VAD ONNX
 // model for real, end to end, through the exact production composition. IVad is resolved from a host
 // built by the same AddWhisperServices extension the WPF app uses, so this also proves the bundled
 // asset resolves at AppContext.BaseDirectory/assets/silero_vad.onnx (the path OnnxVadSession composes).
@@ -56,7 +56,7 @@ public sealed class VadRealModelTests
 	}
 
 	// Pure silence must score below the speech threshold on every window — the complement of the check
-	// above, and the basis of the silence-gating policy (WHISPER-31). Confirms the model discriminates
+	// above, and the basis of the silence-gating policy. Confirms the model discriminates
 	// rather than returning a constant.
 	[Fact]
 	public async Task Scores_silence_below_the_speech_threshold()

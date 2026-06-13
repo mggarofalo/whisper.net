@@ -1,4 +1,4 @@
-// The real audio-feedback player (WHISPER-21): plays a short, distinct tone for each dictation cue.
+// The real audio-feedback player: plays a short, distinct tone for each dictation cue.
 // The tones are synthesized in-process with NAudio's SignalGenerator, so they ship with the app and
 // need no on-disk asset or absolute path to resolve. Playback is fire-and-forget on a background thread
 // and any failure (e.g. no output device) is logged and swallowed, so feedback can never block or break

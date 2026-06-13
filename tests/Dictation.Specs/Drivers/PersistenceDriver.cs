@@ -1,4 +1,4 @@
-// Drives the @WHISPER-11 SQLite persistence scenarios against a private temp-file database. Unlike most
+// Drives the SQLite persistence scenarios against a private temp-file database. Unlike most
 // drivers, persistence is the Infrastructure seam itself, so this composes the REAL SqliteMigrationRunner,
 // SqliteDatabase, and SqliteSettingsStore directly against the file rather than going through the faked
 // ports — that is the whole point of the issue. It stages a database at a chosen schema version (the

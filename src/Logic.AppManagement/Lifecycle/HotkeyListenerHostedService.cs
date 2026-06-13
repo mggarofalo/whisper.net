@@ -1,4 +1,4 @@
-// Owns the global hotkey listener's lifetime as a hosted service (WHISPER-12), so the Generic Host
+// Owns the global hotkey listener's lifetime as a hosted service, so the Generic Host
 // starts the focus-independent keyboard hook when the app launches and tears it down on graceful
 // shutdown. It is the first cross-cutting background component the host runs; later modules subscribe
 // to the listener (wired in M7) to turn key edges into recording. Start/Stop are logged so the

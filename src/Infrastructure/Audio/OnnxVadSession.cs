@@ -4,7 +4,7 @@
 // only actual inference does.
 //
 // The Silero VAD ONNX asset (MIT, ~1.8 MB) ships with the app as a content asset — never downloaded —
-// resolved at AppContext.BaseDirectory/assets/silero_vad.onnx (WHISPER-66). Real inference over the
+// resolved at AppContext.BaseDirectory/assets/silero_vad.onnx. Real inference over the
 // bundled model is covered by the @slow VadRealModelTests; the headless specs drive SileroVad over a
 // fake session instead.
 

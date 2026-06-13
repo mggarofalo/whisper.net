@@ -1,6 +1,6 @@
-// Thin step definitions for the @WHISPER-101 perceptual-meter feature. Each step delegates to the shared
+// Thin step definitions for the perceptual-meter feature. Each step delegates to the shared
 // LevelOverlayDriver (injected by the Reqnroll DI plugin); no logic lives here. The step text is distinct
-// from the @WHISPER-26 overlay steps so Reqnroll binds each unambiguously.
+// from the level-overlay steps so Reqnroll binds each unambiguously.
 
 using Dictation.Specs.Drivers;
 using Reqnroll;

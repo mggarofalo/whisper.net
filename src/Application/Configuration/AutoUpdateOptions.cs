@@ -1,5 +1,5 @@
 // Strongly-typed binding for the in-app auto-update settings, populated from the "AutoUpdate"
-// configuration section (WHISPER-29). Auto-update is outbound network access, so to honor the privacy
+// configuration section. Auto-update is outbound network access, so to honor the privacy
 // stance — no network egress without an explicit opt-in — it is OFF by default: nothing is checked or
 // downloaded unless the user enables it, and when enabled the release feed below is the only egress and
 // no user data is ever sent.

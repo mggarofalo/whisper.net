@@ -1,4 +1,4 @@
-// Inner TDD loop for the hotkey-capture control's WPF-free brain (WHISPER-79). The control is thin glue;
+// Inner TDD loop for the hotkey-capture control's WPF-free brain. The control is thin glue;
 // these pin the capture rules it delegates: a full combination commits as a canonical binding (spaced for
 // display), a standalone modifier is ignored so the user can build a chord, Esc/Backspace clears, and an
 // unmapped key still commits as an Unknown-key chord that the validated HotkeyInput later rejects.

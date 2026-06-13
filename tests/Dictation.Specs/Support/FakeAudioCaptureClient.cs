@@ -1,7 +1,7 @@
 // A controllable stand-in for the native capture device, implementing the Infrastructure capture
-// seam. It lets the @WHISPER-7 scenarios drive the REAL WasapiAudioSource without a microphone:
+// seam. It lets the scenarios drive the REAL WasapiAudioSource without a microphone:
 // the test decides the negotiated format, when frames arrive, what flushes on stop, and whether the
-// device fails. The deferred-stop mode (WHISPER-112) additionally models NAudio's asynchronous stop:
+// device fails. The deferred-stop mode additionally models NAudio's asynchronous stop:
 // Stop() returns immediately and the device keeps delivering its in-flight frames until the scenario
 // completes the stop. Only the device glue is faked here — all the capture behavior under test is real.
 
@@ -21,9 +21,9 @@ public sealed class FakeAudioCaptureClient : IAudioCaptureClient
 	public bool Released { get; private set; }
 
 	/// <summary>
-	/// Opt in to NAudio's real stop timing (WHISPER-112): Stop() only records the request, and the
+	/// Opt in to NAudio's real stop timing: Stop() only records the request, and the
 	/// device keeps delivering frames until the scenario calls <see cref="CompleteStop"/>. The default
-	/// stays the synchronous flush the WHISPER-7 scenarios pin.
+	/// stays the synchronous flush the scenarios pin.
 	/// </summary>
 	public bool DeferStopCompletion { get; set; }
 
@@ -61,7 +61,7 @@ public sealed class FakeAudioCaptureClient : IAudioCaptureClient
 
 	// Finish a stop: deliver everything still buffered on the device, then report the clean stop. In
 	// the default mode Stop() calls this directly; in deferred mode the scenario calls it after the
-	// device has produced its tail frames, modeling NAudio's asynchronous stop (WHISPER-112).
+	// device has produced its tail frames, modeling NAudio's asynchronous stop.
 	public void CompleteStop()
 	{
 		if (!IsRecording && !_stopRequested)

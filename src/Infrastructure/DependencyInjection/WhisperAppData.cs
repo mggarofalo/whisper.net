@@ -1,4 +1,4 @@
-// Single source of truth for the app's per-user data locations (WHISPER-86). The model cache, logs, and
+// Single source of truth for the app's per-user data locations. The model cache, logs, and
 // settings database all hang off this helper so the layout is consistent and pinned by one test.
 //
 // Why the folder is NOT named after the product/PackId: Velopack installs the app to

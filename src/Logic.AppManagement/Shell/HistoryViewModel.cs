@@ -1,12 +1,12 @@
-// The shell's history browser (WHISPER-45): lists past transcriptions newest-first, pages through them,
+// The shell's history browser: lists past transcriptions newest-first, pages through them,
 // and re-copies an entry to the clipboard. It reads via BrowseHistoryQuery (a page at a time, so a
 // large history never blocks) and copies via CopyToClipboardCommand. Empty history is a first-class
-// empty state, not an error, and HasMorePages (WHISPER-110) tells the view when Load More can no
+// empty state, not an error, and HasMorePages tells the view when Load More can no
 // longer produce anything so the control disables instead of silently no-opping. Built on CommunityToolkit.Mvvm and WPF-free so the behavior is driven for
 // real in specs; the thin view binds to it. Entries is a UiBoundCollection registered through the
-// collection-sync seam at construction (WHISPER-91), so an off-UI-thread mutation (the WHISPER-114 live
+// collection-sync seam at construction, so an off-UI-thread mutation (the live
 // feed, published from the record path) binds safely instead of throwing. The live feed is subscribed
-// only while the section is active (WHISPER-94 messenger discipline) and prepends the new entry without
+// only while the section is active (messenger discipline) and prepends the new entry without
 // re-querying, so the user's browsed page and scroll position are preserved.
 
 using Application.History;
@@ -32,8 +32,8 @@ public sealed partial class HistoryViewModel : FeatureViewModel
 		synchronizer.Enable(Entries);
 	}
 
-	// Live history feed (WHISPER-114): subscribe to the "transcription recorded" message only while this
-	// section is active (WHISPER-94), so an inactive cached instance holds no subscription. The shared
+	// Live history feed: subscribe to the "transcription recorded" message only while this
+	// section is active, so an inactive cached instance holds no subscription. The shared
 	// WeakReferenceMessenger means even a missed deactivation could not root this cached view-model.
 	protected override void OnActivated() =>
 		_messenger.Register<HistoryViewModel, TranscriptionRecordedMessage>(this, (recipient, message) => recipient.OnTranscriptionRecorded(message.Entry));
@@ -73,7 +73,7 @@ public sealed partial class HistoryViewModel : FeatureViewModel
 	[ObservableProperty]
 	private bool _hasMorePages = true;
 
-	// Auto-load the first page on first activation (WHISPER-108): the browser opens populated (or in its
+	// Auto-load the first page on first activation: the browser opens populated (or in its
 	// first-class empty state), the cached instance does not re-query on later tab switches — so the page
 	// the user browsed to survives a tab switch — and Refresh stays the manual re-query.
 	protected override IAsyncRelayCommand FirstActivationLoadCommand => LoadCommand;
@@ -113,7 +113,7 @@ public sealed partial class HistoryViewModel : FeatureViewModel
 		Page++;
 		foreach (TranscriptEntryDto entry in next)
 		{
-			// A live-prepended entry (WHISPER-114) shifts the store's page boundary by one, so the next page
+			// A live-prepended entry shifts the store's page boundary by one, so the next page
 			// can repeat an entry already shown; skip any id already loaded so the list never doubles up.
 			if (Entries.Any(existing => existing.Id == entry.Id))
 			{

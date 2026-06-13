@@ -1,4 +1,4 @@
-// Drives the @WHISPER-19 MVVM shell navigation scenarios. It owns HOW the shell is exercised so the
+// Drives the MVVM shell navigation scenarios. It owns HOW the shell is exercised so the
 // steps stay one-liners: it resolves the REAL ShellViewModel (which composes the real NavigationService
 // and feature view-models from the scenario's DI scope), navigates between sections, runs a feature
 // view-model's Mediator-backed command over the faked model ports, and asserts at the view-model

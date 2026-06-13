@@ -1,7 +1,7 @@
 // Per-layer DI registration for the Application layer. Wires the source-generated Mediator (scoped),
 // installs the ValidationBehavior into its pipeline, registers every FluentValidation validator in
 // this assembly, and binds the layered configuration to strongly-typed options. This is the single
-// registration entry point the Generic Host and the BDD specs both call (WHISPER-57), so production
+// registration entry point the Generic Host and the BDD specs both call, so production
 // and test composition cannot drift.
 
 using Application.Behaviors;
@@ -28,10 +28,10 @@ public static class ApplicationServiceCollectionExtensions
 
 		services.AddValidatorsFromAssembly(typeof(ICommand<>).Assembly, includeInternalTypes: true);
 
-		// Instant-apply settings channel (WHISPER-78): one shared WeakReferenceMessenger so the update/switch
+		// Instant-apply settings channel: one shared WeakReferenceMessenger so the update/switch
 		// handlers can publish a committed change and higher layers register weakly to apply it live (e.g.
 		// rebinding the hotkey matcher) without a restart. The channel debounces noisy free-text commits using
-		// the injected TimeProvider. Replaces the ad-hoc SettingsChangeBroadcaster from WHISPER-75.
+		// the injected TimeProvider.
 		services.AddSingleton<CommunityToolkit.Mvvm.Messaging.IMessenger>(
 			_ => new CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger());
 		services.AddSingleton(TimeProvider.System);
@@ -48,15 +48,15 @@ public static class ApplicationServiceCollectionExtensions
 		// handler depends on it (the default strategy is Type when nothing is configured).
 		services.AddOptions<DeliveryOptions>();
 
-		// History retention (WHISPER-17): always resolvable so the record handler can enforce the limit;
+		// History retention: always resolvable so the record handler can enforce the limit;
 		// the default cap applies when nothing is configured.
 		services.AddOptions<RetentionOptions>();
 
-		// Audio feedback (WHISPER-21): always resolvable so the orchestrator can read the on/off switch;
+		// Audio feedback: always resolvable so the orchestrator can read the on/off switch;
 		// feedback is on by default until configuration says otherwise.
 		services.AddOptions<AudioFeedbackOptions>();
 
-		// Auto-update (WHISPER-29): always resolvable so the update policy can read the opt-in switch and
+		// Auto-update: always resolvable so the update policy can read the opt-in switch and
 		// the feed; disabled by default, so nothing is checked or downloaded until the user opts in.
 		services.AddOptions<AutoUpdateOptions>();
 		if (configuration is not null)
@@ -68,7 +68,7 @@ public static class ApplicationServiceCollectionExtensions
 			services.Configure<AutoUpdateOptions>(configuration.GetSection(AutoUpdateOptions.SectionName));
 		}
 
-		// Post-process configuration (WHISPER-41): a single live holder, seeded from the "PostProcess"
+		// Post-process configuration: a single live holder, seeded from the "PostProcess"
 		// section when configuration is present and otherwise from defaults. Held (not IOptions-captured)
 		// so the ConfigurePostProcessing command can update it and the pipeline sees the change next call.
 		PostProcessOptions seed = configuration?.GetSection(PostProcessOptions.SectionName).Get<PostProcessOptions>()

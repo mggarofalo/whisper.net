@@ -1,4 +1,4 @@
-// The one production IUiDispatcher (WHISPER-90): wraps the WPF dispatcher captured at startup —
+// The one production IUiDispatcher: wraps the WPF dispatcher captured at startup —
 // never Application.Current, which is null while the application tears down — and no-ops once
 // dispatcher shutdown has begun, so a late controller event during exit drops a UI refresh instead
 // of throwing. Post maps to BeginInvoke (never blocks the caller; the audio thread raises per-frame

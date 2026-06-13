@@ -1,4 +1,4 @@
-// Unit depth for the WHISPER-100 overlay placement geometry. Pins that the overlay is horizontally
+// Unit depth for the overlay placement geometry. Pins that the overlay is horizontally
 // centered in the work area, anchored a small margin above its bottom edge, and that both carry through a
 // work-area origin offset (a secondary monitor). The WPF window that resolves the work area and applies
 // this is the manual-verification remainder (multi-monitor, DPI scales, taskbar positions).

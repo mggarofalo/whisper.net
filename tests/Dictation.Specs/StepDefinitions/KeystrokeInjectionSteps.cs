@@ -1,4 +1,4 @@
-// Thin step definitions for the universal keystroke-delivery feature (@WHISPER-2). Each step delegates
+// Thin step definitions for the universal keystroke-delivery feature. Each step delegates
 // to the TextInjectionDriver (injected by the Reqnroll DI plugin); no logic lives here. The focus
 // givens are intentionally empty: they set the scene a reader needs, but typing delivery behaves the
 // same regardless of which window has focus, which is the whole point of the feature.

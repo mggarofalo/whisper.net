@@ -3,10 +3,10 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:shell="clr-namespace:Presentation.Shell">
     <UserControl.Resources>
-        <!-- Declared locally (WHISPER-96) so the view is self-contained: parse-time StaticResource only
+        <!-- Declared locally so the view is self-contained: parse-time StaticResource only
              sees the view's own resources and the Application, and the smoke harness composes without one. -->
         <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
-        <!-- Render stored-UTC timestamps in the user's local time (WHISPER-115); storage stays UTC. -->
+        <!-- Render stored-UTC timestamps in the user's local time; storage stays UTC. -->
         <shell:UtcToLocalConverter x:Key="UtcToLocal" />
     </UserControl.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -15,7 +15,7 @@
                        FontSize="18"
                        FontWeight="SemiBold" />
 
-            <!-- Model warm-up status (WHISPER-129): a status line shown while the dictation model is warming
+            <!-- Model warm-up status: a status line shown while the dictation model is warming
                  up, lifted by the app-wide cleared event so it never lingers. Amber to match the overlay cue. -->
             <Border Background="#1FFB8C00"
                     BorderBrush="#FB8C00"
@@ -28,7 +28,7 @@
                            TextWrapping="Wrap" />
             </Border>
 
-            <!-- Current configuration at a glance (WHISPER-106): live from settings. -->
+            <!-- Current configuration at a glance: live from settings. -->
             <Grid Margin="0,16,0,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
@@ -50,7 +50,7 @@
                 <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding InputDevice, TargetNullValue='(none)'}" Margin="0,0,0,4" />
             </Grid>
 
-            <!-- Headline usage totals (WHISPER-106): computed by the Application layer, not here. -->
+            <!-- Headline usage totals: computed by the Application layer, not here. -->
             <TextBlock Text="Usage"
                        FontSize="14"
                        FontWeight="SemiBold"

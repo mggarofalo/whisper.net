@@ -1,4 +1,4 @@
-// A synchronous IUiDispatcher for unit tests (WHISPER-90): runs queued work inline — no dispatcher
+// A synchronous IUiDispatcher for unit tests: runs queued work inline — no dispatcher
 // loop, no live WPF Application — while recording how it arrived, so tests assert the marshaling
 // contract (posted vs CheckAccess fast-path) deterministically.
 

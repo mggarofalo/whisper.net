@@ -1,4 +1,4 @@
-// Thin step definitions for the @WHISPER-10 global-hotkey-listening feature. Each step delegates to
+// Thin step definitions for the global-hotkey-listening feature. Each step delegates to
 // the HotkeyListenerDriver (injected by the Reqnroll DI plugin); no logic lives here.
 
 using Dictation.Specs.Drivers;

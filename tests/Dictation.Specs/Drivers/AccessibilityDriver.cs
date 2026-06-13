@@ -1,4 +1,4 @@
-// Exercises the settings UI's accessibility for the @WHISPER-83 scenarios. Like the repository-guidance and
+// Exercises the settings UI's accessibility. Like the repository-guidance and
 // packaging drivers, it inspects Presentation artifacts directly (the settings view XAML) rather than
 // driving behavior through IMediator — because accessibility lives in the WPF markup (UI Automation names,
 // labels, tab navigation), which the specs do not otherwise touch. It asserts the same things a developer

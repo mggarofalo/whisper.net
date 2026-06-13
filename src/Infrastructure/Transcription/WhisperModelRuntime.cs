@@ -1,5 +1,5 @@
-// The native side of the model lifecycle (WHISPER-15), built on the Whisper.net engine seam from
-// WHISPER-3. Loading creates an engine for the requested model/backend/language and wraps it in a
+// The native side of the model lifecycle, built on the Whisper.net engine seam. Loading creates an
+// engine for the requested model/backend/language and wraps it in a
 // handle the lifecycle policy can warm up, transcribe through, and release. (Whisper.net fixes a
 // model's precision at the file/backend level rather than exposing a runtime knob, so the requested
 // precision is decided and recorded by the policy at load time; there is no separate native toggle to

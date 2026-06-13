@@ -1,4 +1,4 @@
-// The catalog of named output transforms (WHISPER-37). Ships the built-in formats ported from
+// The catalog of named output transforms. Ships the built-in formats ported from
 // whisper-local (bullets, prompt-engineer, polish) and resolves a transform by name (case-insensitive).
 // Custom catalogs can be supplied for tests or future configuration; the default is the built-in set.
 

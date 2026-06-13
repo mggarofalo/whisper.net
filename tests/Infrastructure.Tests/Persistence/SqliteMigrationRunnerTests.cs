@@ -1,4 +1,4 @@
-// Inner TDD loop for the WHISPER-11 migration runner: a fresh database runs every migration to the latest
+// Inner TDD loop for the migration runner: a fresh database runs every migration to the latest
 // schema version with WAL enabled, an older database is migrated forward (pending tail only), and an
 // up-to-date database is a no-op. Driven against a real temp-file database; the runner is the real one.
 

@@ -1,4 +1,4 @@
-// Unit tests for the doctor-mode arg router (WHISPER-50): the pure decision the Presentation entry point
+// Unit tests for the doctor-mode arg router: the pure decision the Presentation entry point
 // makes about whether to run diagnostics and exit instead of going tray-resident. Covers the documented
 // flag, its aliases (case-insensitively), and the normal launch where no flag is present.
 

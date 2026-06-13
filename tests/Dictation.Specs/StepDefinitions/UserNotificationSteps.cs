@@ -1,4 +1,4 @@
-// Thin step definitions for the @WHISPER-95 error-surfacing feature. Each step delegates to the
+// Thin step definitions for the error-surfacing feature. Each step delegates to the
 // UserNotificationDriver (injected by the Reqnroll DI plugin); no logic lives here.
 
 using Dictation.Specs.Drivers;

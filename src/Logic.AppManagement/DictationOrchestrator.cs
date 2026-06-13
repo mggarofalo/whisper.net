@@ -1,15 +1,15 @@
-// The dictation orchestrator: the coordination hub that runs one utterance end to end (WHISPER-14).
+// The dictation orchestrator: the coordination hub that runs one utterance end to end.
 // A hotkey start request begins microphone capture through the IAudioSource port; a stop request
-// keeps the capture buffer open through a short post-release grace window (WHISPER-112) — the device's
+// keeps the capture buffer open through a short post-release grace window — the device's
 // stop is asynchronous, so the frames already in flight (the user's final syllables) arrive AFTER the
 // stop request — then finalizes the captured audio into a clip and drives it through the Application
 // delivery pipeline (DeliverTranscriptionCommand via Mediator) — trim, transcribe, post-process,
 // inject — with no manual step in between, then records a delivered transcription to history
-// (RecordTranscriptionCommand, WHISPER-110) so the History section and usage stats reflect real
+// (RecordTranscriptionCommand) so the History section and usage stats reflect real
 // usage. It owns an explicit pipeline
 // state machine (Idle -> Recording -> Transcribing -> Delivering -> Idle) guarded against concurrent
 // transitions, and keeps the shared RecordingStateMachine in step so the tray/UI reflect status. The
-// capture buffer's max duration is a SOFT limit (WHISPER-111): when a recording approaches and then
+// capture buffer's max duration is a SOFT limit: when a recording approaches and then
 // reaches it, the orchestrator publishes DictationNearLimitMessage / DictationAtLimitMessage on the
 // shared IMessenger so the UI can warn the user — recording continues and nothing is dropped. A HARD
 // failsafe ceiling backs the soft limit: at HardLimitReached the orchestrator stops the dictation
@@ -54,7 +54,7 @@ public sealed class DictationOrchestrator
 	private readonly object _gate = new();
 
 	// Set by OnCaptureFailed (on the capture thread) when the device fails while a stop is draining the
-	// post-release grace window (WHISPER-112), and read by the post-grace path before finalizing the
+	// post-release grace window, and read by the post-grace path before finalizing the
 	// capture. volatile provides the cross-thread visibility; the flag is scoped to one in-flight stop
 	// and reset on Start so a stale signal can never discard the next utterance.
 	private volatile bool _captureFailedDuringStop;
@@ -88,7 +88,7 @@ public sealed class DictationOrchestrator
 		_audioSource.FrameAvailable += OnFrameAvailable;
 		_audioSource.CaptureFailed += OnCaptureFailed;
 
-		// Soft-limit signals (WHISPER-111): the capture buffer fires these once per recording, on the
+		// Soft-limit signals: the capture buffer fires these once per recording, on the
 		// capture thread, at 80% and 100% of the soft max duration. Recording continues either way —
 		// the handlers stay tiny and only publish the strongly-typed message on the (thread-safe)
 		// messenger so the UI can warn the user; they must never touch the pipeline state.
@@ -97,7 +97,7 @@ public sealed class DictationOrchestrator
 		_captureBuffer.MaxDurationReached += (_, _) => _messenger.Send(
 			new DictationAtLimitMessage(_captureBuffer.RecordedDurationMs, _bufferingOptions.MaxDurationMs));
 
-		// Hard failsafe (WHISPER-111): the soft-limit messages above have no consuming UI yet, so the
+		// Hard failsafe: the soft-limit messages above have no consuming UI yet, so the
 		// hard ceiling is the enforcement bound that keeps a runaway recording from growing without end.
 		// It must take the NORMAL stop path — stop and transcribe, never discard. The event fires on the
 		// capture thread, so the stop is dispatched exactly like the hotkey release below: a guarded
@@ -119,7 +119,7 @@ public sealed class DictationOrchestrator
 		activation.RecordingStartRequested += (_, _) => Start();
 		activation.RecordingStopRequested += (_, _) => _ = StopAsync();
 
-		// The binding was reconfigured while a recording was live (WHISPER-126): discard the in-flight
+		// The binding was reconfigured while a recording was live: discard the in-flight
 		// capture and return to Idle. Without this the recording would be orphaned — the old chord can no
 		// longer stop it — wedging the pipeline so the next start is a no-op and no overlay ever appears.
 		activation.RecordingCancelRequested += (_, _) => Cancel();
@@ -132,7 +132,7 @@ public sealed class DictationOrchestrator
 	public event EventHandler<DictationStageChangedEventArgs>? StageChanged;
 
 	/// <summary>
-	/// Whether continuous dictation mode is active (WHISPER-28). While active, each completed utterance
+	/// Whether continuous dictation mode is active. While active, each completed utterance
 	/// auto-restarts recording instead of returning to rest; Esc (<see cref="ExitContinuousMode"/>) turns
 	/// it off. When inactive the pipeline is single-shot: one capture -> deliver -> idle.
 	/// </summary>
@@ -191,7 +191,7 @@ public sealed class DictationOrchestrator
 
 	/// <summary>
 	/// Stop signal (release / VAD silence): drain the device's in-flight capture tail through a short
-	/// post-release grace window (WHISPER-112), then finalize the capture and run the full delivery
+	/// post-release grace window, then finalize the capture and run the full delivery
 	/// pipeline — Recording -> Transcribing -> Delivering -> Idle. A failure at any stage is logged and
 	/// the pipeline is returned to a safe Idle so it can never get stuck.
 	/// </summary>
@@ -206,7 +206,7 @@ public sealed class DictationOrchestrator
 		_stateMachine.RequestStop();
 		PlayFeedback(FeedbackSound.RecordingStopped);
 
-		// Post-release grace window (WHISPER-112): the device's stop is asynchronous — frames already in
+		// Post-release grace window: the device's stop is asynchronous — frames already in
 		// flight (plus the user's final syllables) keep arriving for a short moment after the stop
 		// request. The capture buffer stays recording through the window so that tail lands in the clip
 		// instead of falling into the idle preroll ring; only then is the recording finalized.
@@ -218,7 +218,7 @@ public sealed class DictationOrchestrator
 		AudioClip clip = _captureBuffer.StopRecording();
 
 		// Measured where the capture is finalized: how long the recorded audio ran, the usage measure
-		// (WHISPER-24) the history record carries once delivery succeeds.
+		// the history record carries once delivery succeeds.
 		TimeSpan audioDuration = clip.SampleRate > 0
 			? TimeSpan.FromSeconds((double)clip.Samples.Count / clip.SampleRate)
 			: TimeSpan.Zero;
@@ -234,7 +234,7 @@ public sealed class DictationOrchestrator
 			Advance(DictationStage.Delivering);
 			PlayFeedback(FeedbackSound.TranscriptionComplete);
 
-			// Command-mode hook (WHISPER-35): a matched transcript was routed to the command branch instead
+			// Command-mode hook: a matched transcript was routed to the command branch instead
 			// of being typed. Execution is out of scope here; the orchestrator records the routing.
 			if (result.MatchedCommand is { } command)
 			{
@@ -248,7 +248,7 @@ public sealed class DictationOrchestrator
 				result.Text.Length,
 				Stopwatch.GetElapsedTime(startedTicks).TotalMilliseconds);
 
-			// History write-through (WHISPER-110): a delivered transcription is recorded so the History
+			// History write-through: a delivered transcription is recorded so the History
 			// section and usage stats reflect real usage. Recording observes delivery, it is never a
 			// dependency of it — the method owns its errors, so a failed write can neither surface as a
 			// delivery failure nor keep the pipeline from returning to Idle.
@@ -264,13 +264,13 @@ public sealed class DictationOrchestrator
 				"Dictation pipeline failed after {ElapsedMs:F1}ms; returning to Idle.",
 				Stopwatch.GetElapsedTime(startedTicks).TotalMilliseconds);
 
-			// Surface the failure to the user (WHISPER-95): in a windowless app a log-only failure reads
+			// Surface the failure to the user: in a windowless app a log-only failure reads
 			// as "nothing was typed". The notifier never throws, so this cannot mask the recovery below.
 			_userNotifier.NotifyError(
 				"Dictation failed",
 				"Your speech could not be transcribed or delivered. The app is still running — please try again.");
 
-			// Tell the overlay to show a brief error state (WHISPER-102), sent before the finally returns to Idle.
+			// Tell the overlay to show a brief error state, sent before the finally returns to Idle.
 			_messenger.Send(new DictationFailedMessage());
 		}
 		finally
@@ -279,7 +279,7 @@ public sealed class DictationOrchestrator
 			Advance(DictationStage.Idle);
 		}
 
-		// Continuous dictation (WHISPER-28): keep the pipeline live across utterances. Once the cycle has
+		// Continuous dictation: keep the pipeline live across utterances. Once the cycle has
 		// returned to Idle, if continuous mode is still active (Esc did not exit it during the utterance),
 		// automatically begin the next recording instead of resting. Each restart needs a fresh stop signal
 		// to advance, so the loop cannot spin — it waits in Recording until the next release / VAD silence.
@@ -291,7 +291,7 @@ public sealed class DictationOrchestrator
 	}
 
 	// Wait the configured post-release grace window on the injected clock so the device's in-flight
-	// capture tail drains into the buffer (WHISPER-112). Returns false when the stop must not proceed to
+	// capture tail drains into the buffer. Returns false when the stop must not proceed to
 	// delivery — in every false path the capture is discarded here (DiscardRecording: no clip is ever
 	// materialized for audio nobody will hear) and the pipeline returned to a safe Idle: the wait was
 	// cancelled; the capture device failed mid-grace (OnCaptureFailed cannot claim the Recording stage
@@ -367,7 +367,7 @@ public sealed class DictationOrchestrator
 		}
 	}
 
-	// Audio feedback (WHISPER-21): play the cue for a pipeline transition, but only when feedback is
+	// Audio feedback: play the cue for a pipeline transition, but only when feedback is
 	// enabled (off => no cue and no playback resource is touched). Playback is fire-and-forget and must
 	// never break dictation, so any failure is logged and swallowed here even though the port also
 	// promises not to throw — feedback is a courtesy, never a dependency of the pipeline.
@@ -395,7 +395,7 @@ public sealed class DictationOrchestrator
 
 	// A device error mid-capture is a stage error (AC4): discard the partial capture, log it, and return
 	// the pipeline to a safe Idle rather than leaving it stuck in Recording. A failure during the
-	// post-release grace window (WHISPER-112) lands after the stop already advanced the pipeline to
+	// post-release grace window lands after the stop already advanced the pipeline to
 	// Transcribing; it is logged and surfaced identically, but the buffer finalization stays owned by
 	// the in-flight stop — the failure flag tells its post-grace check to discard instead of deliver.
 	private void OnCaptureFailed(object? sender, AudioCaptureFailedEventArgs e)
@@ -422,7 +422,7 @@ public sealed class DictationOrchestrator
 		NotifyCaptureFailure();
 	}
 
-	// Surface a capture-device failure to the user (WHISPER-95): the recording is discarded either way,
+	// Surface a capture-device failure to the user: the recording is discarded either way,
 	// and in a windowless app a log-only failure reads as "nothing was typed".
 	private void NotifyCaptureFailure()
 	{
@@ -430,7 +430,7 @@ public sealed class DictationOrchestrator
 			"Microphone problem",
 			"Audio capture stopped unexpectedly, so the recording was discarded. Check your microphone and try again.");
 
-		// Show the overlay's brief error state (WHISPER-102) on a capture failure too.
+		// Show the overlay's brief error state on a capture failure too.
 		_messenger.Send(new DictationFailedMessage());
 	}
 

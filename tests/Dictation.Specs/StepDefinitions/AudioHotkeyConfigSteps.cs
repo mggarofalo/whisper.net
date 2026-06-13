@@ -1,4 +1,4 @@
-// Thin step definitions for the @WHISPER-33 audio/hotkey configuration feature. Each step delegates to
+// Thin step definitions for the audio/hotkey configuration feature. Each step delegates to
 // the AudioHotkeyConfigDriver (injected by the Reqnroll DI plugin); no logic lives here.
 
 using Dictation.Specs.Drivers;

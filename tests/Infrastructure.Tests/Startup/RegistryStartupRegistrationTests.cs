@@ -1,4 +1,4 @@
-// Inner TDD loop for the WHISPER-32 registry adapter. To avoid touching the machine's real startup
+// Inner TDD loop for the registry adapter. To avoid touching the machine's real startup
 // list, every test points the adapter at a throwaway HKCU subkey (deleted in Dispose). It proves the
 // adapter reads the real registration state, writes the current executable path under HKCU (no
 // elevation), and that enable/disable are idempotent — repeated toggles leave a single, correct entry

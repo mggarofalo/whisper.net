@@ -1,4 +1,4 @@
-// Drives the @WHISPER-14 end-to-end orchestration scenarios. It owns HOW the pipeline is exercised so
+// Drives the end-to-end orchestration scenarios. It owns HOW the pipeline is exercised so
 // the steps stay one-liners: it drives the REAL DictationOrchestrator over the REAL WasapiAudioSource
 // (fed by the fake capture client) and the REAL DeliverTranscriptionCommand pipeline through Mediator,
 // substituting only the Infrastructure ports (transcriber, injectors). Assertions are made at those
@@ -26,7 +26,7 @@ public sealed class DictationOrchestratorDriver(
 	AudioBufferingOptions bufferingOptions)
 {
 	// One buffer of interleaved stereo samples at the fake device's 48 kHz/2ch default. Filled with
-	// speech-level energy (not silence) so the captured clip survives the no-speech gate (WHISPER-125) —
+	// speech-level energy (not silence) so the captured clip survives the no-speech gate —
 	// the trimmer collapses all-silence to empty and the pipeline would skip transcription. The exact
 	// content is otherwise irrelevant while the transcriber is faked; it only has to flow through capture.
 	private static float[] SpokenFrame()
@@ -49,7 +49,7 @@ public sealed class DictationOrchestratorDriver(
 	}
 
 	// The full hands-free path: start, speak, stop — capture -> transcribe -> deliver -> idle. The stop
-	// drains the post-release grace window (WHISPER-112) on the scenario's manual clock.
+	// drains the post-release grace window on the scenario's manual clock.
 	public async Task RunFullDictation()
 	{
 		orchestrator.Start();

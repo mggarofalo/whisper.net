@@ -1,4 +1,4 @@
-// FluentValidation rules for SwitchActiveModelCommand (WHISPER-27), run by the ValidationBehavior
+// FluentValidation rules for SwitchActiveModelCommand, run by the ValidationBehavior
 // pipeline before the handler. The id must name a model in the on-device catalog, so an unknown id is
 // rejected before the lifecycle is asked to switch.
 

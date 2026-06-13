@@ -1,4 +1,4 @@
-// Startup validation for the rephrase feature (WHISPER-40). When rephrase is enabled, the configured
+// Startup validation for the rephrase feature. When rephrase is enabled, the configured
 // endpoint MUST be loopback — a remote host is rejected here (fail-fast at startup) rather than silently
 // used, so transcript text can never be sent off the machine. When rephrase is disabled the endpoint is
 // irrelevant and not checked.

@@ -1,6 +1,6 @@
 // Registers Serilog as the single logging provider for the application. The minimum level (and any
 // other Serilog settings) are read from the layered IConfiguration; a console sink and a rolling file
-// sink are always added. The file sink (WHISPER-73) is what makes the installed, windowless tray app
+// sink are always added. The file sink is what makes the installed, windowless tray app
 // diagnosable: without it the console sink writes into a console no one can see, so failures vanished
 // without a trace. Other MS logging providers are cleared so Serilog is authoritative — which is what
 // makes ILogger<T>.IsEnabled(...) reflect the configured Serilog level. Used by the Generic Host and

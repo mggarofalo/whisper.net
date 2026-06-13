@@ -1,10 +1,10 @@
-// Drives the @WHISPER-106 Home status-dashboard scenarios. It builds the REAL HomeViewModel over the
+// Drives the Home status-dashboard scenarios. It builds the REAL HomeViewModel over the
 // REAL Mediator pipeline (GetSettings / ListCaptureDevices / GetUsageStats + the real Logic calculator /
 // BrowseHistory handlers), faking only the device-facing ports (settings store, history store, device
 // enumerator). So it proves the dashboard surfaces genuinely live status from settings and history — the
 // active model, the input device's friendly name, the hotkey, the computed usage totals, and the recent
 // transcriptions — entered through the REAL activation lifecycle (OnNavigatedTo triggers the first-
-// activation load, WHISPER-108). The thin WPF view that binds to it is Presentation glue verified by smoke.
+// activation load). The thin WPF view that binds to it is Presentation glue verified by smoke.
 
 using Application.Ports;
 using AwesomeAssertions;
@@ -66,7 +66,7 @@ public sealed class HomeDashboardDriver
 		await _viewModel.RefreshCommand.ExecutionTask!;
 	}
 
-	// WHISPER-119: simulate activity since Home was last open, then switch away and back; the dashboard
+	// Simulate activity since Home was last open, then switch away and back; the dashboard
 	// must re-query on activation rather than show a stale snapshot.
 	public void ANewTranscriptionIsRecorded(string text) =>
 		ReturnEntries(new TranscriptEntry(Guid.NewGuid(), text, new DateTimeOffset(2026, 6, 11, 21, 0, 0, TimeSpan.Zero)));

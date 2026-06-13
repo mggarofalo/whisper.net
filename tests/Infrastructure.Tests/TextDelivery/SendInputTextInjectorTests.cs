@@ -1,4 +1,4 @@
-// Edge-case depth for the WHISPER-2 text injector, beyond the @WHISPER-2 acceptance scenarios. Drives
+// Edge-case depth for the text injector, beyond the acceptance scenarios. Drives
 // the real SendInputTextInjector over a recording fake keyboard (no real input) and pins down the
 // contract that matters: every character becomes a down/up pair, the down events reconstruct the exact
 // input string (including BMP punctuation and non-BMP surrogate pairs), line-break forms collapse to a

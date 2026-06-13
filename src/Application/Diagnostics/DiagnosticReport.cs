@@ -1,4 +1,4 @@
-// The aggregate result of running every diagnostic check (WHISPER-50). It carries the individual
+// The aggregate result of running every diagnostic check. It carries the individual
 // results in a stable order and derives a single Overall status as the worst of them, so a caller (the
 // doctor command, an exit code) can answer "is anything broken?" without re-scanning the list. An empty
 // report is treated as passing.

@@ -1,4 +1,4 @@
-// Unit tests for the individual self-diagnostic checks (WHISPER-50). Each check is exercised over
+// Unit tests for the individual self-diagnostic checks. Each check is exercised over
 // substituted ports for both its healthy and unavailable paths, asserting the status AND that the detail
 // names the concrete thing a user needs (the device, the model path, the chord, the backend reason). The
 // BDD feature proves the checks compose through the real Mediator pipeline; these pin each verdict.

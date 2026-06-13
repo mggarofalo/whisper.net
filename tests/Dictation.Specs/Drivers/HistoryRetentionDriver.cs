@@ -1,4 +1,4 @@
-// Drives the @WHISPER-17 retention + paged-browsing scenarios. Per AC, these run "against a temp SQLite
+// Drives the retention + paged-browsing scenarios. Per the acceptance criteria, these run "against a temp SQLite
 // DB", so the driver builds its OWN composition — the REAL Application pipeline (Mediator + validation +
 // handlers + Mapperly) over the REAL SqliteHistoryStore pointed at a private temp-file database — rather
 // than the spec container's faked IHistoryStore. Recording goes through RecordTranscriptionCommand (which

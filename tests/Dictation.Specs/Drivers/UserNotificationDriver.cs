@@ -1,4 +1,4 @@
-// Drives the @WHISPER-95 error-surfacing scenarios. It owns HOW failures are exercised so the steps
+// Drives the error-surfacing scenarios. It owns HOW failures are exercised so the steps
 // stay one-liners. The pipeline half drives the REAL DictationOrchestrator (real capture/delivery
 // composition, failing transcriber / failing capture device) and asserts the scenario-scoped recording
 // notifier received a clear notice while the pipeline recovered to Idle. The notifier half drives the
@@ -36,7 +36,7 @@ public sealed class UserNotificationDriver(
 
 	// --- failing pipeline (AC1) ---
 
-	// Speech-level energy (not silence) so the captured clip passes the no-speech gate (WHISPER-125) and the
+	// Speech-level energy (not silence) so the captured clip passes the no-speech gate and the
 	// failure path under test is actually reached; the content is irrelevant while the transcriber is faked.
 	private static float[] SpokenFrame()
 	{
@@ -66,7 +66,7 @@ public sealed class UserNotificationDriver(
 
 	public void AssertFailureNotified()
 	{
-		notifier.Notifications.Should().NotBeEmpty("a backend failure must surface a user notification (WHISPER-95 AC1)");
+		notifier.Notifications.Should().NotBeEmpty("a backend failure must surface a user notification");
 		(string title, string message) = notifier.Notifications[0];
 		title.Should().NotBeNullOrWhiteSpace();
 		message.Should().NotBeNullOrWhiteSpace();
@@ -102,7 +102,7 @@ public sealed class UserNotificationDriver(
 	public void AssertSwallowedWithWarning() =>
 		_logger.Entries.Should().Contain(
 			entry => entry.Level == LogLevel.Warning,
-			"a suppressed/failed notification is logged and swallowed, never thrown (WHISPER-95 AC2)");
+			"a suppressed/failed notification is logged and swallowed, never thrown");
 
 	// --- the dispatcher-exception notice (AC3) ---
 
@@ -111,7 +111,7 @@ public sealed class UserNotificationDriver(
 		string app = File.ReadAllText(Path.Combine(RepositoryRoot, "src", "Presentation", "App.xaml.cs"));
 
 		app.Should().Contain("DispatcherUnhandledException", "the composition root handles dispatcher exceptions");
-		app.Should().Contain("NotifyError", "the handler surfaces a notice through the notifier (WHISPER-95 AC3)");
+		app.Should().Contain("NotifyError", "the handler surfaces a notice through the notifier");
 		app.Should().Contain("The app is still running", "the notice is reassuring and non-technical");
 	}
 

@@ -1,4 +1,4 @@
-// Drives the @WHISPER-25 single-instance scenarios. It owns HOW the coordination is exercised so the
+// Drives the single-instance scenarios. It owns HOW the coordination is exercised so the
 // step definitions stay one-liners: it builds REAL SingleInstanceCoordinators over a single shared
 // fake lock + signal (modelling the OS-global mutex and cross-process activation) and the shared fake
 // shell presenter. A "launch" is a new coordinator calling TryStartAsPrimary on that shared backing,

@@ -1,6 +1,6 @@
-// View glue for the dictation overlay feedback (WHISPER-102): maps the WPF-free view-model state to the
+// View glue for the dictation overlay feedback: maps the WPF-free view-model state to the
 // brushes / visibility the code-built overlay binds. Bindings (not PropertyChanged subscriptions) keep the
-// view declarative (WHISPER-92); these converters are the small translation layer between the Logic enum /
+// view declarative; these converters are the small translation layer between the Logic enum /
 // flags and WPF visuals.
 
 using System;
@@ -13,7 +13,7 @@ using Logic.AppManagement;
 namespace Presentation.Overlay;
 
 // The state dot's colour: green while recording, blue while transcribing, red on error, amber while the
-// model is warming up (WHISPER-129).
+// model is warming up.
 public sealed class OverlayStateToBrushConverter : IValueConverter
 {
 	private static readonly Brush Recording = Frozen(Color.FromRgb(0x4C, 0xAF, 0x50));
@@ -43,7 +43,7 @@ public sealed class OverlayStateToBrushConverter : IValueConverter
 	}
 }
 
-// The meter's colour: amber once the recording nears the duration cap (WHISPER-111), green otherwise.
+// The meter's colour: amber once the recording nears the duration cap, green otherwise.
 public sealed class NearCapToBrushConverter : IValueConverter
 {
 	private static readonly Brush Normal = Frozen(Colors.LimeGreen);
@@ -91,7 +91,7 @@ public sealed class OverlayStateToNameConverter : IValueConverter
 		throw new NotSupportedException();
 }
 
-// The warming label is shown only while the model is warming up (WHISPER-129) — it carries the on-screen
+// The warming label is shown only while the model is warming up — it carries the on-screen
 // "Warming up…" text, so the cue is not colour-only and the pill reads at a glance.
 public sealed class WarmingToVisibilityConverter : IValueConverter
 {
@@ -102,7 +102,7 @@ public sealed class WarmingToVisibilityConverter : IValueConverter
 		throw new NotSupportedException();
 }
 
-// The level meter is hidden while warming (WHISPER-129) — there is no input level to show before a
+// The level meter is hidden while warming — there is no input level to show before a
 // recording — so the pill collapses to the dot + the "Warming up…" label; it is shown for every other state.
 public sealed class MeterVisibilityConverter : IValueConverter
 {

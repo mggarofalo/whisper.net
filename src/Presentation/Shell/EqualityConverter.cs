@@ -1,4 +1,4 @@
-// Compares two bound values for equality, for the nav region's selected-item visual (WHISPER-103): the
+// Compares two bound values for equality, for the nav region's selected-item visual: the
 // nav button's DataContext is its section key, and the second value is the shell's CurrentSectionKey, so
 // the multi-binding yields true on the active section's button. String comparison is case-insensitive to
 // match the navigation service's case-insensitive section keys. Lives in Presentation because it is pure

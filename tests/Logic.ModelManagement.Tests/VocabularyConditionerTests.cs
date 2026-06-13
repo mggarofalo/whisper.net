@@ -1,4 +1,4 @@
-// Inner TDD loop for VocabularyConditioner (WHISPER-38), exercised in isolation — no native model load.
+// Inner TDD loop for VocabularyConditioner, exercised in isolation — no native model load.
 // A non-empty vocabulary becomes a biasing initial prompt and disables the first-token threshold; an
 // empty/blank vocabulary leaves decoding at its defaults; and assembly is pure (stateless across calls).
 

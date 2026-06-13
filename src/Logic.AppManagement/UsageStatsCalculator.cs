@@ -2,7 +2,7 @@
 // word count) and total sessions (one per entry). The derived time-saved estimate is computed inside
 // UsageStats. Deterministic and total — empty history yields zeroed stats and never throws. The per-day
 // breakdown (Summarize) buckets by the user's LOCAL calendar day via the injected TimeProvider's
-// LocalTimeZone (WHISPER-116) — not the UTC day — so a dictation just before local midnight lands on the
+// LocalTimeZone — not the UTC day — so a dictation just before local midnight lands on the
 // correct day; the zone is injected (not the ambient ToLocalTime) so it stays deterministic in tests.
 
 using Application.Ports;
@@ -44,7 +44,7 @@ public sealed class UsageStatsCalculator(TimeProvider timeProvider) : IUsageStat
 			totalAudio += entry.AudioDuration;
 		}
 
-		// Group by the user's LOCAL calendar day (WHISPER-116), most-recent day first. The entry's offset is
+		// Group by the user's LOCAL calendar day, most-recent day first. The entry's offset is
 		// UTC, so converting through the injected LocalTimeZone is what puts a late-evening dictation on the
 		// right local day instead of tomorrow's UTC day.
 		TimeZoneInfo zone = timeProvider.LocalTimeZone;

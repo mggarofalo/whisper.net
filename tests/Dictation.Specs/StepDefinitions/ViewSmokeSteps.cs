@@ -1,4 +1,4 @@
-// Thin step definitions for the @WHISPER-96 view-smoke-harness feature. Each step delegates to the
+// Thin step definitions for the view-smoke-harness feature. Each step delegates to the
 // ViewSmokeDriver (injected by the Reqnroll DI plugin); no logic lives here.
 
 using Dictation.Specs.Drivers;

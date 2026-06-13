@@ -1,4 +1,4 @@
-// Thin step definitions for the @WHISPER-77 native settings-validation feature. Each step delegates to
+// Thin step definitions for the native settings-validation feature. Each step delegates to
 // the SettingsValidationDriver (injected by the Reqnroll DI plugin); no logic lives here.
 
 using Dictation.Specs.Drivers;

@@ -1,4 +1,4 @@
-// Drives the @WHISPER-40 scenarios against the REAL OllamaRephraseClient and OllamaRephraseOptionsValidator
+// Drives the rephrase scenarios against the REAL OllamaRephraseClient and OllamaRephraseOptionsValidator
 // over a recording HTTP transport — no real Ollama, no socket. It proves the opt-in gate (disabled ->
 // no call), the loopback-only validation (a remote host is rejected), the happy path (a request to a
 // loopback endpoint, rewritten text), and graceful degradation when the backend fails.

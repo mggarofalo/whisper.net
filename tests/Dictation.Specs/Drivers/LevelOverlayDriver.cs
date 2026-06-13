@@ -1,4 +1,4 @@
-// Drives the @WHISPER-26 level-overlay scenarios. It owns HOW the overlay is exercised so the steps stay
+// Drives the level-overlay scenarios. It owns HOW the overlay is exercised so the steps stay
 // one-liners: it builds the REAL LevelOverlayController over a real RecordingStateMachine and a faked
 // audio source, drives recording start/stop on the state machine (as the orchestrator would), raises an
 // audio frame to simulate speech, and asserts the controller's visibility and level. The controller is
@@ -24,7 +24,7 @@ public sealed class LevelOverlayDriver : IDisposable
 	private readonly LevelOverlayController _controller;
 
 	// The scenario-scoped messenger and manual clock are the same seams the orchestrator publishes the
-	// WHISPER-111 limit / WHISPER-102 failure signals on and times the recording with, so driving them here
+	// soft-limit and failure signals on and times the recording with, so driving them here
 	// exercises the real overlay feedback path.
 	public LevelOverlayDriver(IMessenger messenger, ManualTimeProvider time)
 	{
@@ -42,7 +42,7 @@ public sealed class LevelOverlayDriver : IDisposable
 
 	public void StopRecording() => _stateMachine.RequestStop();
 
-	// Start recording WITHOUT emitting a frame, so the @WHISPER-101 scenarios drive the meter purely with
+	// Start recording WITHOUT emitting a frame, so the perceptual-scale scenarios drive the meter purely with
 	// the sustained audio they specify.
 	public void BeginRecording() => _stateMachine.RequestStart();
 
@@ -74,7 +74,7 @@ public sealed class LevelOverlayDriver : IDisposable
 
 	public void AssertReflectsInputLevel() => _controller.Level.Should().BeGreaterThan(0);
 
-	// WHISPER-101 perceptual-scale bands.
+	// Perceptual-scale bands.
 	public void AssertMeterMidRange() =>
 		_controller.Level.Should().BeInRange(0.40, 0.70, "normal-volume speech should fill the meter to mid-range");
 
@@ -87,16 +87,16 @@ public sealed class LevelOverlayDriver : IDisposable
 		_controller.Level.Should().BeLessThan(1.0, "without constantly pegging");
 	}
 
-	// --- WHISPER-102 feedback: state, elapsed, near-cap, error ---
+	// --- feedback: state, elapsed, near-cap, error ---
 
 	public void CompleteTranscription() => _stateMachine.CompleteTranscription();
 
 	public void AdvanceSeconds(int seconds) => _time.Advance(TimeSpan.FromSeconds(seconds));
 
-	// Publish the WHISPER-111 soft-limit signal on the shared messenger, exactly as the orchestrator does.
+	// Publish the soft-limit signal on the shared messenger, exactly as the orchestrator does.
 	public void PublishNearLimit() => _messenger.Send(new DictationNearLimitMessage(8_000, 10_000));
 
-	// Publish the WHISPER-102 failure signal on the shared messenger, as the orchestrator does on a failure.
+	// Publish the failure signal on the shared messenger, as the orchestrator does on a failure.
 	public void PublishFailure() => _messenger.Send(new DictationFailedMessage());
 
 	public void AssertState(OverlayState state) => _controller.State.Should().Be(state);

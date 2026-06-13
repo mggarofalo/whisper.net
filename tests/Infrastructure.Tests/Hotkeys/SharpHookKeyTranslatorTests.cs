@@ -1,4 +1,4 @@
-// Unit depth for the WHISPER-10 raw-key translation: SharpHook's VcXxx codes map to the right Domain
+// Unit depth for the raw-key translation: SharpHook's VcXxx codes map to the right Domain
 // keys, left/right modifier variants collapse to one side-agnostic key, the extended F13 range is
 // preserved (the reason the app uses a global hook at all), and anything unmapped becomes Unknown
 // rather than being silently dropped. Pure and total, so it is exhaustively checkable here.

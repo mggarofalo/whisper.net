@@ -1,4 +1,4 @@
-// Thin step definitions for the @WHISPER-38 custom-vocabulary feature. The assembly steps delegate to
+// Thin step definitions for the custom-vocabulary feature. The assembly steps delegate to
 // VocabularyConditioningDriver; the transcription steps delegate to VocabularyTranscriptionDriver
 // (the real WhisperTranscriber over a capturing fake engine). No logic lives here.
 

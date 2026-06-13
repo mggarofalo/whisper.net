@@ -5,7 +5,7 @@
              xmlns:behaviors="clr-namespace:Presentation.Behaviors"
              KeyboardNavigation.TabNavigation="Local">
     <UserControl.Resources>
-        <!-- Declared locally (WHISPER-96) so the view is self-contained: parse-time StaticResource only
+        <!-- Declared locally so the view is self-contained: parse-time StaticResource only
              sees the view's own resources and the Application, and the smoke harness composes without one. -->
         <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
     </UserControl.Resources>
@@ -22,7 +22,7 @@
                     Command="{Binding LoadCommand}"
                     Margin="16,0,0,0"
                     Padding="12,4" />
-            <!-- Lightweight loading state (WHISPER-108): visible while the activation-triggered load runs. -->
+            <!-- Lightweight loading state: visible while the activation-triggered load runs. -->
             <TextBlock Text="Loading…"
                        Opacity="0.7"
                        Margin="16,0,0,0"
@@ -30,9 +30,9 @@
                        Visibility="{Binding LoadCommand.IsRunning, Converter={StaticResource BoolToVisibility}}" />
         </StackPanel>
 
-        <!-- A ComboBox of capture devices by friendly name (WHISPER-80). The two-way SelectedValue binding
+        <!-- A ComboBox of capture devices by friendly name. The two-way SelectedValue binding
              is the whole contract: the view-model commits a genuine user pick and ignores the programmatic
-             selection a reload performs (WHISPER-92). The stored value is the stable device id, not an index. -->
+             selection a reload performs. The stored value is the stable device id, not an index. -->
         <ComboBox x:Name="DeviceBox"
                   Width="320"
                   HorizontalAlignment="Left"
@@ -43,7 +43,7 @@
                   SelectedValuePath="Id"
                   SelectedValue="{Binding SelectedDeviceId, Mode=TwoWay}">
             <b:Interaction.Behaviors>
-                <!-- Focus the picker on section activation (WHISPER-93) for immediate keyboard use. -->
+                <!-- Focus the picker on section activation for immediate keyboard use. -->
                 <behaviors:FocusOnActivateBehavior />
             </b:Interaction.Behaviors>
         </ComboBox>

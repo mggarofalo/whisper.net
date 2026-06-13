@@ -1,7 +1,7 @@
 // Handles QueryHistoryQuery: loads the date-range-filtered entries through the IHistoryStore port, then
 // enforces the query's contract — newest-first ordering and the optional result limit — and projects
-// to DTOs. The ordering/limit live here (not faked behind the store) so the @WHISPER-47 scenario
-// validates real handler behavior rather than the store's setup.
+// to DTOs. The ordering/limit live here (not faked behind the store) so the scenario validates real
+// handler behavior rather than the store's setup.
 
 using Application.Interfaces;
 using Application.Ports;

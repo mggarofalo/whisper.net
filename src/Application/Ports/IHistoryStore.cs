@@ -32,6 +32,6 @@ public interface IHistoryStore
 	/// </summary>
 	ValueTask<int> PruneToMostRecentAsync(int maxEntries, CancellationToken cancellationToken);
 
-	/// <summary>Removes every transcript entry from disk (used by the user-initiated purge, WHISPER-34).</summary>
+	/// <summary>Removes every transcript entry from disk (used by the user-initiated purge).</summary>
 	ValueTask ClearAsync(CancellationToken cancellationToken);
 }

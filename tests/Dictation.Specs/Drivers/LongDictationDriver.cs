@@ -1,4 +1,4 @@
-// Drives the @WHISPER-111 long-dictation scenarios. It owns HOW the soft limit is exercised so the
+// Drives the long-dictation scenarios. It owns HOW the soft limit is exercised so the
 // steps stay one-liners: it shrinks the scenario's soft (and hard) limit through the scoped options
 // holder, then drives the REAL DictationOrchestrator over the real WasapiAudioSource (fed by the fake
 // capture client) and the real delivery pipeline, faking only the Infrastructure ports. The
@@ -131,7 +131,7 @@ public sealed class LongDictationDriver
 		_transcribedClip.Should().NotBeNull("the dictation must reach the transcriber");
 		_transcribedClip!.Samples.Should().Contain(
 			PostLimitAmplitude,
-			"the limit is soft (WHISPER-111): audio spoken after it must be retained, never silently dropped");
+			"the limit is soft: audio spoken after it must be retained, never silently dropped");
 	}
 
 	public void AssertNearLimitWarningPublished()

@@ -1,5 +1,5 @@
-// Unit tests for the usage-stats aggregation (WHISPER-48): empty, single-entry, and multi-entry
-// history, plus the derived time-saved estimate. This is the real Logic the @WHISPER-48 scenarios
+// Unit tests for the usage-stats aggregation: empty, single-entry, and multi-entry
+// history, plus the derived time-saved estimate. This is the real Logic the acceptance scenarios
 // drive down into.
 
 using AwesomeAssertions;

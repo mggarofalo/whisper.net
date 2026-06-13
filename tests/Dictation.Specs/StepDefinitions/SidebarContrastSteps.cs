@@ -1,4 +1,4 @@
-// Thin step definitions for the navigation-sidebar theming feature (WHISPER-103 / WHISPER-122). Each step
+// Thin step definitions for the navigation-sidebar theming feature. Each step
 // delegates to the SidebarThemeDriver (injected by the Reqnroll DI plugin); no logic lives here.
 
 using Dictation.Specs.Drivers;

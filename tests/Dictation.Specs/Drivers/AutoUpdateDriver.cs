@@ -1,4 +1,4 @@
-// Drives the @WHISPER-29 signed auto-update scenarios. Like the GPU-backend driver, it constructs the
+// Drives the signed auto-update scenarios. Like the GPU-backend driver, it constructs the
 // REAL AutoUpdateService over a faked IUpdateSource and a scenario-controlled options + recording logger,
 // so the actual policy runs — check, download/apply, opt-in gating, and graceful degradation on failure —
 // with no Velopack and no network. It also inspects the packaging script to assert the installer is

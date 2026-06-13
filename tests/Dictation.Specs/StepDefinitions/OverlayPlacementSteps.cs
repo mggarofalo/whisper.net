@@ -1,4 +1,4 @@
-// Thin step definitions for the @WHISPER-100 overlay-placement feature. Each step delegates to the
+// Thin step definitions for the overlay-placement feature. Each step delegates to the
 // OverlayPlacementDriver (injected by the Reqnroll DI plugin); no logic lives here.
 
 using Dictation.Specs.Drivers;

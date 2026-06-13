@@ -1,4 +1,4 @@
-// Inner TDD loop for the instant-apply channel (WHISPER-78). These pin both publish modes over a real
+// Inner TDD loop for the instant-apply channel. These pin both publish modes over a real
 // WeakReferenceMessenger: an immediate Publish delivers the committed change synchronously (so a live
 // service reconfigures within one message round-trip), and PublishDebounced coalesces a burst of noisy
 // free-text commits into a single delivery of the latest value once the quiet window elapses — proven

@@ -1,4 +1,4 @@
-// Unit coverage for the WHISPER-8 strategy resolution: the configured default applies when no override
+// Unit coverage for the strategy resolution: the configured default applies when no override
 // is given, and a per-delivery override always wins. These map directly to the acceptance criterion's
 // required cases (default, override, precedence).
 

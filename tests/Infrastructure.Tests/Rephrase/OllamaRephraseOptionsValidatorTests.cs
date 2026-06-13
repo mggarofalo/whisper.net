@@ -1,4 +1,4 @@
-// Inner TDD loop for the WHISPER-40 rephrase options validator: a disabled feature is always valid;
+// Inner TDD loop for the rephrase options validator: a disabled feature is always valid;
 // an enabled feature must target a loopback endpoint, and a remote (or malformed) endpoint is rejected.
 
 using AwesomeAssertions;

@@ -1,4 +1,4 @@
-// Thin step definitions for the @WHISPER-121 theme-switcher feature. Each step delegates to the
+// Thin step definitions for the theme-switcher feature. Each step delegates to the
 // ThemeSwitcherDriver (injected by the Reqnroll DI plugin); no logic lives here.
 
 using Dictation.Specs.Drivers;

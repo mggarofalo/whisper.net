@@ -1,4 +1,4 @@
-// The Driver owns HOW clipboard-paste delivery is exercised, so the @WHISPER-5 steps stay one-liners.
+// The Driver owns HOW clipboard-paste delivery is exercised, so the steps stay one-liners.
 // It drives the REAL ClipboardTextInjector over fake clipboard and keyboard seams, captures what was on
 // the clipboard at the moment Ctrl+V fired (that is what "pasted into the focused window" means at this
 // boundary), and can simulate another process copying during the paste to prove the restore guard.

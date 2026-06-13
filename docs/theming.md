@@ -1,6 +1,6 @@
-# Theming decision (WHISPER-84)
+# Theming decision
 
-This records the M12 theming decision required by WHISPER-84 AC2.
+This records the theming decision for the app's Light/Dark and accent colour support.
 
 ## Decision
 
@@ -17,7 +17,7 @@ third-party UI dependency is added.
 
 ## Rationale
 
-WHISPER-84 is explicitly **last and optional**, and the module's guiding constraint is "keep isolated so it
+The guiding constraint is "keep isolated so it
 cannot destabilize working logic." The built-in theme meets the acceptance criteria (system Light/Dark +
 accent, themed settings window) with the **smallest possible, fully isolated change** — a single
 `ThemeMode = ThemeMode.System` opt-in guarded against the `WPF0001` experimental diagnostic. Adopting a
@@ -30,4 +30,4 @@ wants a full Fluent 2 navigation experience, revisit this and adopt WPF-UI then.
 The opt-in is one line in `App.OnStartup`, wrapped in `#pragma warning disable/restore WPF0001`. It changes
 only the visual theme; all behavior lives in the WPF-free view-models and is unaffected. The full non-`@wip`
 suite (validation, instant-apply, the hotkey/device/model pickers, accessibility) passes unchanged under the
-theme, satisfying WHISPER-84 AC3.
+theme, so the active theme is honoured throughout.

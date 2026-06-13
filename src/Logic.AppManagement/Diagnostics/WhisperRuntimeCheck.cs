@@ -1,4 +1,4 @@
-// Whisper native-runtime diagnostic (WHISPER-85): reports whether the Whisper.net native library actually
+// Whisper native-runtime diagnostic: reports whether the Whisper.net native library actually
 // loads, via the IWhisperRuntimeProbe port. Unlike the model-cache check (is a model file present?), this
 // probes the thing that silently broke in the packaged app — the native runtime WhisperFactory needs
 // before it can read any model. A missing native runtime means NO transcription is possible, so it is a

@@ -1,4 +1,4 @@
-// Drives the @WHISPER-23 normalization scenarios against the REAL Logic.AudioManagement behaviors:
+// Drives the normalization scenarios against the REAL Logic.AudioManagement behaviors:
 // the AudioResampler (resolved from DI) and a CaptureBuffer constructed with the scenario's buffering
 // options. No device is involved — frames are synthetic. Idle/recorded audio is filled with an
 // increasing counter so the preroll assertion can prove the *most recent* samples were retained.
@@ -108,5 +108,5 @@ public sealed class AudioNormalizationDriver(AudioResampler resampler)
 		FinalClip().Samples.Should().HaveCount(MsToSamples(ms));
 
 	public void AssertLimitReported() =>
-		_limitReported.Should().BeTrue("the soft limit (WHISPER-111) must be observable even though recording continues");
+		_limitReported.Should().BeTrue("the soft limit must be observable even though recording continues");
 }

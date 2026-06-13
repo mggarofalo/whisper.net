@@ -1,4 +1,4 @@
-// Thin step definitions for the @WHISPER-21 audio-feedback feature. Each step delegates to the
+// Thin step definitions for the audio-feedback feature. Each step delegates to the
 // AudioFeedbackDriver (injected by the Reqnroll DI plugin); no logic lives here.
 
 using Dictation.Specs.Drivers;

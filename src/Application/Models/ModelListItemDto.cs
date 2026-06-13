@@ -1,4 +1,4 @@
-// Boundary projection of one catalog model for the model picker (WHISPER-27): its identity and size,
+// Boundary projection of one catalog model for the model picker: its identity and size,
 // the three ratings (derived by ModelRatingScale), whether it is already downloaded to the local cache,
 // and whether it is the currently active model. The ViewModel binds a row per item; downloading and
 // switching are driven by the picker's commands.

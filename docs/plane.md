@@ -63,11 +63,11 @@ Types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`. Scopes (optional): `d
 Every Reqnroll scenario is tagged with the Plane issue it implements:
 
 ```gherkin
-@WHISPER-114
+@WHISPER-<id>
 Scenario Outline: Trailing silence beyond the threshold is trimmed before delivery
 ```
 
-This gives bidirectional traceability: from an issue, grep `@WHISPER-114` to find its executable
+This gives bidirectional traceability: from an issue, grep `@WHISPER-<id>` to find its executable
 spec; from a failing scenario, the report names the issue. The DoD validator uses these tags to
 confirm every acceptance criterion maps to a passing scenario before an issue may move to Done.
 

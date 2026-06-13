@@ -1,4 +1,4 @@
-// Model diagnostic (WHISPER-50): reports whether the configured Whisper model is present in the local
+// Model diagnostic: reports whether the configured Whisper model is present in the local
 // cache, and where. It reads the configured model id from the settings store, resolves it through the
 // catalog, and asks the cache port — the same path transcription takes — so the verdict reflects the
 // real model the app would load. Fails when the configured id is unknown (a broken setting) or when the

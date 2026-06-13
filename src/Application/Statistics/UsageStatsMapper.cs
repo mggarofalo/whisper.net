@@ -1,7 +1,7 @@
 // Mapperly mapper between UsageStats (Domain) and UsageStatsDto (Application). Per the house rules: a
 // [Mapper] partial class, no [UseMapper]. Domain -> DTO is used by the usage-stats handler; the
-// reverse direction completes the bidirectional contract and is exercised by the @WHISPER-49
-// round-trip test. The real generated mapper is used in tests, never mocked.
+// reverse direction completes the bidirectional contract and is exercised by the round-trip test.
+// The real generated mapper is used in tests, never mocked.
 
 using Domain.Statistics;
 using Riok.Mapperly.Abstractions;

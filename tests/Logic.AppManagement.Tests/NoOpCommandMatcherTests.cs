@@ -1,4 +1,4 @@
-// Unit depth for the WHISPER-35 default command matcher: it must recognize nothing, whatever the
+// Unit depth for the default command matcher: it must recognize nothing, whatever the
 // transcript, so the command-mode hook stays inert and normal dictation is unchanged until a real
 // matcher is implemented.
 

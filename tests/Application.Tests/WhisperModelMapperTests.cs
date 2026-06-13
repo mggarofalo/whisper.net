@@ -1,4 +1,4 @@
-// Verifies the representative Mapperly mapping (WHISPER-56) using the REAL mapper — never a mock, per
+// Verifies the representative Mapperly mapping using the REAL mapper — never a mock, per
 // the house rules: a real Mapperly mapper is fast and deterministic, so mocking it would only hide
 // mapping bugs. Round-trips a domain entity to its DTO and back and asserts every field survives.
 

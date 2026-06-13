@@ -1,4 +1,4 @@
-// Port for cross-process activation signalling (WHISPER-25): how a second launch tells the already-
+// Port for cross-process activation signalling: how a second launch tells the already-
 // running instance to surface itself. Implemented in Infrastructure with a named EventWaitHandle
 // (current-user, no elevation); faked in specs. The primary instance Listens; a second process Signals
 // it, which raises ActivationRequested in the primary. Disposable because the listener owns a

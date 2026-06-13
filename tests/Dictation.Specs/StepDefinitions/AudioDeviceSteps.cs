@@ -1,4 +1,4 @@
-// Thin step definitions for the @WHISPER-13 device-selection feature. Each step delegates to the
+// Thin step definitions for the device-selection feature. Each step delegates to the
 // AudioDeviceDriver (injected by the Reqnroll DI plugin); no logic lives here.
 
 using Dictation.Specs.Drivers;

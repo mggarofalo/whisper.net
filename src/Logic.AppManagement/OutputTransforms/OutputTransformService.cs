@@ -1,4 +1,4 @@
-// Applies a named output transform (WHISPER-37): resolve the transform from the registry, compose its
+// Applies a named output transform: resolve the transform from the registry, compose its
 // prompt with the input text, and delegate the rewrite to the rephrase port. Every non-success path is
 // recoverable — an unknown name, a disabled backend, or a rephrase failure each return a TransformResult
 // carrying the original text rather than throwing, so a transform problem never crashes the pipeline.

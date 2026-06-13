@@ -1,7 +1,7 @@
-// Verifies the Application ports (WHISPER-44) hold the properties the BDD harness depends on: every
+// Verifies the Application ports hold the properties the BDD harness depends on: every
 // port is a pure interface that NSubstitute can fake (one case per port), the specified ports all
 // exist, and no port exposes a static surface. The "no native/framework leakage" property is
-// validated behaviorally by the @WHISPER-44 reflection scenario.
+// validated behaviorally by the reflection scenario.
 
 using System.Reflection;
 using NSubstitute;

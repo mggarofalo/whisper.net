@@ -3,7 +3,7 @@
 // on — start/stop with idempotency, re-raising device frames as port frames in the negotiated format,
 // flushing pending frames on stop, and turning a device error into a typed CaptureFailed event
 // instead of an exception on the capture thread. All of this runs without a real device (over a fake
-// client), which is how the @WHISPER-7 specs exercise it; NAudioCaptureClient supplies the real one.
+// client), which is how the audio-source specs exercise it; NAudioCaptureClient supplies the real one.
 
 using Application.Ports;
 using Domain.Audio;
@@ -24,7 +24,7 @@ public sealed class WasapiAudioSource(IAudioCaptureClient client) : IAudioSource
 	// placeholder until then), so Format MUST be read AFTER client.Start() — reading it before captured the
 	// first recording at the wrong sample rate (e.g. 48 kHz audio tagged 16 kHz, never downsampled, so it
 	// played back 3x too slow and Whisper could not transcribe it), while every later recording happened to
-	// reuse the previously-negotiated format and worked (WHISPER-132). Subscriptions are wired before Start so
+	// reuse the previously-negotiated format and worked. Subscriptions are wired before Start so
 	// no frame is missed; OnDataAvailable's _running/Format guards drop any frame that races the brief gap
 	// between Start returning and the format being read (the first real buffer is milliseconds away).
 	public void Start()

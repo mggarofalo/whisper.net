@@ -1,4 +1,4 @@
-// The user's chosen app theme (WHISPER-121). System follows the OS Light/Dark preference (the default);
+// The user's chosen app theme. System follows the OS Light/Dark preference (the default);
 // Light and Dark override it explicitly. Lives in Domain because it is persisted in AppSettings; the
 // Presentation layer maps it onto WPF's ThemeMode when applying the theme.
 

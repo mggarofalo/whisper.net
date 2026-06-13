@@ -1,4 +1,4 @@
-// Unit tests for the settings handlers (WHISPER-46) in isolation, with a substituted ISettingsStore
+// Unit tests for the settings handlers in isolation, with a substituted ISettingsStore
 // and the real SettingsMapper. They cover what the BDD scenarios assert at the port boundary plus the
 // mapping fidelity in each direction.
 
@@ -52,7 +52,7 @@ public sealed class SettingsHandlersTests
 				s.FillerWordRemovalEnabled),
 			Arg.Any<CancellationToken>());
 
-		// The change is published (after the save) so live services reconfigure without a restart (WHISPER-78).
+		// The change is published (after the save) so live services reconfigure without a restart.
 		Assert.NotNull(published);
 		Assert.Equal("Ctrl+Win", published!.Hotkey.Chord);
 		GC.KeepAlive(recipient);

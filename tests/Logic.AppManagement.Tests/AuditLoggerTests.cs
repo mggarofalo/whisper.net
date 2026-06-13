@@ -1,4 +1,4 @@
-// Unit tests for the audit-log privacy gate (WHISPER-34): nothing is written when auditing is off (the
+// Unit tests for the audit-log privacy gate: nothing is written when auditing is off (the
 // default), a record is appended once the user opts in, and disabling it stops writes immediately — the
 // gate reads the live settings holder, so the toggle needs no restart. Uses a substituted IAuditLog and
 // the real SettingsHolder.

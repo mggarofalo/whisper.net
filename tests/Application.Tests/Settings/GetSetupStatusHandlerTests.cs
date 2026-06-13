@@ -1,4 +1,4 @@
-// Unit tests for GetSetupStatusHandler (WHISPER-82): the launch decision that drives whether the settings
+// Unit tests for GetSetupStatusHandler: the launch decision that drives whether the settings
 // window opens for first-run setup. The app is configured only when setup is completed AND the selected
 // model is present in the local cache, so a fresh install, a completed setup whose model file is gone, and
 // an unknown model id all report not-configured (and the launch flow opens settings).

@@ -1,5 +1,5 @@
 // A controllable IHostApplicationLifetime for specs that need to assert a graceful shutdown was
-// requested (e.g. @WHISPER-18 "Quit"). StopApplication records the request and signals the stopping
+// requested (e.g. "Quit"). StopApplication records the request and signals the stopping
 // token, exactly as the real host lifetime would, without running a Generic Host.
 
 using Microsoft.Extensions.Hosting;

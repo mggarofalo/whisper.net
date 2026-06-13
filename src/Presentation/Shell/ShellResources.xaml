@@ -1,4 +1,4 @@
-<!-- Shared resources for the settings-shell views (WHISPER-96): the converters and validation chrome
+<!-- Shared resources for the settings-shell views: the converters and validation chrome
      the feature views reference by StaticResource. Owned by a standalone dictionary — merged by BOTH
      App.xaml (app-wide, as before) and ShellWindow.xaml — so the shell window is self-contained:
      resource lookup succeeds wherever the window is composed, including the STA smoke harness, which
@@ -9,11 +9,11 @@
 
     <!-- Converters referenced by StaticResource at parse time live IN the consuming views (see
          HistoryView/ModelView), not here: a UserControl's parse-time lookup sees only its own resources
-         and the Application, and the views must compose without a live Application (WHISPER-96). The nav
+         and the Application, and the views must compose without a live Application. The nav
          resources below are an exception: they are consumed by ShellWindow.xaml (a Window, whose parse-time
          lookup sees its own merged dictionaries — this one), not by a UserControl. -->
 
-    <!-- Reusable native validation adorner (WHISPER-77): a red border around the offending control plus
+    <!-- Reusable native validation adorner: a red border around the offending control plus
          the INotifyDataErrorInfo message beside it, and the same message as the control's tooltip. Applied
          to validated TextBoxes so settings errors surface natively next to the field. -->
     <ControlTemplate x:Key="ValidationErrorTemplate">
@@ -43,7 +43,7 @@
     </Style>
 
     <!-- ============================================================================================
-         Navigation sidebar theme (WHISPER-103; made theme-adaptive in WHISPER-122). The sidebar follows
+         Navigation sidebar theme (made theme-adaptive). The sidebar follows
          the active light/dark theme instead of a fixed dark rail: labels inherit the theme's text colour,
          and the rail / hover / pressed surfaces are theme-NEUTRAL semi-transparent grays that read on both
          light and dark. The selected tab uses the system ACCENT colour (the Fluent AccentFillColorDefault
@@ -63,13 +63,13 @@
     <!-- Marks the nav button whose section key equals the shell's CurrentSectionKey as selected. -->
     <shell:EqualityConverter x:Key="EqualityConverter" />
 
-    <!-- Templated nav button (WHISPER-103; adaptive in WHISPER-122): visible hover / pressed / keyboard-
+    <!-- Templated nav button (theme-adaptive): visible hover / pressed / keyboard-
          focus / selected states. The label inherits the theme's foreground (no fixed colour), so it adapts
          to light/dark; the active section is filled with the system accent (DynamicResource so it tracks the
          Windows accent and theme), an accent bar, bold weight, and on-accent text. -->
     <Style x:Key="NavButtonStyle"
            TargetType="Button">
-        <!-- The label uses the Fluent theme's adaptive text brush so it follows light/dark (WHISPER-123).
+        <!-- The label uses the Fluent theme's adaptive text brush so it follows light/dark.
              A keyed style has no implicit-style BasedOn, so without this the foreground would fall back to
              the framework default (~black) and read black-on-dark in dark mode. -->
         <Setter Property="Foreground"

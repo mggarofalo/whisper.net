@@ -1,4 +1,4 @@
-// Regression for WHISPER-131: the warm-up hosted service broadcasts ModelWarmupChangedMessage(true) during
+// Regression: the warm-up hosted service broadcasts ModelWarmupChangedMessage(true) during
 // host start, but the overlay controller — a lazily-resolved singleton — was not constructed until the overlay
 // window was created AFTER _host.Start(). Subscribing after the broadcast misses it (the WeakReferenceMessenger
 // does not replay), so the warming pill never appeared. These pin the ordering contract App now upholds by

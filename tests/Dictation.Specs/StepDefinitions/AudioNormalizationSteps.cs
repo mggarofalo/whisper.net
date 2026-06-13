@@ -1,4 +1,4 @@
-// Thin step definitions for the @WHISPER-23 normalization feature. Each step delegates to the
+// Thin step definitions for the normalization feature. Each step delegates to the
 // AudioNormalizationDriver (injected by the Reqnroll DI plugin); no logic lives here.
 
 using Dictation.Specs.Drivers;

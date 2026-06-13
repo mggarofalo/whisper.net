@@ -4,7 +4,7 @@ The Windows tray app ships as a **self-contained, single-file build** wrapped in
 [Velopack](https://velopack.io) installer, so an end user installs and runs it **without a separate
 .NET install**. Packaging is reproducible from a clean clone with one command.
 
-## One-command local packaging (WHISPER-20)
+## One-command local packaging
 
 ```pwsh
 pwsh ./build/pack.ps1
@@ -31,10 +31,10 @@ under a `'$(RuntimeIdentifier)' != ''` group, so they apply only when publishing
 normal `dotnet build` is unaffected. The app id, title, and icon (`assets/whisper.ico`) are passed to
 `vpk pack`.
 
-## Bundled model assets (WHISPER-66)
+## Bundled model assets
 
 The Silero **voice-activity-detection** model ships with the app as a committed content asset — there is
-**no runtime download** (satisfies WHISPER-31 AC6):
+**no runtime download**:
 
 | | |
 |---|---|
@@ -59,7 +59,7 @@ newer v5 single-`state` model would not load. Real inference over the bundled as
 pwsh ./build/pack.ps1 -OutputDir ./releases -PublishDir ./artifacts/publish
 ```
 
-## Per-user data locations (WHISPER-86)
+## Per-user data locations
 
 The app's **install directory** and its **mutable user data** are deliberately kept apart. Velopack
 installs the app to `%LOCALAPPDATA%\Whisper.Net` (the `PackId`); user data lives under a separate
@@ -88,21 +88,21 @@ install root, so Velopack reclaims it on the next install/update anyway.
 `App.OnStartup` calls `VelopackApp.Build().Run()` first, so when the installer or updater launches the
 app with a hook argument it performs the hook and exits instead of starting the tray.
 
-## Auto-update (WHISPER-29)
+## Auto-update
 
 When the user opts in (`AutoUpdate` settings — **off by default**, so there is no network egress
 otherwise), a startup background check asks the release feed for a newer version and stages it to apply on
 the next restart. The policy (`AutoUpdateService`) keeps the app running on the current version if the
 channel is unreachable. See the network disclosure in [README](../README.md) and [CHANGELOG](../CHANGELOG.md).
 
-## Code signing (WHISPER-29)
+## Code signing
 
 `build/pack.ps1` Authenticode-signs the app and installer through `signtool` (via `vpk --signParams`)
 **when** a signing certificate is supplied from the environment — a base64 PFX in
 `VELOPACK_SIGN_CERTIFICATE` plus `VELOPACK_SIGN_PASSWORD`. The release CI injects these from GitHub
 Actions secrets; they are never committed and never echoed. Absent the secret, the build is unsigned.
 
-## Tag-driven release CI (WHISPER-39)
+## Tag-driven release CI
 
 `.github/workflows/release.yml` runs on a `vX.Y.Z` tag: it builds (`-warnaserror`), tests, packages, and
 publishes the installer + update package + feed to a GitHub Release for the tag. A failing build or test

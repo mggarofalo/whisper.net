@@ -1,4 +1,4 @@
-// Thin step definitions for UIPI-aware delivery (@WHISPER-6). Each step delegates to the
+// Thin step definitions for UIPI-aware delivery. Each step delegates to the
 // UipiDeliveryDriver; the "model will transcribe" given is reused from the push-to-talk steps (it
 // configures the same scoped transcriber). The unelevated given is scene-setting — the app runs
 // unelevated in tests anyway, and the higher-integrity foreground is what drives the UIPI branch.

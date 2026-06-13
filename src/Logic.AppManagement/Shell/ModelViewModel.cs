@@ -1,8 +1,8 @@
-// The shell's model picker (WHISPER-27, growing the WHISPER-19 representative section): it lists the
+// The shell's model picker: it lists the
 // catalog models with speed/accuracy/memory ratings, lets the user download them with live progress, and
 // switches the active model on selection. It depends on nothing but IMediator — no ports, no handlers,
 // no Infrastructure: it loads via ListModelsQuery and activates via SwitchActiveModelCommand. Downloads
-// are owned per row (WHISPER-107): each ModelItemViewModel has its own Download/Cancel command and state,
+// are owned per row: each ModelItemViewModel has its own Download/Cancel command and state,
 // so several models can download concurrently; this section coordinates only the list and the active
 // model. Selecting an un-downloaded model drives that row's download first and only activates on success.
 // Built on CommunityToolkit.Mvvm and WPF-free so the behavior is driven for real in specs; the thin WPF
@@ -29,12 +29,12 @@ public sealed partial class ModelViewModel : FeatureViewModel
 	[ObservableProperty]
 	private string? _activeModelId;
 
-	// Auto-load the catalog on first activation (WHISPER-108): the section opens populated, the cached
+	// Auto-load the catalog on first activation: the section opens populated, the cached
 	// instance does not re-query on later tab switches, and Refresh stays the manual re-query.
 	protected override IAsyncRelayCommand FirstActivationLoadCommand => LoadCommand;
 
 	// Load the model list through Mediator and project each into a row; mark which one is active. Each row
-	// gets the mediator so it can own its download (WHISPER-107).
+	// gets the mediator so it can own its download.
 	[RelayCommand]
 	private async Task LoadAsync(CancellationToken cancellationToken)
 	{
@@ -51,7 +51,7 @@ public sealed partial class ModelViewModel : FeatureViewModel
 
 	// Selecting a model activates it. If it is not yet downloaded, drive that row's own download first (with
 	// progress) and only switch on a successful download — a failed download leaves the active model
-	// unchanged. The download lives on the row (WHISPER-107); this only coordinates the active switch.
+	// unchanged. The download lives on the row; this only coordinates the active switch.
 	[RelayCommand]
 	private async Task SelectAsync(ModelItemViewModel? item, CancellationToken cancellationToken)
 	{
@@ -65,7 +65,7 @@ public sealed partial class ModelViewModel : FeatureViewModel
 			// Drive the row's own download — but never via ExecuteAsync while it is already running. For a
 			// cancelable command ExecuteAsync cancels the in-flight token and restarts, which would silently
 			// kill a download the user just started from the row's own Download button (then click Select on
-			// the same row). If one is already in flight, await it instead of restarting it (WHISPER-107).
+			// the same row). If one is already in flight, await it instead of restarting it.
 			// (SelectCommand is not itself cancelable, so its cancellationToken never fires; the download owns
 			// its own cancellation via the row's Cancel button.)
 			if (item.DownloadCommand.IsRunning)

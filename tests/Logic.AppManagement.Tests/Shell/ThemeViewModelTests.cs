@@ -1,4 +1,4 @@
-// Inner TDD loop for the theme switcher's view-model (WHISPER-121), WPF-free. Pins that it loads the
+// Inner TDD loop for the theme switcher's view-model, WPF-free. Pins that it loads the
 // persisted preference for display, that a genuine user pick persists the new theme through
 // UpdateSettings (carrying the whole settings DTO with the theme swapped), and that the programmatic
 // selection a load performs does NOT commit (the same suppress-on-load discipline as the audio picker).

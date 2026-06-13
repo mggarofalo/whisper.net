@@ -4,7 +4,7 @@
 // Domain keys, track the live modifier set so each edge carries a consistent snapshot, join the
 // thread cleanly on Stop/Dispose, and survive a hook that fails to start by logging instead of
 // crashing the host. All of this runs without a real hook (over a fake seam), which is how the
-// @WHISPER-10 specs exercise it; SharpHookGlobalKeyHook supplies the real one.
+// hotkey-listener specs exercise it; SharpHookGlobalKeyHook supplies the real one.
 
 using Application.Ports;
 using Domain.Input;

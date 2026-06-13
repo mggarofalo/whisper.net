@@ -1,8 +1,8 @@
-// Inner TDD loop for native settings validation (WHISPER-77), WPF-free. These pin the DataAnnotations +
+// Inner TDD loop for native settings validation, WPF-free. These pin the DataAnnotations +
 // INotifyDataErrorInfo contract on the editable hotkey: an empty or unrecognized chord flags a field
 // error and HasErrors, the Save command is gated (no UpdateSettingsCommand is dispatched while invalid),
 // and a valid chord clears the error and is sent. The custom validator itself is also exercised directly.
-// The outer @WHISPER-77 scenarios drive this down; the WPF adorner that renders the error is smoke-only.
+// The outer acceptance scenarios drive this down; the WPF adorner that renders the error is smoke-only.
 
 using System.ComponentModel.DataAnnotations;
 using Application.Settings;

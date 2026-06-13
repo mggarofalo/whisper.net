@@ -1,5 +1,5 @@
 // Trims trailing dead air from a clip so the model isn't fed silence at the end, without clipping quiet
-// word endings (WHISPER-112). End-of-speech is found by ENERGY, not raw per-sample amplitude: the clip is
+// word endings. End-of-speech is found by ENERGY, not raw per-sample amplitude: the clip is
 // scanned in short frames and the last frame whose RMS energy reaches the threshold is the end of speech.
 // This is the fix for the reopened clip — a word trailing off has individual samples below the old
 // per-sample bar yet still carries real frame energy, so it was wrongly trimmed as dead air; RMS over a

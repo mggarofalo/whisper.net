@@ -1,4 +1,4 @@
-// Port for the ordered post-process pipeline (WHISPER-41). The pipeline behavior lives in
+// Port for the ordered post-process pipeline. The pipeline behavior lives in
 // Logic.AppManagement; this abstraction lets the transcription handler (Application) depend on the
 // capability without referencing Logic. Implementations apply the configured steps — normalize, then
 // the optional output transform — reading the live configuration so changes take effect next call.

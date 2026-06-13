@@ -1,4 +1,4 @@
-// Exercises the real Infrastructure composition for the @WHISPER-86 scenario. The model cache and
+// Exercises the real Infrastructure composition. The model cache and
 // settings-database default paths are applied by AddInfrastructure's PostConfigure, so this drives the
 // actual production registration (no configuration → the per-user defaults kick in) and resolves the
 // bound options; the logs directory comes from the same WhisperLogPath the Serilog wiring uses. It then

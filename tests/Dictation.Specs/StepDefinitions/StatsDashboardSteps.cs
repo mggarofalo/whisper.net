@@ -1,4 +1,4 @@
-// Thin step definitions for the @WHISPER-53 stats dashboard feature. Each step delegates to the
+// Thin step definitions for the stats dashboard feature. Each step delegates to the
 // StatsDashboardDriver (injected by the Reqnroll DI plugin); no logic lives here.
 
 using Dictation.Specs.Drivers;

@@ -1,4 +1,4 @@
-// Thin step definitions for the @WHISPER-26 level-overlay feature. Each step delegates to the
+// Thin step definitions for the level-overlay feature. Each step delegates to the
 // LevelOverlayDriver (injected by the Reqnroll DI plugin); no logic lives here.
 
 using Dictation.Specs.Drivers;
@@ -25,7 +25,7 @@ public sealed class LevelOverlaySteps(LevelOverlayDriver driver)
 	public void WhenTheDictationFinishes()
 	{
 		// Stop -> Transcribing -> (complete) Idle: the overlay only hides once the dictation is fully done;
-		// it now stays visible through the transcribing step (WHISPER-102).
+		// it now stays visible through the transcribing step.
 		driver.StopRecording();
 		driver.CompleteTranscription();
 	}

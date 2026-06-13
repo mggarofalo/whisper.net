@@ -28,10 +28,10 @@ project.lock.json
 project.fragment.lock.json
 artifacts/
 
-# Velopack packaging output (WHISPER-20): the local installer + release feed, never committed.
+# Velopack packaging output: the local installer + release feed, never committed.
 releases/
 
-# Code-signing secrets (WHISPER-72): self-signed certs / exported keys are generated on demand by
+# Code-signing secrets: self-signed certs / exported keys are generated on demand by
 # build/new-self-signed-cert.ps1 and must never be committed.
 *.pfx
 *.p12
@@ -74,10 +74,6 @@ nunit-*.xml
 
 # Reqnroll-generated feature code-behind (regenerated on build)
 *.feature.cs
-
-# WHISPER-65 spike: downloaded artifacts (sample audio + ggml models), never committed
-spikes/**/jfk.wav
-spikes/**/models/
 
 # SDLC pipeline state (local only)
 .sdlc/

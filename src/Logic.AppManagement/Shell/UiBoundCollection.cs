@@ -1,4 +1,4 @@
-// The sanctioned bound-collection helper (WHISPER-91): an ObservableCollection whose every mutation
+// The sanctioned bound-collection helper: an ObservableCollection whose every mutation
 // takes its own Gate, so a registered view (WPF's collection synchronization reads under the same
 // gate) can be updated from any thread without a cross-thread exception. List-bearing view-models
 // expose one of these and register it through IUiCollectionSynchronizer at construction — see

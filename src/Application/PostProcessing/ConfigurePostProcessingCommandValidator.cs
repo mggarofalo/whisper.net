@@ -1,4 +1,4 @@
-// Validates a post-process configuration change (WHISPER-41) in the ValidationBehavior pipeline, so an
+// Validates a post-process configuration change in the ValidationBehavior pipeline, so an
 // invalid configuration is reported clearly and never reaches the live holder: the default transform
 // must be a known transform, and an enabled rephrase endpoint must be loopback-only.
 

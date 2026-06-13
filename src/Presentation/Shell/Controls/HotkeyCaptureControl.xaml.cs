@@ -1,4 +1,4 @@
-// The reusable hotkey-capture control (WHISPER-79): a read-only TextBox that records the next key
+// The reusable hotkey-capture control: a read-only TextBox that records the next key
 // combination the user presses and exposes it as a two-way bindable Chord (the canonical chord string the
 // validated HotkeyViewModel.HotkeyInput binds to). All the capture RULES live WPF-free in
 // HotkeyCaptureInterpreter; this control is the thin glue that (1) translates the WPF Key + ModifierKeys to

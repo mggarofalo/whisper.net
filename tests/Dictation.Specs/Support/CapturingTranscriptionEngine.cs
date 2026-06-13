@@ -1,4 +1,4 @@
-// A fake engine seam for the @WHISPER-38 transcription scenario: it lets the REAL WhisperTranscriber
+// A fake engine seam for the transcription scenario: it lets the REAL WhisperTranscriber
 // run without a model or the native library, while recording the per-call DecodingOptions the decoder
 // was conditioned with and how many times an engine was created. That lets a scenario prove a changed
 // vocabulary conditions the next transcription with no reload (CreateCount stays at one).

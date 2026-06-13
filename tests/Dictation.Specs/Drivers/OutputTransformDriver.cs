@@ -1,4 +1,4 @@
-// Drives the @WHISPER-37 scenarios against the REAL OutputTransformService + OutputTransformRegistry,
+// Drives the output-transform scenarios against the REAL OutputTransformService + OutputTransformRegistry,
 // with the rephrase port (IRephraseClient) faked so the test controls whether the AI backend is
 // available, disabled, or never reached. Proves the prompt+text are composed and handed to the port,
 // that an unknown transform is a recoverable error with no rephrase call, and that a disabled backend

@@ -1,4 +1,4 @@
-// Inner TDD loop for the output-transforms service (WHISPER-37): applying a known transform composes
+// Inner TDD loop for the output-transforms service: applying a known transform composes
 // its prompt with the text and returns the rephrased result; an unknown name is a recoverable error
 // with no rephrase call; and a disabled or failed rephrase backend degrades to the original text.
 

@@ -1,7 +1,7 @@
 // Unit coverage for the delivery orchestration's branching: deliver normally, deliver nothing when
 // there is no speech, route a matched transcript to the command branch instead of typing it
-// (WHISPER-35), withhold and surface a UIPI block for a higher-integrity window (WHISPER-6), and route
-// the delivery through the strategy the selector resolves (WHISPER-8). The Logic and Infrastructure
+//, withhold and surface a UIPI block for a higher-integrity window, and route
+// the delivery through the strategy the selector resolves. The Logic and Infrastructure
 // ports are substituted so this pins the handler's decisions, not their implementations.
 
 using Application.Commands;
@@ -144,8 +144,8 @@ public sealed class DeliverTranscriptionHandlerTests
 	[Fact]
 	public async Task Skips_transcription_entirely_when_the_clip_has_no_speech()
 	{
-		// The trimmer collapses an all-silence clip to empty (WHISPER-112); feeding that to Whisper makes it
-		// hallucinate a phrase (WHISPER-125), so the handler must not call the transcriber at all.
+		// The trimmer collapses an all-silence clip to empty; feeding that to Whisper makes it
+		// hallucinate a phrase, so the handler must not call the transcriber at all.
 		_silenceTrimmer.Trim(Arg.Any<AudioClip>()).Returns(AudioClip.OneSecondOfSilence() with { Samples = [] });
 
 		DeliveryResult result = await Deliver();

@@ -1,5 +1,5 @@
-// Exercises the Velopack packaging configuration for the @WHISPER-20 scenarios. Like the @WHISPER-60
-// repository-guidance driver, it inspects repository artifacts directly rather than driving behavior
+// Exercises the Velopack packaging configuration. Like the repository-guidance driver, it inspects
+// repository artifacts directly rather than driving behavior
 // through IMediator — because the packaging contract lives in the project file, the version policy, and
 // the packaging script, not in the application's runtime composition. It asserts the configuration that
 // makes the installer correct: a self-contained, single-file, native-bundling win-x64 publish; a
@@ -41,7 +41,7 @@ public sealed class PackagingDriver
 
 	public void AssertNativeAssetsLooseForTheLoader()
 	{
-		// WHISPER-85: the native libraries must NOT be embedded for self-extract — Whisper.net's loader
+		// The native libraries must NOT be embedded for self-extract — Whisper.net's loader
 		// resolves whisper.dll relative to the base directory and cannot find it in the self-extract temp
 		// dir, which silently broke all transcription. They stay loose (runtimes/win-x64/native) next to the
 		// single-file exe, where the loader finds them; the self-contained publish still copies them.

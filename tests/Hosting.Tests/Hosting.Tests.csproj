@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    Integration tests for the Generic Host composition (WHISPER-57). Builds a host from the same
+    Integration tests for the Generic Host composition. Builds a host from the same
     per-layer registration extensions the WPF app uses (via AddWhisperServices + AddSerilogLogging in
     Infrastructure) and asserts the wiring resolves and that Serilog honors the configured level.
     References Infrastructure, which transitively brings Application + Logic.* + Domain. xUnit v3 test
@@ -23,7 +23,7 @@
     <PackageReference Include="coverlet.collector" />
   </ItemGroup>
 
-  <!-- Speech fixture for the @slow real-model VAD test (WHISPER-66): 16 kHz mono 16-bit PCM. -->
+  <!-- Speech fixture for the @slow real-model VAD test: 16 kHz mono 16-bit PCM. -->
   <ItemGroup>
     <Content Include="Audio\speech.wav">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

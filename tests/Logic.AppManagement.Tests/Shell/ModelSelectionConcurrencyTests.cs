@@ -1,4 +1,4 @@
-// Regression pin for the Select-during-download race (WHISPER-107). Each row owns its download, but the
+// Regression pin for the Select-during-download race. Each row owns its download, but the
 // section's Select still drives that row's download when the model is not yet cached. CommunityToolkit's
 // cancelable AsyncRelayCommand.ExecuteAsync CANCELS the in-flight token and restarts — so Select must NOT
 // call ExecuteAsync on a row that is already downloading (the user clicked the row's own Download button,

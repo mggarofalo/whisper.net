@@ -1,4 +1,4 @@
-// The dashboard shell's view-model (WHISPER-19): the navigable main window's content host. It exposes
+// The dashboard shell's view-model: the navigable main window's content host. It exposes
 // the registered section keys for the nav region, a NavigateCommand the nav buttons invoke, and the
 // CurrentViewModel the window's content region binds to. All navigation is delegated to the
 // INavigationService, which resolves each feature view-model from the DI container — so the shell holds
@@ -29,11 +29,11 @@ public sealed partial class ShellViewModel : ObservableObject
 		}
 
 		// Load the persisted theme so the sidebar-footer switcher shows the current choice on open
-		// (WHISPER-121). The shell is created once, on the UI thread, so this runs at startup.
+		//. The shell is created once, on the UI thread, so this runs at startup.
 		Theme.LoadCommand.Execute(null);
 	}
 
-	/// <summary>The theme switcher shown in the sidebar footer (WHISPER-121).</summary>
+	/// <summary>The theme switcher shown in the sidebar footer.</summary>
 	public ThemeViewModel Theme { get; }
 
 	/// <summary>The feature view-model currently shown in the shell's content region.</summary>
@@ -41,7 +41,7 @@ public sealed partial class ShellViewModel : ObservableObject
 	private object? _currentViewModel;
 
 	/// <summary>The key of the section currently shown, so the nav region can mark the active item
-	/// (WHISPER-103). NavigateTo is only ever driven from here, so tracking the key here is authoritative.</summary>
+	///. NavigateTo is only ever driven from here, so tracking the key here is authoritative.</summary>
 	[ObservableProperty]
 	private string? _currentSectionKey;
 

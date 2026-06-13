@@ -1,5 +1,5 @@
 // Implements IUpdateSource over Velopack's UpdateManager against the configured GitHub Releases feed
-// (WHISPER-29) — the single outbound seam for updates. The UpdateManager is created lazily on first use,
+// — the single outbound seam for updates. The UpdateManager is created lazily on first use,
 // not in the constructor: building it resolves the app's install locator, which throws on a dev/F5 build
 // (no local package), so constructing this adapter must touch none of that — resolving the port stays
 // safe in any host. Only an installed (Velopack-packaged) app can self-update, so off an install the

@@ -1,4 +1,4 @@
-// Drives the @WHISPER-27 model picker scenarios. It owns HOW the picker is exercised so the steps stay
+// Drives the model picker scenarios. It owns HOW the picker is exercised so the steps stay
 // one-liners: it builds the REAL ModelViewModel over the REAL Mediator pipeline (ListModels / Download /
 // SwitchActiveModel handlers) and the REAL on-device catalog, faking only the device-facing ports — the
 // cache, the downloader, and the model lifecycle. It can therefore prove the list carries ratings, that
@@ -42,7 +42,7 @@ public sealed class ModelPickerDriver
 		_lifecycle.Status.Returns(ModelStatus.Unloaded);
 
 		// The settings store round-trips a save into the next load, so switching the active model can be
-		// observed as a persisted settings.ModelId — the value the transcriber loads (WHISPER-98).
+		// observed as a persisted settings.ModelId — the value the transcriber loads.
 		_store.LoadAsync(Arg.Any<CancellationToken>()).Returns(_ => _persisted);
 		_store.When(s => s.SaveAsync(Arg.Any<AppSettings>(), Arg.Any<CancellationToken>()))
 			.Do(call => _persisted = call.Arg<AppSettings>());
@@ -78,7 +78,7 @@ public sealed class ModelPickerDriver
 		await LoadList();
 	}
 
-	// WHISPER-118: the model is the persisted selection but the runtime has not loaded it yet (a fresh
+	// The model is the persisted selection but the runtime has not loaded it yet (a fresh
 	// launch); the lifecycle stays Unloaded (the ctor default), so ListModels must fall back to settings.
 	public void GivenPersistedActiveModelNotYetLoaded(string id) =>
 		_persisted = new AppSettings(id, _persisted.Hotkey, _persisted.SilenceThresholdMs, _persisted.FillerWordRemovalEnabled, _persisted.CaptureDeviceId, _persisted.AuditLogEnabled, _persisted.SetupCompleted);

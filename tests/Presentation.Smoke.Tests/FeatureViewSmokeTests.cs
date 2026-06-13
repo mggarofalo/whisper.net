@@ -1,4 +1,4 @@
-// The thin view-level smoke layer (WHISPER-96). Behavior lives in the WPF-free view-model specs;
+// The thin view-level smoke layer. Behavior lives in the WPF-free view-model specs;
 // these tests guard only the view glue, on a dedicated STA thread per test:
 //  - every registered NavigationSection's view-model type resolves an implicit DataTemplate from the
 //    real shell window's resources (a missing template fails, AC2), and
@@ -30,7 +30,7 @@ public sealed class FeatureViewSmokeTests
 
 			template.Should().NotBeNull(
 				$"the '{section.Key}' section's view-model ({section.ViewModelType.Name}) must have an " +
-				"implicit DataTemplate in the shell resources (WHISPER-96 AC2)");
+				"implicit DataTemplate in the shell resources");
 		}
 	});
 
@@ -60,7 +60,7 @@ public sealed class FeatureViewSmokeTests
 
 			bindingErrors.Errors.Should().BeEmpty(
 				$"the '{section.Key}' view must complete its first bind cleanly — a binding error here is a " +
-				"renamed/mistyped path the WPF-free specs cannot see (WHISPER-96 AC1)");
+				"renamed/mistyped path the WPF-free specs cannot see");
 		}
 	});
 

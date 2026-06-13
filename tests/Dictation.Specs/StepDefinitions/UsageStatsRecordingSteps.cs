@@ -1,4 +1,4 @@
-// @WHISPER-24 — drives the stats recording + aggregation scenarios. Steps stay thin; the
+// Drives the stats recording + aggregation scenarios. Steps stay thin; the
 // UsageStatsRecordingDriver owns HOW the real Mediator pipeline and SQLite store are exercised against a
 // private temp-file database.
 

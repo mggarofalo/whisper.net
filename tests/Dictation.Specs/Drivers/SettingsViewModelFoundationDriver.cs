@@ -1,4 +1,4 @@
-// Drives the @WHISPER-76 foundation scenarios. It resolves the shell's REAL feature section
+// Drives the settings view-model foundation scenarios. It resolves the shell's REAL feature section
 // view-models from the scenario's DI scope (exactly as the shell composes them) and asserts the
 // foundational contract M12 builds on: every settings/feature view-model is an ObservableValidator
 // (so it is both INotifyPropertyChanged and INotifyDataErrorInfo — validation-capable) and its
@@ -25,8 +25,8 @@ public sealed class SettingsViewModelFoundationDriver(
 	// Every section the shell can navigate to, resolved for real from the scenario scope.
 	private IReadOnlyList<object> FeatureViewModels => [home, model, audio, hotkey, history, stats];
 
-	// AC1: each feature view-model derives from ObservableValidator, so validation (WHISPER-77) and the
-	// instant-apply channel (WHISPER-78) have one uniform, validation-capable observable base to build on.
+	// AC1: each feature view-model derives from ObservableValidator, so validation and the
+	// instant-apply channel have one uniform, validation-capable observable base to build on.
 	public void AssertEachIsValidationCapableObservable()
 	{
 		foreach (object viewModel in FeatureViewModels)

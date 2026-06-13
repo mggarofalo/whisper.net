@@ -1,4 +1,4 @@
-// Configuration for the opt-in localhost AI rephrase feature (WHISPER-40). Privacy stance: rephrase is
+// Configuration for the opt-in localhost AI rephrase feature. Privacy stance: rephrase is
 // DISABLED by default and, when enabled, may only target a loopback endpoint (enforced by
 // OllamaRephraseOptionsValidator). This is the single disclosed network entry point for transcript text
 // — see README + CHANGELOG.

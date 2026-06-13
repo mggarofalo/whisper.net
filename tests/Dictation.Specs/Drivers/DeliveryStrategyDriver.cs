@@ -1,4 +1,4 @@
-// The Driver owns HOW delivery-strategy selection is exercised (@WHISPER-8). It sets the scenario's
+// The Driver owns HOW delivery-strategy selection is exercised. It sets the scenario's
 // configured default on the scoped DeliveryOptions and an optional per-delivery override, runs the REAL
 // pipeline through IMediator, and asserts which delivery path was taken by checking which faked injector
 // received the text. The transcriber is primed via the shared "model will transcribe" step.

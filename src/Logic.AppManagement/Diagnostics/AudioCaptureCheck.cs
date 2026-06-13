@@ -1,4 +1,4 @@
-// Audio diagnostic (WHISPER-50): confirms a usable capture device is available, through the same
+// Audio diagnostic: confirms a usable capture device is available, through the same
 // IAudioDeviceEnumerator port the rest of the app records from — so the check reflects the real runtime
 // path, not a bespoke probe. Fails when no capture device is present (nothing to record from); passes
 // otherwise, naming how many devices were found and which one is the OS default.

@@ -1,4 +1,4 @@
-// Drives the @WHISPER-45 history browser scenarios. It owns HOW the browser is exercised so the steps
+// Drives the history browser scenarios. It owns HOW the browser is exercised so the steps
 // stay one-liners: it builds the REAL HistoryViewModel over the REAL Mediator pipeline (BrowseHistory +
 // CopyToClipboard handlers, including the paging/ordering the handler owns) and faked IHistoryStore +
 // IClipboard. It can therefore prove the list is newest-first, that browsing loads the next page, that a
@@ -60,7 +60,7 @@ public sealed class HistoryBrowserDriver
 		ReturnEntries(entries);
 	}
 
-	// Exactly PageSize entries (WHISPER-110): the first page fills completely, so the browser cannot
+	// Exactly PageSize entries: the first page fills completely, so the browser cannot
 	// know the history is exhausted until the (empty) next page is requested.
 	public void StoreHasExactlyOneFullPage()
 	{
@@ -108,7 +108,7 @@ public sealed class HistoryBrowserDriver
 		_viewModel.Entries.Should().BeEmpty();
 	}
 
-	// The write-through assertion (WHISPER-110): the recorded transcription is read back through the
+	// The write-through assertion: the recorded transcription is read back through the
 	// real Mediator pipeline into the view-model the History section binds — not off the store fake.
 	public void AssertMostRecentEntryIs(string text)
 	{

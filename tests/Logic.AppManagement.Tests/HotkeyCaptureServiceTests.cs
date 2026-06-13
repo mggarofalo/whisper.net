@@ -1,4 +1,4 @@
-// Unit depth for the WHISPER-30 capture/rebinding helper, beyond the @WHISPER-30 acceptance scenarios.
+// Unit depth for the capture/rebinding helper, beyond the acceptance scenarios.
 // Pins down the one-shot capture resolving a chord (including an extended F13 key), the atomic rebind
 // that makes the new chord fire while the old one goes silent, rejection of a bare modifier with the
 // previous binding kept, Esc cancellation, and that edges outside listen mode are ignored.

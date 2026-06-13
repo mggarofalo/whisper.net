@@ -1,4 +1,4 @@
-// Thin step definitions for the @WHISPER-22 recording-state-machine feature. Each step delegates to
+// Thin step definitions for the recording-state-machine feature. Each step delegates to
 // the RecordingStateMachineDriver (injected by the Reqnroll DI plugin); no logic lives here.
 
 using Dictation.Specs.Drivers;

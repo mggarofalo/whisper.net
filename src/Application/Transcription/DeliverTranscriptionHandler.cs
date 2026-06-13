@@ -30,8 +30,8 @@ public sealed class DeliverTranscriptionHandler(
 	{
 		Domain.Audio.AudioClip trimmed = silenceTrimmer.Trim(command.Clip);
 
-		// No speech: the trimmer collapses a clip that is sub-threshold throughout to empty (WHISPER-112).
-		// Feeding empty/silent audio to Whisper makes it HALLUCINATE a phrase (WHISPER-125 — e.g. it emitted
+		// No speech: the trimmer collapses a clip that is sub-threshold throughout to empty.
+		// Feeding empty/silent audio to Whisper makes it HALLUCINATE a phrase (e.g. it emitted
 		// "SILENT PRACTICE" on a first, near-silent dictation), so skip transcription and deliver nothing.
 		// Quiet speech stays above the energy floor, so it is never collapsed and still transcribes.
 		if (trimmed.Samples.Count == 0)
@@ -41,7 +41,7 @@ public sealed class DeliverTranscriptionHandler(
 
 		Domain.Audio.TranscriptionResult transcription = await transcriber.TranscribeAsync(trimmed, cancellationToken);
 
-		// Post-processing (WHISPER-41): normalize (filler/noise per config) then the optional output
+		// Post-processing: normalize (filler/noise per config) then the optional output
 		// transform, applied in a fixed order behind the IPostProcessor port.
 		string cleaned = await postProcessor.ProcessAsync(transcription.Text, cancellationToken);
 
@@ -51,7 +51,7 @@ public sealed class DeliverTranscriptionHandler(
 			return new DeliveryResult(Delivered: false, Text: string.Empty);
 		}
 
-		// Command-mode hook (WHISPER-35): consult the matcher after transcription/clean-up and before
+		// Command-mode hook: consult the matcher after transcription/clean-up and before
 		// delivery. On a match the transcript is routed to the command branch instead of being typed —
 		// execution is out of scope here (scaffolding only), so we report the matched command and deliver
 		// no text. The default matcher never matches, so normal dictation is unchanged.

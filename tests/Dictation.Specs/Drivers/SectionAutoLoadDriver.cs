@@ -1,4 +1,4 @@
-// Drives the @WHISPER-108 section auto-load scenarios. It owns HOW the sections are exercised so the
+// Drives the section auto-load scenarios. It owns HOW the sections are exercised so the
 // steps stay one-liners: every scenario enters through the REAL navigation lifecycle — the resolved
 // ShellViewModel's NavigateCommand over the real NavigationService and the cached, scope-resolved
 // feature view-models — never LoadCommand directly, because the activation-triggered load is exactly
@@ -51,8 +51,8 @@ public sealed class SectionAutoLoadDriver
 		_historyStore = historyStore;
 		_enumerator = enumerator;
 
-		// Resolving the shell already opened it on the Home dashboard (WHISPER-106), which reads history for
-		// its overview. Those incidental calls are not what this issue tests, so clear the recorded calls
+		// Resolving the shell already opened it on the Home dashboard, which reads history for
+		// its overview. Those incidental calls are not what the section auto-load tests, so clear the recorded calls
 		// (keeping the configured return) — the counts below then reflect only the section under test.
 		_historyStore.ClearReceivedCalls();
 	}
@@ -90,7 +90,7 @@ public sealed class SectionAutoLoadDriver
 		{
 			// Switch away to a section that does NOT touch the history store (Model reads catalog/cache/
 			// settings), so this counts only the section-under-test's queries — the Home dashboard now
-			// re-queries history on every activation (WHISPER-119) and would otherwise inflate the count.
+			// re-queries history on every activation and would otherwise inflate the count.
 			_shell.NavigateCommand.Execute("Model");
 			_shell.NavigateCommand.Execute(section);
 		}

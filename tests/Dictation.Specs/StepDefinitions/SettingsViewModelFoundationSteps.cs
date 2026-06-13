@@ -1,4 +1,4 @@
-// Thin step definitions for the @WHISPER-76 settings/feature view-model foundation feature. Each step
+// Thin step definitions for the settings/feature view-model foundation feature. Each step
 // delegates to the SettingsViewModelFoundationDriver (injected by the Reqnroll DI plugin); no logic here.
 
 using Dictation.Specs.Drivers;

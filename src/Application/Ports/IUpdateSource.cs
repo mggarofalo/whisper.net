@@ -1,4 +1,4 @@
-// Port for the release channel the app self-updates from (WHISPER-29). Implemented in Infrastructure over
+// Port for the release channel the app self-updates from. Implemented in Infrastructure over
 // Velopack's UpdateManager against the configured GitHub Releases feed; faked in specs so the update
 // policy (check -> download -> apply, and graceful degradation when the channel is unreachable) can be
 // driven without any network. This is the single outbound seam for updates — the only egress, and only

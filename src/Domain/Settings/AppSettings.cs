@@ -19,15 +19,15 @@ public sealed record AppSettings
 	// follow the OS default. Defaulted so existing construction sites need not change.
 	public string CaptureDeviceId { get; }
 
-	// Opt-in verbose audit logging (WHISPER-34). Privacy-sensitive, so it is OFF by default; nothing is
+	// Opt-in verbose audit logging. Privacy-sensitive, so it is OFF by default; nothing is
 	// written to the audit log unless the user explicitly enables it. Defaulted so existing sites need not change.
 	public bool AuditLogEnabled { get; }
 
-	// Whether first-run onboarding has been completed (WHISPER-51). False on a fresh install, so the
+	// Whether first-run onboarding has been completed. False on a fresh install, so the
 	// onboarding flow is shown until the user finishes it. Defaulted so existing sites need not change.
 	public bool SetupCompleted { get; }
 
-	// The chosen app theme (WHISPER-121): System (follow the OS), Light, or Dark. Defaulted to System so
+	// The chosen app theme: System (follow the OS), Light, or Dark. Defaulted to System so
 	// existing sites need not change and a fresh install follows the OS preference.
 	public ThemePreference ThemePreference { get; }
 

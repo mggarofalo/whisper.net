@@ -1,4 +1,4 @@
-// Drives the @WHISPER-110 history write-through arrangement. It owns the one seam those scenarios add
+// Drives the history write-through arrangement. It owns the one seam those scenarios add
 // on top of the end-to-end orchestration driver: the scenario-scoped IHistoryStore substitute is
 // configured to round-trip — AddAsync keeps each entry, GetEntriesAsync returns what was kept — so a
 // recorded transcription is asserted through the REAL read path (the history browser and stats

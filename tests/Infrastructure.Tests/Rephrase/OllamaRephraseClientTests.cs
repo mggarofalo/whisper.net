@@ -1,4 +1,4 @@
-// Inner TDD loop for the WHISPER-40 rephrase adapter, over a fake HTTP transport (no Ollama, no socket).
+// Inner TDD loop for the rephrase adapter, over a fake HTTP transport (no Ollama, no socket).
 // Confirms the opt-in gate (disabled -> no call), the happy path (a request to a loopback /api/generate
 // returning the rewritten text), graceful degradation on a backend failure, the defensive loopback
 // guard, and that genuine caller cancellation still propagates.

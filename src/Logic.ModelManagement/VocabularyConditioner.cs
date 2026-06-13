@@ -1,4 +1,4 @@
-// Assembles decoder conditioning from a user-supplied custom vocabulary (WHISPER-38), mirroring
+// Assembles decoder conditioning from a user-supplied custom vocabulary, mirroring
 // speaktype's prompt-token approach. Pure and stateless: it reads only its argument, so an edited
 // vocabulary is reflected on the very next call — the caller can re-assemble per transcription without
 // restarting the engine. No native model is involved, so the assembly is fully unit-testable in

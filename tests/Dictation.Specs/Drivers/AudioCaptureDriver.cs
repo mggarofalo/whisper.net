@@ -1,4 +1,4 @@
-// Drives the @WHISPER-7 capture scenarios. It owns HOW capture is exercised so the step definitions
+// Drives the capture scenarios. It owns HOW capture is exercised so the step definitions
 // stay one-liners: it configures the fake device, starts/stops the REAL WasapiAudioSource through the
 // IAudioSource port, records the frames and failures the port raises, and asserts at that boundary.
 

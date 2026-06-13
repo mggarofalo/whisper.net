@@ -21,11 +21,11 @@
 
   <!-- Tray icon (H.NotifyIcon) is Presentation-only (Windows/WPF). MVVM source generators
        (CommunityToolkit.Mvvm) are UI-framework-agnostic: the shell + feature view-models live in
-       Logic.AppManagement (WPF-free, unit-testable) and the thin WPF views bind to them (WHISPER-19). -->
+       Logic.AppManagement (WPF-free, unit-testable) and the thin WPF views bind to them. -->
   <ItemGroup>
     <PackageVersion Include="H.NotifyIcon.Wpf" Version="2.4.1" />
     <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
-    <!-- Declarative view event wiring (WHISPER-93): EventTrigger/InvokeCommandAction + Behavior<T>. -->
+    <!-- Declarative view event wiring: EventTrigger/InvokeCommandAction + Behavior<T>. -->
     <PackageVersion Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.135" />
   </ItemGroup>
 
@@ -67,7 +67,7 @@
   </ItemGroup>
 
   <!--
-    Packaging + auto-update (Velopack, WHISPER-20/29). Presentation-only: provides the in-app install/
+    Packaging + auto-update (Velopack). Presentation-only: provides the in-app install/
     update hooks (VelopackApp) and the UpdateManager. The matching `vpk` CLI builds the installer in the
     packaging script and the release CI; keep the two versions in lockstep.
   -->

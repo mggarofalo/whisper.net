@@ -1,6 +1,6 @@
-// Unit tests for the usage-summary aggregation (WHISPER-24): empty history, summed totals (transcription
+// Unit tests for the usage-summary aggregation: empty history, summed totals (transcription
 // count, characters, audio duration), and the per-day breakdown (grouping + most-recent-first ordering).
-// This is the real Logic the @WHISPER-24 scenarios drive down into.
+// This is the real Logic the acceptance scenarios drive down into.
 
 using AwesomeAssertions;
 using Domain.History;
@@ -74,7 +74,7 @@ public sealed class UsageSummaryCalculatorTests
 	[Fact]
 	public void Breakdown_buckets_by_the_local_day_not_the_utc_day()
 	{
-		// WHISPER-116: a UTC-05:00 user. Both entries share the UTC date 2026-06-12, but in local time they
+		// A UTC-05:00 user. Both entries share the UTC date 2026-06-12, but in local time they
 		// straddle midnight — 04:30 UTC is 23:30 on the 11th, 05:30 UTC is 00:30 on the 12th — so they must
 		// fall on DIFFERENT local days. The UTC-day grouping put both on the 12th.
 		ManualTimeProvider time = new();

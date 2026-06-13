@@ -10,7 +10,7 @@
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <!-- The shared converters + validation chrome the feature views reference (WHISPER-96):
+                <!-- The shared converters + validation chrome the feature views reference:
                      merged at window level too, so the shell is self-contained — its views resolve their
                      resources wherever the window is composed, Application or not (the smoke harness). -->
                 <ResourceDictionary Source="/Presentation;component/Shell/ShellResources.xaml" />
@@ -41,12 +41,12 @@
     <DockPanel>
         <!-- Navigation region: one button per registered section, dispatching the shell's NavigateCommand.
              The rail follows the active theme and highlights the selected tab with the system accent
-             (WHISPER-103/122); a theme switcher is pinned to its footer (WHISPER-121). -->
+; a theme switcher is pinned to its footer. -->
         <Border DockPanel.Dock="Left"
                 Width="160"
                 Background="{StaticResource NavSidebarBackgroundBrush}">
             <DockPanel>
-                <!-- Theme switcher (WHISPER-121): System / Light / Dark, persisted and applied live. -->
+                <!-- Theme switcher: System / Light / Dark, persisted and applied live. -->
                 <StackPanel DockPanel.Dock="Bottom"
                             Margin="8,4,8,8">
                     <TextBlock Text="Theme"

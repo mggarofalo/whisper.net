@@ -1,4 +1,4 @@
-// Unit tests for the doctor report formatter (WHISPER-50): proves "prints a clear pass/warn/fail report"
+// Unit tests for the doctor report formatter: proves "prints a clear pass/warn/fail report"
 // without a real console. Each check renders to a tagged line carrying its name and detail, and the
 // report ends with an overall line that reflects the worst status.
 

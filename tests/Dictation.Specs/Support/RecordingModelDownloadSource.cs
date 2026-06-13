@@ -1,4 +1,4 @@
-// A network source stand-in for the @WHISPER-4 scenarios. It records whether it was ever asked for
+// A network source stand-in for the model-download scenarios. It records whether it was ever asked for
 // bytes — so a scenario can prove a cache query made NO network request — and, when a download is
 // requested, hands back canned bytes (still no real network).
 

@@ -1,4 +1,4 @@
-// Inner TDD loop for the WHISPER-3 transcriber adapter, over a fake engine seam (no model, no native
+// Inner TDD loop for the transcriber adapter, over a fake engine seam (no model, no native
 // library). Confirms it joins segment text and carries timing/confidence, raises a typed
 // ModelNotFoundException for a missing/empty path, passes the configured language and the selected
 // backend down to the engine, loads the model only once across calls, and honors cancellation.
@@ -168,7 +168,7 @@ public sealed class WhisperTranscriberTests : IDisposable
 	[Fact]
 	public async Task Resolves_the_active_model_from_settings_when_no_explicit_path_is_configured()
 	{
-		// WHISPER-87: with no config override, the transcriber loads the model the user actually selected,
+		// With no config override, the transcriber loads the model the user actually selected,
 		// resolved through settings -> catalog -> cache (the same path the doctor's model check resolves).
 		string modelFile = ExistingModelFile();
 		WhisperModelCatalogEntry entry = new("base.en", "Base (English)", "q5", "ggml-base.en.bin", 1);
@@ -188,7 +188,7 @@ public sealed class WhisperTranscriberTests : IDisposable
 	[Fact]
 	public async Task Reloads_the_engine_when_the_active_model_changes()
 	{
-		// WHISPER-87: switching the active model makes the next transcription load the new model.
+		// Switching the active model makes the next transcription load the new model.
 		string firstFile = ExistingModelFile();
 		string secondFile = ExistingModelFile();
 		WhisperModelCatalogEntry first = new("base.en", "Base", "q5", "ggml-base.en.bin", 1);
@@ -215,7 +215,7 @@ public sealed class WhisperTranscriberTests : IDisposable
 	[Fact]
 	public async Task Preload_loads_the_model_and_runs_a_warm_up_inference()
 	{
-		// WHISPER-127: warm-up loads the model and runs one throwaway inference so the first real dictation
+		// Warm-up loads the model and runs one throwaway inference so the first real dictation
 		// pays no cold-load cost. It is independent of the live custom vocabulary (warm-up uses defaults).
 		FakeWhisperEngineFactory factory = new(new WhisperSegment("x", TimeSpan.Zero, TimeSpan.Zero, 1f));
 		await using WhisperTranscriber transcriber = CreateTranscriber(factory, ExistingModelFile(), vocabulary: ["Reqnroll"]);
@@ -229,7 +229,7 @@ public sealed class WhisperTranscriberTests : IDisposable
 	[Fact]
 	public async Task Preload_then_transcribe_reuses_the_warmed_engine_without_a_cold_load()
 	{
-		// WHISPER-127: the whole point — the first real dictation after warm-up reuses the loaded engine.
+		// The whole point — the first real dictation after warm-up reuses the loaded engine.
 		FakeWhisperEngineFactory factory = new(new WhisperSegment("hi", TimeSpan.Zero, TimeSpan.Zero, 1f));
 		await using WhisperTranscriber transcriber = CreateTranscriber(factory, ExistingModelFile());
 
@@ -256,7 +256,7 @@ public sealed class WhisperTranscriberTests : IDisposable
 	[Fact]
 	public async Task Serializes_warm_up_and_a_dictation_so_the_first_utterance_is_not_lost()
 	{
-		// WHISPER-130: the startup warm-up and a real dictation share ONE engine. Without serialization both
+		// The startup warm-up and a real dictation share ONE engine. Without serialization both
 		// run whisper_full concurrently on the same context, and a dictation that lands while the warm-up
 		// inference is still in flight comes back empty — the lost first utterance. The transcriber must make
 		// the dictation WAIT for the in-flight warm-up, then transcribe cleanly (decided: wait, not cancel).

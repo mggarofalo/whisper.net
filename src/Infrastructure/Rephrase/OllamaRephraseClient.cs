@@ -1,4 +1,4 @@
-// The opt-in, localhost-only AI rephrase adapter (WHISPER-40) implementing IRephraseClient against a
+// The opt-in, localhost-only AI rephrase adapter implementing IRephraseClient against a
 // local Ollama HTTP endpoint. Privacy is the point: when disabled (the default) it makes NO network
 // call and returns the original text; when enabled it only ever talks to a loopback host (a remote host
 // is rejected at startup by OllamaRephraseOptionsValidator, and re-checked here defensively before any

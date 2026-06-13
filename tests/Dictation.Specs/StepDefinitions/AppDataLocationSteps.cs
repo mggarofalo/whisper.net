@@ -1,4 +1,4 @@
-// Thin step definitions for the @WHISPER-86 data-location feature. Each step delegates to the
+// Thin step definitions for the data-location feature. Each step delegates to the
 // AppDataLocationDriver (injected by the Reqnroll DI plugin); no logic lives here.
 
 using Dictation.Specs.Drivers;

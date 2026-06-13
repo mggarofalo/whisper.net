@@ -1,4 +1,4 @@
-// A fake engine seam for the @WHISPER-3 scenarios: it lets the REAL WhisperTranscriber run end-to-end
+// A fake engine seam for the transcription scenarios: it lets the REAL WhisperTranscriber run end-to-end
 // without a model file or the native Whisper.net library. The factory yields one segment with the
 // configured text and, by construction, performs no network access — so the "no network egress"
 // guarantee is observable (NetworkAccessed is always false).

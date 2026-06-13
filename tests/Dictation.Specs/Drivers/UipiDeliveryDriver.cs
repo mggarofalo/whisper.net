@@ -1,4 +1,4 @@
-// The Driver owns HOW UIPI-aware delivery is exercised (@WHISPER-6). It drives the REAL delivery
+// The Driver owns HOW UIPI-aware delivery is exercised. It drives the REAL delivery
 // pipeline through IMediator with the foreground-integrity probe faked, and asserts at the boundary
 // that an elevated-window delivery is surfaced as a UIPI block (not silently dropped, no exception),
 // while a same-integrity delivery types normally with no warning.

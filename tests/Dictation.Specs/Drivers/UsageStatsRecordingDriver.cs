@@ -1,4 +1,4 @@
-// Drives the @WHISPER-24 stats recording + aggregation scenarios. Per AC, recording must persist so totals
+// Drives the stats recording + aggregation scenarios. Recording must persist so totals
 // survive a restart, so the driver builds its OWN composition — the REAL Application pipeline (Mediator +
 // handlers + Mapperly) and the REAL Logic aggregator over the REAL SqliteHistoryStore pointed at a private
 // temp-file database. Recording goes through RecordTranscriptionCommand (carrying the audio duration);

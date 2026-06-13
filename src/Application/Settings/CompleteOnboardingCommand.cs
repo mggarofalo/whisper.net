@@ -1,4 +1,4 @@
-// CQRS command to mark first-run onboarding as complete (WHISPER-51): the onboarding flow dispatches it
+// CQRS command to mark first-run onboarding as complete: the onboarding flow dispatches it
 // when the user finishes setup. The handler flips the persisted SetupCompleted flag so subsequent
 // launches skip onboarding. Returns Unit.
 

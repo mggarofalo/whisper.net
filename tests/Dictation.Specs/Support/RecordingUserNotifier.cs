@@ -1,4 +1,4 @@
-// A recording IUserNotifier for the @WHISPER-95 scenarios: captures every error notice a failure path
+// A recording IUserNotifier: captures every error notice a failure path
 // requests, so specs assert a backend failure surfaced a user-visible notification without a tray icon.
 // Registered scoped per scenario, overriding the production TrayUserNotifier mapping.
 

@@ -1,4 +1,4 @@
-// Decoder conditioning derived from the user's custom vocabulary (WHISPER-38). The InitialPrompt biases
+// Decoder conditioning derived from the user's custom vocabulary. The InitialPrompt biases
 // recognition toward the supplied terms via Whisper's prompt-token conditioning. When a prompt is
 // present the first-token log-probability threshold must be disabled: the injected prompt can push the
 // genuine first sampled token below that threshold and drop it. With no vocabulary, both are left at

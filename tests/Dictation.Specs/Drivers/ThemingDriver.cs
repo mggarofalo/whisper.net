@@ -1,4 +1,4 @@
-// Exercises the @WHISPER-84 native-theming requirement. Theming is pure WPF Presentation, so — like the
+// Exercises the native-theming requirement. Theming is pure WPF Presentation, so — like the
 // packaging/guidance/accessibility drivers — this inspects repository artifacts directly rather than driving
 // behavior through IMediator: it asserts the app opts into the built-in Fluent theme that follows the system
 // Light/Dark + accent preference, and that the built-in-vs-library decision is recorded with its rationale.
@@ -23,7 +23,7 @@ public sealed class ThemingDriver
 	public void AssertThemingDecisionRecorded()
 	{
 		string path = Path.Combine(RepositoryRoot, "docs", "theming.md");
-		File.Exists(path).Should().BeTrue("the theming decision must be recorded (WHISPER-84 AC2)");
+		File.Exists(path).Should().BeTrue("the theming decision must be recorded");
 
 		string doc = File.ReadAllText(path);
 		doc.Should().Contain("ThemeMode", "the decision names the chosen built-in Fluent approach");

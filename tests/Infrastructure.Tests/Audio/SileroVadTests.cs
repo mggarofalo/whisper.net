@@ -1,4 +1,4 @@
-// Edge-case depth for the WHISPER-31 VAD adapter's windowing, over a fake inference session (no ONNX
+// Edge-case depth for the VAD adapter's windowing, over a fake inference session (no ONNX
 // model). Confirms the clip is sliced into full windows, each scored once in order, state is reset
 // per analysis, a trailing partial window is dropped, and cancellation is honored.
 

@@ -1,4 +1,4 @@
-// Drives the @WHISPER-36 normalization scenarios against the REAL Logic.AudioManagement behavior:
+// Drives the normalization scenarios against the REAL Logic.AudioManagement behavior:
 // the IFillerWordCleaner resolved from DI. No model or pipeline is involved — the normalizer is a
 // pure function, so the driver simply feeds it raw text plus the "remove filler words" toggle and
 // asserts on the normalized result.

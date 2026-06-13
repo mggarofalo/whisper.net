@@ -1,4 +1,4 @@
-// Covers the AuditRecord value object (WHISPER-34): a non-empty event is required, a null detail is
+// Covers the AuditRecord value object: a non-empty event is required, a null detail is
 // normalized to empty, and Create assigns a fresh identity and carries the supplied values.
 
 using AwesomeAssertions;

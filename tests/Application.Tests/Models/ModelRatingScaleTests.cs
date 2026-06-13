@@ -1,4 +1,4 @@
-// Verifies the model rating derivation (WHISPER-27): a model's speed/accuracy/memory ratings follow its
+// Verifies the model rating derivation: a model's speed/accuracy/memory ratings follow its
 // size tier. Drives the real ModelRatingScale across the two tier boundaries so the small/medium/large
 // branches — and the inverse relationship between speed and accuracy/memory — are each pinned.
 

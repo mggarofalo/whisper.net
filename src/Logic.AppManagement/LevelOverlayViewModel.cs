@@ -1,6 +1,6 @@
-// The level overlay's view-model (WHISPER-26; feedback in WHISPER-102): a thin CommunityToolkit.Mvvm
-// wrapper over the LevelOverlayController, which the mini-recorder window binds to. Moved out of
-// Presentation (WHISPER-90) so the specs and unit tests drive it for real: controller events are
+// The level overlay's view-model: a thin CommunityToolkit.Mvvm wrapper over the
+// LevelOverlayController, which the mini-recorder window binds to. Moved out of
+// Presentation so the specs and unit tests drive it for real: controller events are
 // marshaled through the injected IUiDispatcher seam with a CheckAccess fast-path. The per-frame Level and
 // the per-second Elapsed updates use the non-blocking Post path — the audio/timer threads must never block
 // on the UI thread for a refresh. It surfaces the controller's presentation State, formatted elapsed

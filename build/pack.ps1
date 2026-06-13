@@ -1,7 +1,7 @@
 #requires -Version 7
 <#
 .SYNOPSIS
-    Builds the Whisper installer with Velopack (WHISPER-20).
+    Builds the Whisper installer with Velopack.
 
 .DESCRIPTION
     The one-command local packaging path: from a clean clone, `pwsh ./build/pack.ps1` produces a
@@ -58,7 +58,7 @@ try {
     dotnet publish $project -c $Configuration -r $Runtime -o $PublishDir --nologo
     if ($LASTEXITCODE -ne 0) { throw 'dotnet publish failed.' }
 
-    # 3. Code signing (WHISPER-29): when a signing certificate is supplied via the environment — a
+    # 3. Code signing: when a signing certificate is supplied via the environment — a
     #    base64-encoded PFX in VELOPACK_SIGN_CERTIFICATE plus VELOPACK_SIGN_PASSWORD, injected by CI from
     #    GitHub Actions secrets — Authenticode-sign the app and installer through signtool. The certificate
     #    is never committed; absent the secret, the build is simply unsigned. The PFX is written to a temp

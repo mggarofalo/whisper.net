@@ -21,7 +21,7 @@ public sealed record HotkeyBinding
 	public string Chord { get; }
 
 	/// <summary>The chord formatted for display with spaced separators, e.g. "Ctrl + Shift + A" — the
-	/// form the hotkey-capture control shows the user (WHISPER-79). Derived from the canonical chord.</summary>
+	/// form the hotkey-capture control shows the user. Derived from the canonical chord.</summary>
 	public string DisplayChord => string.Join(" + ", Chord.Split('+'));
 
 	// The modifiers the chord requires, as a side-agnostic set.

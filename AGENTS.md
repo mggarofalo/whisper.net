@@ -100,11 +100,11 @@ so commits are guarded either way.
 
 **Privacy is non-negotiable.** No feature may send audio, transcripts, or any user data off the
 device without an **explicit, opt-in** user action. Transcription runs entirely locally (Whisper.net).
-Any future network capability (e.g. model download, an opt-in localhost rephrase) must be disabled by
-default, gated behind a clear user prompt, and disclosed in `README.md` and the changelog. There is no
-telemetry.
+Any network capability — model download, the opt-in localhost rephrase, opt-in auto-update — is
+disabled by default, gated behind a clear user prompt, and disclosed in `README.md` and the changelog.
+There is no telemetry.
 
-## The agents (M0)
+## The agents
 
 This repo is built under a fully AI-driven model. Four Claude skills under `.claude/skills/`
 encode the workflow so agents apply it consistently:

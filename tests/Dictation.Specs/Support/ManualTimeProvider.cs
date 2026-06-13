@@ -1,7 +1,7 @@
 // A minimal, deterministic TimeProvider for the scenario scope: time only advances when a driver calls
 // Advance, and one-shot timers created via CreateTimer fire synchronously when the manual clock passes
 // their due time. It overrides the production TimeProvider.System (registered by AddApplication) so the
-// orchestrator's post-release grace window (WHISPER-112) elapses under test control instead of on the
+// orchestrator's post-release grace window elapses under test control instead of on the
 // wall clock. The equivalent of Application.Tests' ManualTimeProvider; kept tiny on purpose (one-shot
 // timers only, which is all Task.Delay needs).
 
@@ -14,7 +14,7 @@ public sealed class ManualTimeProvider : TimeProvider
 	private DateTimeOffset _now = DateTimeOffset.UnixEpoch;
 
 	// Default UTC so scenarios that don't pin a zone stay deterministic (and match the prior UTC
-	// day-bucketing); the WHISPER-116 driver pins a non-UTC zone via SetLocalTimeZone.
+	// day-bucketing); the driver pins a non-UTC zone via SetLocalTimeZone.
 	private TimeZoneInfo _localTimeZone = TimeZoneInfo.Utc;
 
 	public override TimeZoneInfo LocalTimeZone => _localTimeZone;

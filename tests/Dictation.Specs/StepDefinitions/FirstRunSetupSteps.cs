@@ -1,4 +1,4 @@
-// Thin step definitions for the @WHISPER-82 first-run-setup feature. Each step delegates to the
+// Thin step definitions for the first-run-setup feature. Each step delegates to the
 // SetupStatusDriver (injected by the Reqnroll DI plugin); no logic lives here.
 
 using Dictation.Specs.Drivers;

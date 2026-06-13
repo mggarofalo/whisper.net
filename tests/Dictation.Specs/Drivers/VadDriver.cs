@@ -1,4 +1,4 @@
-// Drives the @WHISPER-31 voice-activity scenarios end to end over a fake inference session: it builds
+// Drives the voice-activity scenarios end to end over a fake inference session: it builds
 // a clip from speech/silence regions (speech filled 1.0 so preserved speech is countable), scores it
 // through the REAL SileroVad adapter, then gates/trims it with the REAL VadSilencePolicy. One window
 // per second keeps the second-based scenarios easy to read.

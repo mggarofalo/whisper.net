@@ -2,9 +2,9 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              KeyboardNavigation.IsTabStop="False">
-    <!-- A read-only capture field (WHISPER-79): it shows the captured combination and records the next one
+    <!-- A read-only capture field: it shows the captured combination and records the next one
          the user presses. Focusable but read-only, with no context menu, so its own text shortcuts never
-         steal the keystroke we want to capture. Accessibility (WHISPER-83): the inner TextBox is the single
+         steal the keystroke we want to capture. Accessibility: the inner TextBox is the single
          tab stop, and its AutomationProperties.Name announces the current binding to a screen reader, since
          the displayed chord is the value the user needs spoken. -->
     <TextBox x:Name="DisplayBox"

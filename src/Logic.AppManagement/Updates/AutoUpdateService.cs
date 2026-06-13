@@ -1,4 +1,4 @@
-// The in-app auto-update policy (WHISPER-29): the single place that decides whether to check, download,
+// The in-app auto-update policy: the single place that decides whether to check, download,
 // and apply an update, and — crucially — that a failed or unreachable update never takes the app down.
 // It honors the opt-in switch first (no check, so no network egress, when disabled), then checks the
 // release source; if a newer release is found it downloads and stages it to apply on the next restart.

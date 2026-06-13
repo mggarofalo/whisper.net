@@ -1,4 +1,4 @@
-// Inner TDD loop for the audio-device picker (WHISPER-80), WPF-free. These pin the device-list behavior
+// Inner TDD loop for the audio-device picker, WPF-free. These pin the device-list behavior
 // behind IMediator: the list is loaded and the persisted selection reflected; a persisted device that is no
 // longer present does not crash or blank the picker but falls back to the system default and surfaces a
 // clear warning (leaving the persisted id intact so it is restored if the device returns); and choosing a

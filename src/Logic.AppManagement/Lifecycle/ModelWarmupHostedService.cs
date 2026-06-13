@@ -1,11 +1,11 @@
-// Warms the dictation model as soon as the app starts (WHISPER-127) so the FIRST dictation isn't slowed
+// Warms the dictation model as soon as the app starts so the FIRST dictation isn't slowed
 // by the cold model load + native init. Dictation runs through the ITranscriber port (WhisperTranscriber),
 // which otherwise loads the model lazily on the first real transcription — the "long pause on first use".
 // On startup this service kicks off ITranscriber.PreloadAsync in the BACKGROUND (load + a throwaway
 // warm-up inference); it never blocks host startup or the UI thread, and it swallows failures (a fresh
 // install with no model yet, or a transient load error) so warm-up can never crash the host — the first
 // real dictation then just falls back to the lazy load it has today. It also re-warms when the user
-// switches the active model (the instant-apply SettingsChangedMessage, WHISPER-78), so the first dictation
+// switches the active model (the instant-apply SettingsChangedMessage), so the first dictation
 // after a model change is fast too, not only the first after launch. Singleton dependencies only, so the
 // Generic Host owns it directly; registered only in the production composition (the specs fake ITranscriber).
 
@@ -34,7 +34,7 @@ public sealed class ModelWarmupHostedService(
 		AppSettings settings = await store.LoadAsync(cancellationToken);
 		_lastModelId = settings.ModelId;
 
-		// Re-warm when the active model changes (instant-apply channel, WHISPER-78). Weak registration,
+		// Re-warm when the active model changes (instant-apply channel). Weak registration,
 		// matching the other lifecycle services: the host owns this singleton, so there is no leak and no
 		// manual unsubscribe is required for correctness.
 		messenger.Register<ModelWarmupHostedService, SettingsChangedMessage>(
@@ -73,7 +73,7 @@ public sealed class ModelWarmupHostedService(
 
 	private async Task WarmAsync(string reason)
 	{
-		// Announce the warm-up so the UI can show a "warming up" cue (WHISPER-129). The matching clear is in
+		// Announce the warm-up so the UI can show a "warming up" cue. The matching clear is in
 		// the finally, so warming is lifted app-wide whether the warm-up succeeds, fails, or is cancelled —
 		// no surface is ever left stuck "warming". A discrete model warm-up is the realistic case (the load
 		// gate inside the transcriber serializes overlapping warm-ups), so a plain started/ended pair is enough.

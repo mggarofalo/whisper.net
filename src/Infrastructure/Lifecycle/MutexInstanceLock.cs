@@ -3,7 +3,7 @@
 // previous owner crashed without releasing, the abandoned mutex is treated as acquired. Release frees it
 // on graceful shutdown. Windows-only by nature; annotated accordingly (Infrastructure targets portable
 // net10.0). This is OS device-glue verified by smoke — the single-instance coordination it backs is
-// driven for real over a fake seam in the @WHISPER-25 specs.
+// driven for real over a fake seam in the instance-lock specs.
 
 using System.Runtime.Versioning;
 using Application.Ports;

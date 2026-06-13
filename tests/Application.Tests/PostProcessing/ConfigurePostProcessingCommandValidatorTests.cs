@@ -1,4 +1,4 @@
-// Inner TDD loop for the post-process configuration validator (WHISPER-41): a known (or empty) default
+// Inner TDD loop for the post-process configuration validator: a known (or empty) default
 // transform is accepted, an unknown one is rejected, and an enabled rephrase must be loopback-only.
 
 using Application.PostProcessing;

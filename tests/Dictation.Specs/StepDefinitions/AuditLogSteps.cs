@@ -1,4 +1,4 @@
-// @WHISPER-34 — drives the privacy-gated audit-log scenarios. Steps stay thin; the AuditLogDriver owns
+// Drives the privacy-gated audit-log scenarios. Steps stay thin; the AuditLogDriver owns
 // HOW the real AuditLogger gate and SQLite history/audit stores are exercised against a private temp-file
 // database. "A transcription completes" can appear in a Given or a When context, so it is bound to both.
 

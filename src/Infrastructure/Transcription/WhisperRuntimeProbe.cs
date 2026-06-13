@@ -1,4 +1,4 @@
-// Probes the Whisper.net native runtime by actually attempting to load it (WHISPER-85). WhisperFactory
+// Probes the Whisper.net native runtime by actually attempting to load it. WhisperFactory
 // loads the native library (resolved relative to AppContext.BaseDirectory) in its constructor, BEFORE the
 // model is parsed — so we hand it a present-but-invalid probe file: if the native runtime is missing the
 // loader throws a DllNotFound/"Native Library not found" we classify as unavailable; if it loads, the only

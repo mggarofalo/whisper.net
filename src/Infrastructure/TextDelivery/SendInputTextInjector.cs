@@ -1,5 +1,5 @@
 // The ITextInjector adapter that types text into the focused window by synthesizing Unicode
-// keystrokes (WHISPER-2). This is the universal delivery path: unlike clipboard paste, which many
+// keystrokes. This is the universal delivery path: unlike clipboard paste, which many
 // terminals ignore, KEYEVENTF_UNICODE typing lands in terminals, browsers, IDEs and chat boxes alike.
 //
 // The adapter owns only the device-independent decomposition of a string into key events; the actual

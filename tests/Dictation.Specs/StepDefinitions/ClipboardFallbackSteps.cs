@@ -1,4 +1,4 @@
-// Thin step definitions for the clipboard-fallback feature (@WHISPER-5). Each step delegates to the
+// Thin step definitions for the clipboard-fallback feature. Each step delegates to the
 // ClipboardDeliveryDriver (injected by the Reqnroll DI plugin); no logic lives here.
 
 using Dictation.Specs.Drivers;

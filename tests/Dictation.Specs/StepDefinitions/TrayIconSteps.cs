@@ -1,4 +1,4 @@
-// @WHISPER-18 — drives the tray icon/menu scenarios. Steps stay thin; the TrayDriver exercises the real
+// Drives the tray icon/menu scenarios. Steps stay thin; the TrayDriver exercises the real
 // TrayController over the real recording state machine, with the shell-presenter and host-lifetime
 // seams faked.
 

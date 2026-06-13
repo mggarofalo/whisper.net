@@ -12,14 +12,14 @@ public static class ModelManagementServiceCollectionExtensions
 {
 	public static IServiceCollection AddModelManagement(this IServiceCollection services, IConfiguration? configuration = null)
 	{
-		// Model registry (WHISPER-4): the static catalog of supported Whisper variants. Pure data.
+		// Model registry: the static catalog of supported Whisper variants. Pure data.
 		services.AddSingleton<IModelCatalog, WhisperModelCatalog>();
 
-		// Custom-vocabulary prompt-token conditioning (WHISPER-38): a pure, stateless assembler that
+		// Custom-vocabulary prompt-token conditioning: a pure, stateless assembler that
 		// turns a user vocabulary into decoder conditioning (initial prompt + threshold override).
 		services.AddSingleton<VocabularyConditioner>();
 
-		// Model lifecycle (WHISPER-15): the single owner of the loaded model — load/unload/switch,
+		// Model lifecycle: the single owner of the loaded model — load/unload/switch,
 		// warmup, precision, and concurrency-safe transcription. Pure policy over IModelRuntime.
 		services.AddOptions<ModelLifecycleOptions>();
 		if (configuration is not null)

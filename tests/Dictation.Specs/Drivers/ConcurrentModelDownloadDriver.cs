@@ -1,7 +1,7 @@
-// Drives the @WHISPER-107 concurrent-download scenarios. It builds the REAL ModelViewModel over the REAL
+// Drives the concurrent-download scenarios. It builds the REAL ModelViewModel over the REAL
 // Mediator pipeline (ListModels / DownloadModel handlers) and the REAL catalog, faking only the
 // device-facing downloader — gated PER MODEL ID so several downloads can sit IN FLIGHT at once. That is
-// what proves WHISPER-107's outcome: each row owns its own download (progress, IsRunning, Cancel), so
+// what proves the outcome: each row owns its own download (progress, IsRunning, Cancel), so
 // starting one neither blocks nor disables the others, and cancelling one leaves the rest running. The
 // ProgressBar + per-row Cancel button that bind to these are Presentation glue verified by smoke.
 

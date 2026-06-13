@@ -1,4 +1,4 @@
-// Exercises the @WHISPER-96 presentation-test-strategy requirement. The smoke tests themselves are
+// Exercises the presentation-test-strategy requirement. The smoke tests themselves are
 // WPF (net10.0-windows) and run in their own project inside the same gate; this spec — like the
 // packaging/guidance/theming drivers — inspects the repository artifacts to pin the strategy: the STA
 // harness exists and covers construction + first bind with binding-trace errors failing, the
@@ -19,7 +19,7 @@ public sealed class ViewSmokeDriver
 	public void AssertStaHarnessConstructsEachFeatureView()
 	{
 		string project = Path.Combine(SmokeProjectRoot, "Presentation.Smoke.Tests.csproj");
-		File.Exists(project).Should().BeTrue("the smoke project must exist (WHISPER-96 AC1)");
+		File.Exists(project).Should().BeTrue("the smoke project must exist");
 
 		string csproj = File.ReadAllText(project);
 		csproj.Should().Contain("net10.0-windows", "the smoke layer is WPF and Windows-only");
@@ -42,7 +42,7 @@ public sealed class ViewSmokeDriver
 
 		string tests = File.ReadAllText(Path.Combine(SmokeProjectRoot, "FeatureViewSmokeTests.cs"));
 		tests.Should().Contain("BindingErrorCollector", "the harness collects binding errors during the first bind");
-		tests.Should().Contain("Errors.Should().BeEmpty", "a collected binding error fails the test (WHISPER-96 AC1)");
+		tests.Should().Contain("Errors.Should().BeEmpty", "a collected binding error fails the test");
 	}
 
 	public void AssertTemplateCompletenessChecked()
@@ -52,14 +52,14 @@ public sealed class ViewSmokeDriver
 		tests.Should().Contain("NavigationSection", "the completeness check enumerates the real registered sections");
 		tests.Should().Contain("DataTemplateKey", "each section's view-model type must key an implicit template");
 		tests.Should().Contain("Every_registered_section_has_a_matching_data_template",
-			"a missing template fails a dedicated test (WHISPER-96 AC2)");
+			"a missing template fails a dedicated test");
 	}
 
 	public void AssertFlauiDecisionRecorded()
 	{
 		string doc = File.ReadAllText(Path.Combine(RepositoryRoot, "docs", "bdd-strategy.md"));
 
-		doc.Should().Contain("FlaUI", "the adopt-vs-defer decision names the candidate framework (WHISPER-96 AC3)");
+		doc.Should().Contain("FlaUI", "the adopt-vs-defer decision names the candidate framework");
 		doc.Should().Contain("defer FlaUI adoption", "the decision is explicit");
 		doc.Should().Contain("revisit when the UI grows", "the decision records when to revisit, not just a verdict");
 	}

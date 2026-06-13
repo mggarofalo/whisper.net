@@ -3,7 +3,7 @@
 // and waking a background thread that raises ActivationRequested when it is set. A second launch
 // Signal()s by opening that named event and setting it, so the running instance surfaces. Periodic
 // timeout polling lets Dispose stop the listener even when no signal arrives. Windows-only OS
-// device-glue, verified by smoke; the coordination it backs is spec-driven over a fake seam (WHISPER-25).
+// device-glue, verified by smoke; the coordination it backs is spec-driven over a fake seam.
 
 using System.Runtime.Versioning;
 using Application.Ports;

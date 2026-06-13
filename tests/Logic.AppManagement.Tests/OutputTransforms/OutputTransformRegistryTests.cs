@@ -1,4 +1,4 @@
-// Inner TDD loop for the output-transforms registry (WHISPER-37): the built-in formats are present,
+// Inner TDD loop for the output-transforms registry: the built-in formats are present,
 // resolution is case-insensitive, every built-in carries a non-empty prompt, and an unknown name does
 // not resolve.
 

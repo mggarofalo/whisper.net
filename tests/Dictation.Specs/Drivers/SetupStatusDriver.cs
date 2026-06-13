@@ -1,4 +1,4 @@
-// Drives the @WHISPER-82 first-run-setup scenarios. There is no separate onboarding flow any more — the
+// Drives the first-run-setup scenarios. There is no separate onboarding flow any more — the
 // launch decision is a single GetSetupStatusQuery over the REAL Mediator pipeline (the real model catalog
 // from AddModelManagement), faking only the settings store and the model cache. So it proves the decision
 // the App startup uses: a fresh install and a completed-but-missing-model both report not-configured (the

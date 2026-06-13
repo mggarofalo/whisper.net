@@ -1,4 +1,4 @@
-// Drives the @WHISPER-30 hotkey-rebinding scenarios. It owns HOW capture is exercised so the steps
+// Drives the hotkey-rebinding scenarios. It owns HOW capture is exercised so the steps
 // stay one-liners: it replays key edges into the REAL HotkeyCaptureService (building the live modifier
 // set like the listener), records the capture outcome, and — to prove the rebind took effect — drives
 // chords into the REAL HotkeyActivationController the capture service rebinds, watching for a recording

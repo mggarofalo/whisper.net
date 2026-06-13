@@ -28,7 +28,7 @@ House rules:
   outward dependencies (enforced by `tests/Architecture.Tests`).
 
 Example: `src/Application/Transcription/DeliverTranscriptionCommand.cs` +
-`DeliverTranscriptionHandler.cs`, exercised end-to-end by the `@WHISPER-58` push-to-talk scenario.
+`DeliverTranscriptionHandler.cs`, exercised end-to-end by the `@WHISPER-<id>` push-to-talk scenario.
 
 ## Validation (FluentValidation)
 

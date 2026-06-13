@@ -23,7 +23,7 @@ internal sealed class WhisperNetEngine(WhisperFactory factory, string? language)
 		WhisperProcessorBuilder builder = factory.CreateBuilder();
 		builder = IsAutoDetect(language) ? builder.WithLanguageDetection() : builder.WithLanguage(language!);
 
-		// Custom-vocabulary conditioning (WHISPER-38): bias the decoder toward the user's terms via the
+		// Custom-vocabulary conditioning: bias the decoder toward the user's terms via the
 		// initial prompt, and — when a prompt is supplied — disable the first-token log-probability
 		// threshold by pushing it to its floor, so the injected prompt cannot drop the genuine first token.
 		if (decodingOptions.InitialPrompt is not null)

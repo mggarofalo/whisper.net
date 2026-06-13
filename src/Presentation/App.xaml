@@ -4,7 +4,7 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <!-- The shell's shared converters + validation chrome (WHISPER-96): owned by a standalone
+                <!-- The shell's shared converters + validation chrome: owned by a standalone
                      dictionary the shell window also merges, so views resolve them with or without a live
                      Application. Merged here too so any future window gets them app-wide. -->
                 <ResourceDictionary Source="/Presentation;component/Shell/ShellResources.xaml" />

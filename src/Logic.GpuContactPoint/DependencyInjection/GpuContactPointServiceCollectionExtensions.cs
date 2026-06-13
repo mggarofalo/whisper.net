@@ -12,7 +12,7 @@ public static class GpuContactPointServiceCollectionExtensions
 {
 	public static IServiceCollection AddGpuContactPoint(this IServiceCollection services, IConfiguration? configuration = null)
 	{
-		// The single GPU contact point (WHISPER-9): decides Vulkan vs CPU from the raw probe's answer.
+		// The single GPU contact point: decides Vulkan vs CPU from the raw probe's answer.
 		services.AddSingleton<IBackendSelector, GpuBackendSelector>();
 
 		return services;

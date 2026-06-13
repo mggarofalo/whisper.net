@@ -1,4 +1,4 @@
-// The production IUserNotifier (WHISPER-95), kept WPF-free so the failure-surfacing behavior is driven
+// The production IUserNotifier, kept WPF-free so the failure-surfacing behavior is driven
 // for real in specs: notifications marshal to the UI thread through the IUiDispatcher seam (CheckAccess
 // fast-path, non-blocking Post otherwise) and are presented by a balloon delegate the composition root
 // attaches once the tray icon exists. Degradation is graceful by contract — no presenter attached

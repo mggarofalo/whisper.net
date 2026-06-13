@@ -22,7 +22,7 @@ public sealed class TranscriptionDriver(
 			.TranscribeAsync(Arg.Any<AudioClip>(), Arg.Any<CancellationToken>())
 			.Returns(new TranscriptionResult(text));
 
-	// WHISPER-125: the captured audio is silence, so the trimmer collapses it to empty and the pipeline must
+	// The captured audio is silence, so the trimmer collapses it to empty and the pipeline must
 	// not transcribe it (Whisper hallucinates a phrase on silence).
 	public void CapturedAudioIsSilent() => world.CapturedClip = AudioClip.OneSecondOfSilence();
 

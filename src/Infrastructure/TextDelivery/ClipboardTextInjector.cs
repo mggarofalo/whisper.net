@@ -1,4 +1,4 @@
-// The ITextInjector adapter that delivers text by pasting (WHISPER-2's typing path is the default;
+// The ITextInjector adapter that delivers text by pasting (the typing path is the default;
 // this is the alternative for very long text or when the user picks paste). The clipboard is shared
 // global state, so the cardinal rule is: never clobber whatever the user copied. We snapshot the prior
 // contents and the clipboard change count, set our text, issue Ctrl+V, then restore the prior contents

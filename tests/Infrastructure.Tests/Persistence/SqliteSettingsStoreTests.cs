@@ -1,4 +1,4 @@
-// Inner TDD loop for the WHISPER-11 SQLite settings store: it yields defaults and persists them on a
+// Inner TDD loop for the SQLite settings store: it yields defaults and persists them on a
 // first run, round-trips saved settings, and recovers to defaults — logging the recovery rather than
 // throwing — when the database file is corrupt. Driven against a real temp-file database; the
 // SettingsMapper is the real generated mapper, never mocked.

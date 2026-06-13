@@ -1,4 +1,4 @@
-// Drives the @WHISPER-35 command-mode hook scenarios. It owns HOW the hook is exercised so the steps
+// Drives the command-mode hook scenarios. It owns HOW the hook is exercised so the steps
 // stay one-liners: it configures the faked command matcher (match or no-match), sends the REAL
 // DeliverTranscriptionCommand through IMediator, and asserts at the boundary — a matched transcript is
 // routed to the command branch (reported on the result) and never typed, while an unmatched transcript

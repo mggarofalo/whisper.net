@@ -1,5 +1,5 @@
-// An in-memory stand-in for the OS startup registration (the IStartupRegistration port) for the
-// @WHISPER-32 scenarios. It models the single source of truth a real registry Run key provides:
+// An in-memory stand-in for the OS startup registration (the IStartupRegistration port).
+// Models the single source of truth a real registry Run key provides:
 // enabling/disabling flips one flag, so it is inherently idempotent (no duplicates, no orphans) — the
 // real registry idempotency is proven separately against an actual HKCU subkey in Infrastructure.Tests.
 

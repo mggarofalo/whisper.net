@@ -1,4 +1,4 @@
-// Unit test for the user-data purge (WHISPER-34): the handler clears both local stores — transcript
+// Unit test for the user-data purge: the handler clears both local stores — transcript
 // history and the audit log — through their ports. Uses substituted ports.
 
 using Application.Ports;

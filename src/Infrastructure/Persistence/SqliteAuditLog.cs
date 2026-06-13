@@ -1,4 +1,4 @@
-// SQLite-backed implementation of the IAuditLog port (WHISPER-34): appends audit records to a local
+// SQLite-backed implementation of the IAuditLog port: appends audit records to a local
 // table, counts them, and clears them. Local-only by construction — it talks only to the on-device SQLite
 // database, never the network. Writes fail safe (logged and swallowed) so an audit hiccup never blocks
 // the pipeline; a count failure reports zero rather than crashing the host. The decision of WHETHER to

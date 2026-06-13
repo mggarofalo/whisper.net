@@ -1,4 +1,4 @@
-// Drives the @WHISPER-13 device scenarios against the REAL DeviceSelectionPolicy and the REAL
+// Drives the device scenarios against the REAL DeviceSelectionPolicy and the REAL
 // SettingsMapper (for the persistence round-trip), over a fake enumerator and a fake notification
 // client. Device ids equal their display names here for readability. When the fake watcher reports a
 // default change, the driver updates the enumerator's default — mirroring how the app reacts to the

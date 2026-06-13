@@ -1,4 +1,4 @@
-// Drives the @WHISPER-34 privacy-gated audit-log scenarios. Audit logging is a security/privacy feature,
+// Drives the privacy-gated audit-log scenarios. Audit logging is a security/privacy feature,
 // so the driver builds its OWN composition — the REAL AuditLogger gate (which reads the live settings
 // holder) over the REAL SqliteAuditLog + SqliteHistoryStore against a private temp-file database — and
 // purges through the REAL PurgeUserDataCommand via Mediator. A completed transcription always records to

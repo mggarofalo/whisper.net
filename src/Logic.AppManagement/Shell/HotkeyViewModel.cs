@@ -1,4 +1,4 @@
-// The shell's hotkey section (WHISPER-33; native validation in WHISPER-77): shows the current dictation
+// The shell's hotkey section (with native validation): shows the current dictation
 // hotkey and assigns a new one. It depends on nothing but IMediator — it loads via GetSettingsQuery and
 // saves via UpdateSettingsCommand, carrying the whole settings DTO with the hotkey swapped. The chord the
 // user is editing lives in a validated [ObservableProperty] (HotkeyInput) decorated with DataAnnotations
@@ -49,11 +49,11 @@ public sealed partial class HotkeyViewModel : FeatureViewModel
 	[ObservableProperty]
 	private string? _error;
 
-	// Live subscriptions exist only while this section is the shell's active content (WHISPER-94): the
+	// Live subscriptions exist only while this section is the shell's active content: the
 	// instant-apply registration is added on activate and removed on deactivate, so an inactive cached
 	// section gets no callbacks. The messenger is the shared WeakReferenceMessenger, so even a missed
 	// deactivation could never root this cached view-model. Activation also triggers the load
-	// (WHISPER-109): without it the section showed no binding and AssignAsync silently no-opped on its
+	//: without it the section showed no binding and AssignAsync silently no-opped on its
 	// null-settings guard, so assignment never persisted.
 	protected override void OnActivated()
 	{
@@ -64,7 +64,7 @@ public sealed partial class HotkeyViewModel : FeatureViewModel
 
 	protected override void OnDeactivated() => _messenger.Unregister<SettingsChangedMessage>(this);
 
-	// A live settings commit (instant apply, WHISPER-78) refreshes the displayed binding while active —
+	// A live settings commit (instant apply) refreshes the displayed binding while active —
 	// e.g. a hotkey assigned elsewhere shows here without a reload.
 	private void OnSettingsChanged(SettingsChangedMessage message)
 	{

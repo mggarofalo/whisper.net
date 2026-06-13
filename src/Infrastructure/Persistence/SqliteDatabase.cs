@@ -1,4 +1,4 @@
-// The single owner of the SQLite connection string and one-time schema initialization (WHISPER-11). It
+// The single owner of the SQLite connection string and one-time schema initialization. It
 // hands out open connections to the store adapters, running the migration runner once — lazily and
 // thread-safely — on first use, so the schema is present before the first read or write (in practice "at
 // startup", since the stores are touched as the host starts). Connection pooling (on by default for a

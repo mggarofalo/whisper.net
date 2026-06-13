@@ -45,7 +45,7 @@ public sealed class Win32KeyboardInput : IKeyboardInput
 
 	// The marshaled size of INPUT, which is the cbSize SendInput requires. Exposed so a guard test pins it
 	// to the platform-correct value (40 on x64, 28 on x86) — a wrong size makes SendInput reject the batch
-	// with ERROR_INVALID_PARAMETER, which is exactly the bug this struct layout fixes (WHISPER-88).
+	// with ERROR_INVALID_PARAMETER, which is exactly the bug this struct layout fixes.
 	internal static int NativeInputSize => Marshal.SizeOf<INPUT>();
 
 	[DllImport("user32.dll", SetLastError = true)]
@@ -60,7 +60,7 @@ public sealed class Win32KeyboardInput : IKeyboardInput
 
 	// The native INPUT union must be sized for its LARGEST member (MOUSEINPUT, 32 bytes on x64), not just
 	// KEYBDINPUT (24) — otherwise Marshal.SizeOf<INPUT> is 32 instead of the 40 Windows expects, and the
-	// resulting cbSize mismatch makes SendInput fail with error 87 (WHISPER-88). mi is unused but pads the
+	// resulting cbSize mismatch makes SendInput fail with error 87. mi is unused but pads the
 	// union to the correct size; both members overlap at offset 0 exactly as the Win32 union does.
 	[StructLayout(LayoutKind.Explicit)]
 	private struct InputUnion

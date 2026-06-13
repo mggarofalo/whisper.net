@@ -1,4 +1,4 @@
-// Pins the data behind the nav region's selected-item visual (WHISPER-103): the shell tracks which
+// Pins the data behind the nav region's selected-item visual: the shell tracks which
 // section key is current so the nav button for the active section can be marked. The visual states
 // (hover/pressed/focus/selected styling) are WPF and validated by smoke + the artifact spec; this pins
 // that the selected key is correct on open and after navigation, since NavigateTo is only ever driven

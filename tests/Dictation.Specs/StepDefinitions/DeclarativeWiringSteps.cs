@@ -1,4 +1,4 @@
-// Thin step definitions for the @WHISPER-93 declarative-event-wiring feature. Each step delegates to
+// Thin step definitions for the declarative-event-wiring feature. Each step delegates to
 // the DeclarativeWiringDriver (injected by the Reqnroll DI plugin); no logic lives here.
 
 using Dictation.Specs.Drivers;

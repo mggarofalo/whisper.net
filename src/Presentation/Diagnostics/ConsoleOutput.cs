@@ -1,4 +1,4 @@
-// A WinExe has no console of its own, so when the app is launched with --doctor (WHISPER-50) from a
+// A WinExe has no console of its own, so when the app is launched with --doctor from a
 // terminal its diagnostic report would have nowhere to go. This helper attaches to the parent process's
 // console (the terminal that launched it) for the duration of a write, so the report appears inline where
 // the user ran the command, then detaches. When there is no parent console (e.g. a double-click) the

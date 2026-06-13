@@ -1,6 +1,6 @@
 // Inner TDD loop for AudioResampler: channel downmixing averages, same-rate is identity, and
 // resampling scales the sample count by the rate ratio. Edge cases (empty, zero channels) are the
-// depth behind the @WHISPER-23 normalization outline.
+// depth behind the normalization outline.
 
 using AwesomeAssertions;
 using Domain.Audio;

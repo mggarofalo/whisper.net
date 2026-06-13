@@ -1,4 +1,4 @@
-// Drives the @WHISPER-12 host-bootstrap scenarios. It owns HOW a real Generic Host is composed,
+// Drives the host-bootstrap scenarios. It owns HOW a real Generic Host is composed,
 // launched, and shut down so the step definitions stay one-liners. The host is built from the SAME
 // per-layer registration extensions the production WPF app uses; only the Infrastructure hotkey seam
 // is faked, so the REAL hosted services (the hotkey listener) and the host's start/stop lifecycle are
@@ -40,34 +40,34 @@ public sealed class AppLifecycleDriver : IDisposable
 		builder.Services.AddGpuContactPoint();
 
 		// Fake ONLY the Infrastructure hotkey seam, then compose the REAL EventLoopHotkeyListener over
-		// it (exactly as the @WHISPER-10 specs do), so the hosted service starts a real listener with
+		// it (exactly as the hotkey specs do), so the hosted service starts a real listener with
 		// no OS hook installed.
 		_hook = new FakeGlobalKeyHook();
 		builder.Services.AddSingleton<IGlobalKeyHook>(_hook);
 		builder.Services.AddSingleton<IHotkeyListener, EventLoopHotkeyListener>();
 
-		// The host-owned background components also include settings persistence (WHISPER-43); supply a
+		// The host-owned background components also include settings persistence; supply a
 		// stub store so the host composes it without touching disk. This driver asserts the hosted-service
 		// lifecycle, not settings, so defaults are fine.
 		ISettingsStore settingsStore = Substitute.For<ISettingsStore>();
 		settingsStore.LoadAsync(Arg.Any<CancellationToken>()).Returns(AppSettings.Default);
 		builder.Services.AddSingleton(settingsStore);
 
-		// The dictation orchestrator activated by the host (WHISPER-14) needs the audio capture port and
-		// the audio-feedback port (WHISPER-21); this driver asserts the hosted-service lifecycle, not
+		// The dictation orchestrator activated by the host needs the audio capture port and
+		// the audio-feedback port; this driver asserts the hosted-service lifecycle, not
 		// capture or feedback, so substitutes that open no device are enough for the host to start.
 		builder.Services.AddSingleton(Substitute.For<IAudioSource>());
 		builder.Services.AddSingleton(Substitute.For<IAudioFeedback>());
 
-		// The model warm-up hosted service (WHISPER-127) preloads the dictation model via ITranscriber; a
+		// The model warm-up hosted service preloads the dictation model via ITranscriber; a
 		// substitute that no-ops keeps the host composing without a real model or native library.
 		builder.Services.AddSingleton(Substitute.For<ITranscriber>());
 
-		// The host also runs the auto-update check hosted service (WHISPER-29); supply a stub source so the
+		// The host also runs the auto-update check hosted service; supply a stub source so the
 		// host composes without any network. This driver asserts the hosted-service lifecycle, not updates.
 		builder.Services.AddSingleton(Substitute.For<IUpdateSource>());
 
-		// The host-owned background components under test (WHISPER-12).
+		// The host-owned background components under test.
 		builder.Services.AddAppManagementHostedServices();
 
 		// A probe hosted service so the scenarios can assert the host drives an arbitrary IHostedService

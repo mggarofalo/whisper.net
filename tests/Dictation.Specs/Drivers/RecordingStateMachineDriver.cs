@@ -1,4 +1,4 @@
-// Drives the @WHISPER-22 recording-state-machine scenarios. It owns HOW the machine is exercised so
+// Drives the recording-state-machine scenarios. It owns HOW the machine is exercised so
 // the steps stay one-liners: it issues start/stop/complete/cancel against the REAL
 // RecordingStateMachine and records the state path it travels plus whether a cancel discarded the
 // capture. "No text is delivered" is asserted behaviorally — a cancelled capture never enters

@@ -1,4 +1,4 @@
-// Single-instance coordination (WHISPER-25), kept out of Presentation/Infrastructure so it can be
+// Single-instance coordination, kept out of Presentation/Infrastructure so it can be
 // driven for real in specs. On startup TryStartAsPrimary tries to acquire the OS-global lock: if it
 // wins, this process is the primary — it listens for activation requests and surfaces the window (via
 // the IShellPresenter seam) whenever a later launch signals it. If the lock is already held, it signals

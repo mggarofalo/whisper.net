@@ -1,4 +1,4 @@
-// Smoke coverage for the WHISPER-9 Vulkan probe. The probe's job is to answer "is a usable Vulkan
+// Smoke coverage for the Vulkan probe. The probe's job is to answer "is a usable Vulkan
 // runtime present?" promptly and WITHOUT crashing on any machine — present or absent, GPU box or
 // headless CI agent. These tests assert exactly that contract: it returns a bool, never throws, and
 // honors cancellation. Whether the answer is true or false depends on the host and is not asserted.

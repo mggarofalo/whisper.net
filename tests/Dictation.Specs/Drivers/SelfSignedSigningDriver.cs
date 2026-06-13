@@ -1,9 +1,9 @@
-// Exercises the self-signed code-signing path and the build-from-source guide for the @WHISPER-72
-// scenarios. Like the packaging and release-workflow drivers, it inspects repository artifacts directly —
+// Exercises the self-signed code-signing path and the build-from-source guide. Like the packaging and
+// release-workflow drivers, it inspects repository artifacts directly —
 // the signing-cert helper script, the build-and-run guide, and the README — because the contract here is
 // "a reproducible script produces the base64 PFX + password that pack.ps1 already consumes, and the path
 // is documented", not runtime behavior. A self-signed certificate makes the signature valid only where the
-// cert is trusted; it does not earn SmartScreen reputation (that is WHISPER-69's CA cert), and the guide
+// cert is trusted; it does not earn SmartScreen reputation (that requires a CA cert), and the guide
 // must say so.
 
 using AwesomeAssertions;
