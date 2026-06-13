@@ -4,8 +4,7 @@
 **dictation app for Windows**. It lives in your system tray: hold a hotkey, speak, and the words you
 said are typed straight into whatever window has focus — your editor, browser, chat, email, anything.
 
-Transcription runs **entirely on your machine** with [Whisper.net](https://github.com/sandrohanea/whisper.net).
-Your voice never leaves your computer.
+Transcription runs **entirely on your machine** — your voice never leaves your computer.
 
 > 🔒 **Private by default.** No audio, transcripts, or any of your data leave the device without an
 > explicit action you take. There is no telemetry, no account, and no cloud. See

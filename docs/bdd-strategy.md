@@ -333,7 +333,7 @@ Describe **what** behavior is expected, not the **clicks/keystrokes** that produ
 - **Tags** for slicing and traceability:
   - `@wip` — work in progress, excluded from the CI gate.
   - `@slow` — anything touching a real model/IO fixture you want to filter.
-  - `@WHISPER-123` — the **Plane issue id**, so every scenario traces to a requirement (section 7).
+  - `@WHISPER-<id>` — the **Plane issue id**, so every scenario traces to a requirement (section 7).
 - **No UI/implementation coupling.** No widget names, no key codes, no "the SendInput call." Talk about *dictation*, *delivery*, *silence*, *filler words*.
 - **No incidental detail.** Only include data that affects the outcome. If the exact silence duration matters, state it; if it doesn't, don't.
 - **Ubiquitous language.** The nouns/verbs match `Domain`/`Application` types: `TranscriptionResult`, "trailing silence," "push-to-talk release," "CPU fallback."
@@ -357,7 +357,7 @@ Scenario: User records and gets text
 
 ```gherkin
 # ✅ GOOD — declarative, one behavior, ubiquitous language
-@WHISPER-101
+@WHISPER-<id>
 Scenario: Transcription is delivered to the focused field on push-to-talk release
   Given the model will transcribe the audio to "schedule the meeting"
   When push-to-talk is released
@@ -376,7 +376,7 @@ Scenario: VAD
 
 ```gherkin
 # ✅ GOOD — observable behavior, data-driven, declarative
-@WHISPER-114
+@WHISPER-<id>
 Scenario Outline: Trailing silence beyond the threshold is trimmed before delivery
   Given a recording of "<spoken>" followed by <silence_ms> ms of silence
   And the silence threshold is 500 ms
@@ -402,7 +402,7 @@ Scenario: Remove fillers
 
 ```gherkin
 # ✅ GOOD — behavior + concrete examples
-@WHISPER-122
+@WHISPER-<id>
 Scenario Outline: Filler words are removed from the delivered text
   Given the model will transcribe the audio to "<raw>"
   And filler-word removal is enabled
@@ -425,7 +425,7 @@ Scenario: GPU stuff
   Then an exception is caught and logged at Warning level
 
 # ✅ GOOD — describes the user-observable policy
-@WHISPER-130
+@WHISPER-<id>
 Scenario: Transcription falls back to CPU when no compatible GPU runtime is present
   Given no compatible GPU runtime is available
   When a transcription is requested
@@ -501,13 +501,13 @@ Feature: Deliver transcription on push-to-talk release
     Given filler-word removal is enabled
     And the silence threshold is 500 ms
 
-  @WHISPER-101
+  @WHISPER-<id>
   Scenario: Spoken phrase is delivered to the focused field
     Given the model will transcribe the audio to "schedule the meeting for friday"
     When push-to-talk is released
     Then the text delivered to the focused field is "schedule the meeting for friday"
 
-  @WHISPER-101
+  @WHISPER-<id>
   Scenario: Nothing is delivered when the audio yields no speech
     Given the model will transcribe the audio to ""
     When push-to-talk is released
@@ -632,7 +632,7 @@ public sealed class PushToTalkSteps
 3. **Shared mutable scenario state** — order-dependent, flaky scenarios. **Guard:** per-scenario DI scope from the plugin; carry state in a scenario-scoped `ScenarioWorld`, never in `static` fields.
 4. **Scenarios that mirror code instead of behavior** — "the handler calls `_cleaner.Clean`." **Guard:** if a non-programmer can't read the scenario as a sentence about the product, rewrite it; assert on outcomes, not on internal calls (the one acceptable "interaction" assertion is at the *port boundary*, e.g. "text was delivered").
 
-### The Presentation smoke layer (WHISPER-96)
+### The Presentation smoke layer
 
 "UI is manual/iterative" above does **not** mean the view glue is unguarded. A thin, STA-threaded
 smoke layer (`tests/Presentation.Smoke.Tests`, `net10.0-windows`, in the same fast gate CI runs on
@@ -669,11 +669,11 @@ That is checkable in CI, not a matter of opinion.
 ### Tag every scenario with its Plane issue id
 
 ```gherkin
-@WHISPER-114
+@WHISPER-<id>
 Scenario Outline: Trailing silence beyond the threshold is trimmed before delivery
 ```
 
-This gives **bidirectional traceability**: from a Plane issue you can grep `@WHISPER-114` to find its executable spec; from a failing scenario the report names the issue it implements. A small CI step (or a `dotnet test --filter "Category=WHISPER-114"`-style run, since Reqnroll maps tags to xUnit traits) can prove an issue's scenarios pass before it's marked Done.
+This gives **bidirectional traceability**: from a Plane issue you can grep `@WHISPER-<id>` to find its executable spec; from a failing scenario the report names the issue it implements. A small CI step (or a `dotnet test --filter "Category=WHISPER-<id>"`-style run, since Reqnroll maps tags to xUnit traits) can prove an issue's scenarios pass before it's marked Done.
 
 ### Living documentation as the behavioral record
 
