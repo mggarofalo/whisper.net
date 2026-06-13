@@ -24,7 +24,18 @@ public sealed class WasapiAudioSourceTests
 		public event EventHandler<AudioCaptureBuffer>? DataAvailable;
 		public event EventHandler<AudioCaptureStopped>? RecordingStopped;
 
-		public void Start() => IsRecording = true;
+		// When set, the device negotiates this format DURING Start — mirroring the real NAudioCaptureClient,
+		// whose Format is a placeholder until Start reads the device's actual mix format.
+		public CaptureFormat? FormatNegotiatedOnStart { get; set; }
+
+		public void Start()
+		{
+			IsRecording = true;
+			if (FormatNegotiatedOnStart is { } negotiated)
+			{
+				Format = negotiated;
+			}
+		}
 
 		public void Produce(params float[] samples) => DataAvailable?.Invoke(this, new AudioCaptureBuffer(samples));
 
@@ -70,6 +81,32 @@ public sealed class WasapiAudioSourceTests
 		source.Start();
 
 		source.Format.Should().Be(new CaptureFormat(44_100, 1, 16, AudioSampleFormat.Pcm));
+	}
+
+	[Fact]
+	public void Reads_the_device_format_negotiated_during_start_not_a_stale_placeholder()
+	{
+		// The real NAudioCaptureClient only knows the device's format AFTER Start() negotiates it; before Start
+		// it exposes a 16 kHz placeholder. WasapiAudioSource must read the format AFTER starting. Reading it
+		// before captured the FIRST recording at the wrong rate — 48 kHz audio tagged 16 kHz, so the resampler
+		// (seeing 16 kHz == 16 kHz target) skipped downsampling and the clip played back 3x too slow and
+		// untranscribable; every later recording reused the previously-negotiated format and worked.
+		FakeClient client = new()
+		{
+			Format = new CaptureFormat(16_000, 1, 16, AudioSampleFormat.Pcm),                       // placeholder pre-Start
+			FormatNegotiatedOnStart = new CaptureFormat(48_000, 1, 32, AudioSampleFormat.IeeeFloat), // real, on Start
+		};
+		WasapiAudioSource source = new(client);
+		AudioFrameAvailableEventArgs? captured = null;
+		source.FrameAvailable += (_, e) => captured = e;
+
+		source.Start();
+		client.Produce(0.1f, 0.2f, 0.3f);
+
+		CaptureFormat expected = new(48_000, 1, 32, AudioSampleFormat.IeeeFloat);
+		source.Format.Should().Be(expected);
+		captured.Should().NotBeNull();
+		captured!.Format.Should().Be(expected, "frames must carry the real negotiated format, not the pre-start placeholder");
 	}
 
 	[Fact]
