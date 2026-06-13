@@ -1,6 +1,6 @@
 name: Release
 
-# Tag-driven releases (WHISPER-39): pushing a semantic-version tag IS the release. MinVer derives the
+# Tag-driven releases: pushing a semantic-version tag IS the release. MinVer derives the
 # version from the tag, the app is built + tested, packaged with Velopack, and the installer + update
 # package + feed are published to a GitHub Release for that tag. A failing build or test fails the job
 # before anything is published, so a broken build never ships.
@@ -51,8 +51,8 @@ jobs:
         run: ./build/pack.ps1
         env:
           # Code-signing secrets are injected from GitHub Actions secrets and consumed by the packaging
-          # step; they are never echoed to the log. The signing implementation lands in WHISPER-29; absent
-          # secrets simply produce an unsigned build (no failure).
+          # step; they are never echoed to the log. Absent signing secrets simply produce an unsigned
+          # build (no failure).
           VELOPACK_SIGN_CERTIFICATE: ${{ secrets.VELOPACK_SIGN_CERTIFICATE }}
           VELOPACK_SIGN_PASSWORD: ${{ secrets.VELOPACK_SIGN_PASSWORD }}
 

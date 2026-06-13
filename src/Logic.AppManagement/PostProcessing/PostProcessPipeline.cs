@@ -1,10 +1,10 @@
-// The ordered post-process pipeline (WHISPER-41) behind the IPostProcessor port. It reads the live
+// The ordered post-process pipeline behind the IPostProcessor port. It reads the live
 // PostProcessSettingsHolder on every call, so a configuration edit takes effect on the next
 // transcription without restarting the app. Step order (each independently toggleable):
-//   1. Normalize  - strip noise labels (always) and, when enabled, filler words (WHISPER-36).
-//   2. (Custom-vocabulary decode conditioning is applied UPSTREAM during transcription, WHISPER-38.)
+//   1. Normalize  - strip noise labels (always) and, when enabled, filler words.
+//   2. (Custom-vocabulary decode conditioning is applied UPSTREAM during transcription.)
 //   3. Transform  - when a default transform is configured, rewrite via the transforms framework
-//                   (WHISPER-37). An unknown/disabled/failed transform leaves the normalized text
+//. An unknown/disabled/failed transform leaves the normalized text
 //                   unchanged, so an invalid configuration degrades safely rather than crashing.
 
 using Application.Configuration;

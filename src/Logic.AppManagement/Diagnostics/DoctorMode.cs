@@ -1,4 +1,4 @@
-// Decides whether the app was launched to run diagnostics rather than the tray UI (WHISPER-50). The
+// Decides whether the app was launched to run diagnostics rather than the tray UI. The
 // Presentation entry point passes its command-line arguments here; if any is the doctor/selftest flag,
 // the app runs the checks, prints the report, and exits instead of going tray-resident. Kept as a pure
 // helper (no WPF, no process state) so the arg-routing decision is unit-tested directly.

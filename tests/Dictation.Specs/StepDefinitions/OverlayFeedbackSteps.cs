@@ -1,6 +1,6 @@
-// Thin step definitions for the @WHISPER-102 overlay-feedback feature. Each step delegates to the shared
+// Thin step definitions for the overlay-feedback feature. Each step delegates to the shared
 // LevelOverlayDriver (injected by the Reqnroll DI plugin); no logic lives here. The step text is distinct
-// from the @WHISPER-26 / @WHISPER-101 overlay steps so Reqnroll binds each unambiguously.
+// from the level and perceptual-meter overlay steps so Reqnroll binds each unambiguously.
 
 using System;
 using Dictation.Specs.Drivers;

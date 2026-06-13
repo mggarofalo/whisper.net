@@ -1,6 +1,6 @@
 // A minimal, deterministic TimeProvider for unit tests: time only advances when the test calls Advance,
 // and one-shot timers created via CreateTimer fire synchronously when the manual clock passes their due
-// time. It implements exactly what the orchestrator's post-release grace window (WHISPER-112) uses — a
+// time. It implements exactly what the orchestrator's post-release grace window uses — a
 // one-shot Task.Delay timer — so the capture-tail drain can be proven without real wall-clock waiting.
 // The equivalent of Application.Tests' ManualTimeProvider; not a general-purpose fake (no recurring
 // periods), kept tiny on purpose.
@@ -13,7 +13,7 @@ public sealed class ManualTimeProvider : TimeProvider
 	private readonly List<ManualTimer> _timers = [];
 	private DateTimeOffset _now = DateTimeOffset.UnixEpoch;
 
-	// Default UTC so day-bucketing tests that don't care about the zone (WHISPER-116) are deterministic and
+	// Default UTC so day-bucketing tests that don't care about the zone are deterministic and
 	// match the prior UTC behavior; tests that pin a non-UTC zone call SetLocalTimeZone.
 	private TimeZoneInfo _localTimeZone = TimeZoneInfo.Utc;
 

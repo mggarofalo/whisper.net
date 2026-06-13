@@ -1,11 +1,11 @@
-// The shell's landing section (WHISPER-19), now a live status dashboard (WHISPER-106). It no longer sits
+// The shell's landing section, now a live status dashboard. It no longer sits
 // empty: on first activation it composes existing read queries through IMediator into an at-a-glance
 // overview the other sections don't give in one place — the active model, the dictation hotkey, the
 // selected input device, headline usage totals, and the most recent transcriptions. It depends on
 // nothing but IMediator (no ports, no Infrastructure) and does no arithmetic of its own — the usage
 // figures are the Application layer's. Built on CommunityToolkit.Mvvm and WPF-free so the behavior is
 // driven for real in specs; the thin view binds to it. Recent is a UiBoundCollection registered through
-// the collection-sync seam (WHISPER-91) so a future off-UI-thread refresh binds safely.
+// the collection-sync seam so a future off-UI-thread refresh binds safely.
 
 using Application.Audio;
 using Application.History;
@@ -67,17 +67,17 @@ public sealed partial class HomeViewModel : FeatureViewModel
 	[ObservableProperty]
 	private bool _isEmpty;
 
-	/// <summary>True while the dictation model is warming up (WHISPER-129); the dashboard shows a status line
+	/// <summary>True while the dictation model is warming up; the dashboard shows a status line
 	/// until the app-wide warm-up cleared event lifts it.</summary>
 	[ObservableProperty]
 	private bool _isModelWarming;
 
-	// Refresh the overview on EVERY activation (WHISPER-119). Unlike the data sections — which load once and
-	// keep their browsed page/scroll across tab switches (WHISPER-108) — the dashboard is a live overview,
+	// Refresh the overview on EVERY activation. Unlike the data sections — which load once and
+	// keep their browsed page/scroll across tab switches — the dashboard is a live overview,
 	// so opening Home always re-queries settings/usage/history rather than showing a stale snapshot (e.g.
 	// last night's most-recent transcription). RefreshCommand disallows concurrent runs, so a rapid
 	// re-activation while a refresh is in flight is a no-op, never a duplicate query. The model warm-up
-	// status (WHISPER-129) is reflected only while Home is active (WHISPER-94 messenger discipline): the
+	// status is reflected only while Home is active (messenger discipline): the
 	// app-wide ModelWarmupChangedMessage drives the status line and its cleared event lifts it.
 	protected override void OnActivated()
 	{

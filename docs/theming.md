@@ -1,6 +1,6 @@
 # Theming decision (WHISPER-84)
 
-This records the M12 theming decision required by WHISPER-84 AC2.
+This records the theming decision required by WHISPER-84 AC2.
 
 ## Decision
 

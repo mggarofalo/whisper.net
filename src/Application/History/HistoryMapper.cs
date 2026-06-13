@@ -1,7 +1,7 @@
 // Mapperly mapper between TranscriptEntry (Domain) and TranscriptEntryDto (Application). Per the house
 // rules: a [Mapper] partial class, no [UseMapper]. Domain -> DTO is used by the query handler; the
-// reverse direction completes the bidirectional contract and is exercised by the @WHISPER-49
-// round-trip test. The real generated mapper is used in tests, never mocked.
+// reverse direction completes the bidirectional contract and is exercised by the round-trip test.
+// The real generated mapper is used in tests, never mocked.
 
 using Domain.History;
 using Riok.Mapperly.Abstractions;

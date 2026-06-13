@@ -1,4 +1,4 @@
-// Drives the @WHISPER-109 hotkey-assignment scenarios. The defect: navigating to the hotkey section
+// Drives the hotkey-assignment scenarios. The defect: navigating to the hotkey section
 // activated it (messenger registration) but never loaded the persisted settings, so the binding label
 // stayed empty and AssignAsync silently returned on its null-settings guard — assignment was a no-op.
 // This driver therefore enters through the REAL lifecycle entry point — vm.OnNavigatedTo(), exactly as
@@ -69,7 +69,7 @@ public sealed class HotkeyAssignmentDriver
 	// --- when ---
 
 	// Enter through the REAL navigation lifecycle, not LoadCommand: OnNavigatedTo is what the shell calls
-	// when the section becomes active, and the load it must trigger is exactly what WHISPER-109 fixes.
+	// when the section becomes active, and the load it must trigger is exactly what this driver exercises.
 	// Awaiting the command's ExecutionTask (null until activation actually starts a load) keeps the
 	// scenario deterministic without bypassing the entry point.
 	public async Task OpenHotkeySection()

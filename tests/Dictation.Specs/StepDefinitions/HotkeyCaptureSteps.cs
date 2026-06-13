@@ -1,4 +1,4 @@
-// Thin step definitions for the @WHISPER-79 hotkey-capture feature. Each step delegates to the
+// Thin step definitions for the hotkey-capture feature. Each step delegates to the
 // HotkeyCaptureDriver (injected by the Reqnroll DI plugin); the modifier list and key are parsed from the
 // Gherkin into the Domain vocabulary so the steps stay declarative.
 

@@ -1,4 +1,4 @@
-// The user-visible error-surfacing seam (WHISPER-95). In a windowless tray app a backend failure that
+// The user-visible error-surfacing seam. In a windowless tray app a backend failure that
 // only reaches Serilog is invisible — the user just sees nothing typed. Failure paths route a short,
 // non-technical notice through this port (the production implementation shows a tray balloon); the
 // technical record still goes to the log. Implementations NEVER throw: surfacing a failure must not be

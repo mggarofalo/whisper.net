@@ -1,4 +1,4 @@
-// Unit depth for the WHISPER-16 activation controller, beyond the @WHISPER-16 acceptance scenarios.
+// Unit depth for the activation controller, beyond the acceptance scenarios.
 // Pins down the chord-matching edges both modes share: push-to-talk start-on-hold / stop-on-release
 // (including a pure-modifier chord), the toggle alternation, and the matching rules — all configured
 // modifiers required, unrelated and extra keys ignored, partial chords inert. The controller is fed
@@ -121,7 +121,7 @@ public sealed class HotkeyActivationControllerTests
 		_stops.Should().Be(0);
 	}
 
-	// WHISPER-126: a reconfigure that lands while a chord is actively driving a recording must not silently
+	// A reconfigure that lands while a chord is actively driving a recording must not silently
 	// drop it (that orphans the recording in the orchestrator). It asks the live recording to cancel —
 	// discarding, not stopping-and-transcribing — so the pipeline can return to a clean Idle.
 	[Fact]

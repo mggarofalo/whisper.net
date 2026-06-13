@@ -1,6 +1,6 @@
 // Covers the TranscriptEntry history record: its non-empty-text invariant, the word count it derives
 // (the input to usage-stats aggregation), and its structural equality (which the Mapperly round-trip
-// in WHISPER-49 depends on).
+// depends on).
 
 using AwesomeAssertions;
 using Domain;

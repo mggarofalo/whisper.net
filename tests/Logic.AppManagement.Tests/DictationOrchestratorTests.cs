@@ -1,15 +1,15 @@
-// Unit depth for the WHISPER-14 dictation orchestrator, beyond the @WHISPER-14 acceptance scenarios.
+// Unit depth for the dictation orchestrator, beyond the acceptance scenarios.
 // Pins down the explicit stage path (Idle -> Recording -> Transcribing -> Delivering -> Idle) and its
 // observability, the hotkey start signal, the concurrency guard against a second capture, the Esc
 // cancel that discards a capture, and the two error paths (a failed delivery and a device capture
-// failure) that must log and return the pipeline to a safe Idle. The history write-through (WHISPER-110)
+// failure) that must log and return the pipeline to a safe Idle. The history write-through
 // is pinned here too: a delivered result dispatches a RecordTranscriptionCommand, an undelivered one
 // does not, and a failed history write is swallowed with a warning. The post-release grace window
-// (WHISPER-112) is pinned on a manual clock: delivery waits for the window, frames arriving during it
+// is pinned on a manual clock: delivery waits for the window, frames arriving during it
 // land in the delivered clip, a cancel mid-grace cannot derail the stop, a cancelled wait discards
 // the capture, and a device failure mid-grace — including one landing at the grace boundary, racing
 // the finalization — discards the capture, notifies the user, and never poisons the next utterance.
-// The soft recording limit (WHISPER-111) is pinned here at the orchestration boundary: approaching the
+// The soft recording limit is pinned here at the orchestration boundary: approaching the
 // limit publishes DictationNearLimitMessage once, reaching it publishes DictationAtLimitMessage once,
 // and frames past the limit still land in the delivered clip. The hard failsafe is pinned too: a
 // recording reaching the hard ceiling publishes DictationHardLimitStopMessage once and stops ITSELF
@@ -57,7 +57,7 @@ public sealed class DictationOrchestratorTests
 			.Send(Arg.Any<DeliverTranscriptionCommand>(), Arg.Any<CancellationToken>())
 			.Returns(new DeliveryResult(Delivered: true, Text: "the result"));
 
-	// Grace 0 by default so the stage/delivery tests stay synchronous; the WHISPER-112 grace-window
+	// Grace 0 by default so the stage/delivery tests stay synchronous; the grace-window
 	// tests opt in with a positive window driven by a manual clock.
 	private DictationOrchestrator CreateSut(AudioBufferingOptions? bufferingOptions = null, TimeProvider? time = null) =>
 		new(_audio, _stateMachine, _activation, new AudioResampler(),
@@ -229,7 +229,7 @@ public sealed class DictationOrchestratorTests
 	[Fact]
 	public async Task Frames_arriving_during_the_post_release_grace_window_land_in_the_delivered_clip()
 	{
-		// The device's stop is asynchronous (WHISPER-112): the user's final syllables arrive after the
+		// The device's stop is asynchronous: the user's final syllables arrive after the
 		// stop request. They must drain into the delivered clip, not the idle preroll ring.
 		ManualTimeProvider time = new();
 		AudioClip? delivered = null;
@@ -307,7 +307,7 @@ public sealed class DictationOrchestratorTests
 	[Fact]
 	public async Task A_capture_device_failure_during_the_grace_window_discards_the_capture_and_notifies()
 	{
-		// The device dies after release but before the grace elapses (WHISPER-112): the failure must be
+		// The device dies after release but before the grace elapses: the failure must be
 		// logged and surfaced exactly like a Recording-stage failure, and the in-flight stop must discard
 		// the partial capture — no delivery, no history entry — and return the pipeline to a safe Idle.
 		ManualTimeProvider time = new();
@@ -356,7 +356,7 @@ public sealed class DictationOrchestratorTests
 	[Fact]
 	public async Task A_capture_failure_racing_the_post_grace_finalization_discards_the_capture()
 	{
-		// The WHISPER-112 late-failure race the merged final gate guards: OnCaptureFailed fires in the
+		// The late-failure race the merged final gate guards: OnCaptureFailed fires in the
 		// gap between the grace delay completing and the stop finalizing the capture. Code that read the
 		// failure flag once, ahead of a separate stage guard, could notify the user the microphone failed
 		// and then deliver the partial clip anyway; the single final gate re-reads the flag immediately
@@ -436,7 +436,7 @@ public sealed class DictationOrchestratorTests
 	[Fact]
 	public async Task Frames_past_the_soft_limit_land_in_the_delivered_clip()
 	{
-		// The limit is soft (WHISPER-111): the recording grows past it, so the whole utterance —
+		// The limit is soft: the recording grows past it, so the whole utterance —
 		// 120 ms against a 100 ms limit — must reach delivery, never a truncated 100 ms clip.
 		AudioClip? delivered = null;
 		_mediator
@@ -459,7 +459,7 @@ public sealed class DictationOrchestratorTests
 	[Fact]
 	public void Reaching_the_hard_limit_stops_and_transcribes_the_recording()
 	{
-		// The hard failsafe (WHISPER-111): with no UI consuming the soft-limit warnings yet, a runaway
+		// The hard failsafe: with no UI consuming the soft-limit warnings yet, a runaway
 		// recording must stop itself at the hard ceiling THROUGH THE NORMAL STOP PATH — the clip reaches
 		// delivery, nothing is discarded — and the pipeline returns to Idle.
 		// 200 ms hard limit at 16 kHz = 3200 samples = 20 frames of 160.
@@ -528,7 +528,7 @@ public sealed class DictationOrchestratorTests
 	[Fact]
 	public void Reassigning_the_hotkey_mid_recording_returns_to_idle_so_the_next_dictation_records()
 	{
-		// WHISPER-126: the live hotkey starts a recording, then the binding is reconfigured under it (the
+		// The live hotkey starts a recording, then the binding is reconfigured under it (the
 		// user assigns a new hotkey while the old one is still held / armed). The orchestrator must discard
 		// the orphaned capture and return to Idle — otherwise it stays stuck Recording, the next start is a
 		// no-op, and the overlay never appears for any later dictation.

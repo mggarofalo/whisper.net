@@ -1,4 +1,4 @@
-// GPU diagnostic (WHISPER-50): reports whether Vulkan acceleration is available, going through the single
+// GPU diagnostic: reports whether Vulkan acceleration is available, going through the single
 // GPU contact point (IBackendSelector) so the verdict matches the backend transcription would actually
 // select. Crucially this check never fails: a missing or broken GPU runtime is a supported, expected
 // state, so it is reported as a Warn that the app will run on CPU — not a Fail. The selector already

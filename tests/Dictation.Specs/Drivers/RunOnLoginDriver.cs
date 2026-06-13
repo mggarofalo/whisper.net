@@ -1,4 +1,4 @@
-// Drives the @WHISPER-32 run-on-login scenarios through the REAL Mediator pipeline (SetRunOnLoginCommand
+// Drives the run-on-login scenarios through the REAL Mediator pipeline (SetRunOnLoginCommand
 // + GetRunOnLoginQuery and their handlers), substituting only the IStartupRegistration port with an
 // in-memory fake. It asserts at the port boundary (the registration's real state) and through the query
 // (so both the command and query handlers are exercised).

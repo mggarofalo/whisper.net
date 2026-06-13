@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    The thin view-level smoke layer (WHISPER-96): STA-threaded tests that construct each
+    The thin view-level smoke layer: STA-threaded tests that construct each
     DataTemplate-resolved feature view against its real (Mediator-substituted) view-model and assert
     construction + first bind raise no exception and no data-binding trace error, plus the
     NavigationSection -> DataTemplate completeness check. Behavior stays in the WPF-free view-model

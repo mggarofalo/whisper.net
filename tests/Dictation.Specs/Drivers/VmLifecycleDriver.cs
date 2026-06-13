@@ -1,4 +1,4 @@
-// Drives the @WHISPER-94 activation-lifecycle scenarios. It owns HOW the lifecycle is exercised so the
+// Drives the activation-lifecycle scenarios. It owns HOW the lifecycle is exercised so the
 // steps stay one-liners: it navigates the REAL ShellViewModel (real NavigationService + cached feature
 // view-models from the scenario scope), publishes a real SettingsChangedMessage over the scenario's
 // messenger, and asserts at the view-model boundary that the cached Hotkey section reacts exactly while
@@ -17,7 +17,7 @@ public sealed class VmLifecycleDriver(ShellViewModel shell, HotkeyViewModel hotk
 	private static readonly string RepositoryRoot = FindRepositoryRoot();
 
 	// What the cached hotkey section displayed just before a publish — "did not react" means the display
-	// is still exactly this. (Activation seeds the binding from settings since WHISPER-109, so the
+	// is still exactly this. (Activation seeds the binding from settings, so the
 	// inactive section's display is the loaded chord, not null.)
 	private string? _hotkeyBeforePublish;
 
@@ -36,13 +36,13 @@ public sealed class VmLifecycleDriver(ShellViewModel shell, HotkeyViewModel hotk
 
 	public void AssertHotkeyDidNotReact() =>
 		hotkey.CurrentHotkey.Should().Be(_hotkeyBeforePublish,
-			"an inactive cached section must receive no callbacks (WHISPER-94 AC1)");
+			"an inactive cached section must receive no callbacks");
 
 	public void AssertLifecycleDocumented()
 	{
 		string doc = File.ReadAllText(Path.Combine(RepositoryRoot, "docs", "architecture.md"));
 
-		doc.Should().Contain("View-model activation lifecycle", "the lifecycle rule has its own documented section (WHISPER-94 AC3)");
+		doc.Should().Contain("View-model activation lifecycle", "the lifecycle rule has its own documented section");
 		doc.Should().Contain("deactivated on navigate-away and disposed only at shell teardown",
 			"the documented rule states when cached view-models deactivate and when they dispose");
 		doc.Should().Contain("WeakReferenceMessenger", "the messenger standard is recorded");

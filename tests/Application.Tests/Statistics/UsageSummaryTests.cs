@@ -1,4 +1,4 @@
-// Unit tests for the usage-summary slice (WHISPER-24): the handler loads history, delegates aggregation
+// Unit tests for the usage-summary slice: the handler loads history, delegates aggregation
 // to the calculator, and projects the result through the REAL UsageSummaryMapper to a DTO (totals + the
 // per-day breakdown). Uses a substituted IHistoryStore + IUsageStatsCalculator and the real mapper.
 

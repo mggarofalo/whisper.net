@@ -1,4 +1,4 @@
-// @WHISPER-12 — drives the Generic Host bootstrap scenarios. Steps stay thin; the AppLifecycleDriver
+// Drives the Generic Host bootstrap scenarios. Steps stay thin; the AppLifecycleDriver
 // owns HOW a real host is composed, launched, and shut down, and asserts the hosted-service lifecycle
 // at the host boundary.
 

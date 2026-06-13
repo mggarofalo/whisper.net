@@ -16,7 +16,7 @@ public interface ITranscriber
 
 	/// <summary>
 	/// Loads the active model and runs a tiny warm-up inference so the FIRST real dictation is not
-	/// penalized by the cold model load and lazy native initialization (WHISPER-127). Best-effort and
+	/// penalized by the cold model load and lazy native initialization. Best-effort and
 	/// idempotent: if there is no usable model yet, the implementation surfaces the same typed error
 	/// <see cref="TranscribeAsync"/> would, for the caller to swallow. Safe to call before any real clip.
 	/// </summary>

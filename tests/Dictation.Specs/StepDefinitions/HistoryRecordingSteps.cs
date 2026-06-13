@@ -1,4 +1,4 @@
-// Thin step definitions for the @WHISPER-110 history write-through scenarios. The recording driver
+// Thin step definitions for the history write-through scenarios. The recording driver
 // arranges the round-tripping store; the existing browser/dashboard drivers own the real read path
 // the assertions go through. No logic lives here.
 

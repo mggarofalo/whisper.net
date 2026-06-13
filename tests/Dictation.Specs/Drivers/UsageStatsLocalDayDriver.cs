@@ -1,4 +1,4 @@
-// Drives the @WHISPER-116 local-day bucketing scenarios over the REAL UsageStatsCalculator. It pins a
+// Drives the local-day bucketing scenarios over the REAL UsageStatsCalculator. It pins a
 // non-UTC time zone (via a ManualTimeProvider, the same TimeProvider seam production injects) so the
 // assertion is deterministic regardless of the host's zone: two dictations whose UTC day is identical but
 // whose LOCAL day differs must land in different daily buckets. All-time totals stay zone-independent.

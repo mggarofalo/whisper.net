@@ -1,5 +1,5 @@
 // Maps the dictation status to the tray's coloured-dot icon (idle grey, recording red, transcribing
-// orange) so the icon is data-bound to the view-model's Status (WHISPER-92) rather than refreshed by a
+// orange) so the icon is data-bound to the view-model's Status rather than refreshed by a
 // property-name switch. The dot is drawn by H.NotifyIcon, so no icon asset ships with the app.
 
 using System;

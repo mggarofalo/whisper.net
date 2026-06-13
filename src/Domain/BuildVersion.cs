@@ -1,6 +1,6 @@
 // Single source of truth for the product version. MinVer injects the version (derived from git
-// tags) into the assembly at build time; this exposes it so any layer — and the WHISPER-1
-// build-reproducibility scenario — can read one canonical value rather than hard-coding it.
+// tags) into the assembly at build time; this exposes it so any layer — and the build-reproducibility
+// scenario — can read one canonical value rather than hard-coding it.
 
 using System.Reflection;
 

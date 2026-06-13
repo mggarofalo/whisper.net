@@ -2,7 +2,7 @@
 # Reject commit messages that do not follow Conventional Commits (see commitlint.config.mjs).
 #
 # Prefer the installed commitlint CLI. Fall back to a Node-free check so the hook still guards
-# commits — and the @WHISPER-60 BDD scenario can exercise it — when dependencies are not installed.
+# commits — and the BDD scenario can exercise it — when dependencies are not installed.
 
 msg_file="$1"
 

@@ -1,4 +1,4 @@
-// Thin step definitions for the repository-guidance feature (@WHISPER-60). Each step delegates to the
+// Thin step definitions for the repository-guidance feature. Each step delegates to the
 // RepositoryGuidanceDriver (injected by the Reqnroll DI plugin); no logic lives here.
 
 using Dictation.Specs.Drivers;

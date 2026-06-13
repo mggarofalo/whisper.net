@@ -1,4 +1,4 @@
-// Thin step definitions for the @WHISPER-84 theming feature. Each step delegates to the ThemingDriver
+// Thin step definitions for the theming feature. Each step delegates to the ThemingDriver
 // (injected by the Reqnroll DI plugin), which inspects the presentation artifacts directly.
 
 using Dictation.Specs.Drivers;

@@ -1,4 +1,4 @@
-// Inner TDD loop for the WHISPER-4 downloader, over a fake byte source and a real filesystem cache in a
+// Inner TDD loop for the downloader, over a fake byte source and a real filesystem cache in a
 // temp directory (no network). Confirms it streams to the cache and reports progress, verifies SHA-256
 // when the catalog supplies one (accepting a match, rejecting a mismatch), rejects an empty download,
 // and — on a mismatch or cancellation — leaves no partial/corrupt file behind.

@@ -1,6 +1,6 @@
-// The tray icon's view-model (WHISPER-18): a thin CommunityToolkit.Mvvm wrapper over the
+// The tray icon's view-model: a thin CommunityToolkit.Mvvm wrapper over the
 // TrayController. It exposes the current status and tooltip as observable properties and the two menu
-// actions as relay commands the context menu binds to. Moved out of Presentation (WHISPER-90) so the
+// actions as relay commands the context menu binds to. Moved out of Presentation so the
 // specs and unit tests drive it for real: controller events are marshaled through the injected
 // IUiDispatcher seam — with a CheckAccess fast-path — instead of a hand-rolled blocking call against
 // the WPF application's dispatcher, which was untestable and null at shutdown.

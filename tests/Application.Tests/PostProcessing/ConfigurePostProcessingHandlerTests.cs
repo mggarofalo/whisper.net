@@ -1,4 +1,4 @@
-// Inner TDD loop for the post-process configuration handler (WHISPER-41): a validated command is
+// Inner TDD loop for the post-process configuration handler: a validated command is
 // applied to the live holder, so the pipeline picks up the change on the next transcription.
 
 using Application.Configuration;

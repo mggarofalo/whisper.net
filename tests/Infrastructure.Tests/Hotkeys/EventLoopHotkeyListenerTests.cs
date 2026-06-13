@@ -1,4 +1,4 @@
-// Edge-case depth for the WHISPER-10 hotkey listener, beyond the @WHISPER-10 acceptance scenarios.
+// Edge-case depth for the hotkey listener, beyond the acceptance scenarios.
 // Drives the real EventLoopHotkeyListener over a fake hook (no OS hook) and pins down the contract the
 // app depends on: the hook is pumped on a dedicated background thread that Start does not block on and
 // Dispose joins cleanly; the live modifier set is tracked across presses and releases; a second Start

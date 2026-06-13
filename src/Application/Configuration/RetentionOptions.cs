@@ -1,4 +1,4 @@
-// History retention policy (WHISPER-17): how much transcription history is kept. Bound from the
+// History retention policy: how much transcription history is kept. Bound from the
 // "History" configuration section; the default is a sane, finite cap so history cannot grow without
 // bound on a fresh install. The policy lives in the Application layer (out of Infrastructure) and is
 // enforced after each new history write by pruning the oldest entries beyond the limit.

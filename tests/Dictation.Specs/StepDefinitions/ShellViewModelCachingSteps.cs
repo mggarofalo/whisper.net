@@ -1,4 +1,4 @@
-// Thin step definitions for the @WHISPER-89 shell view-model caching feature. Each step delegates to the
+// Thin step definitions for the shell view-model caching feature. Each step delegates to the
 // ShellNavigationDriver (injected by the Reqnroll DI plugin); no logic lives here.
 
 using Dictation.Specs.Drivers;

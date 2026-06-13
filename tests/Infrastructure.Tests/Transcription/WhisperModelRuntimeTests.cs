@@ -1,4 +1,4 @@
-// Inner TDD loop for the WHISPER-15 native runtime over the fake Whisper.net engine seam. Confirms a
+// Inner TDD loop for the native runtime over the fake Whisper.net engine seam. Confirms a
 // loaded handle folds the engine's segments into a TranscriptionResult and that warmup runs an
 // inference without throwing — the device-independent parts of the runtime, with no real model.
 

@@ -1,4 +1,4 @@
-// Handles ListCaptureDevicesQuery (WHISPER-33): reads the active capture devices from the enumerator
+// Handles ListCaptureDevicesQuery: reads the active capture devices from the enumerator
 // port and projects each to a DTO, flagging the one that is the OS default. Pure projection over the
 // port — the real NAudio enumeration stays in Infrastructure.
 

@@ -1,4 +1,4 @@
-// Inner TDD loop for the WHISPER-15 lifecycle policy, over a fake runtime. Confirms load makes a model
+// Inner TDD loop for the model lifecycle policy, over a fake runtime. Confirms load makes a model
 // Ready and observable; warmup runs at load (so the first transcription pays no lazy-init cost) and can
 // be turned off; switching releases the previous model before the new one is Ready; unload releases and
 // reports Unloaded; the configured precision and selected backend are applied at load; transcription

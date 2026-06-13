@@ -1,4 +1,4 @@
-// Drives the @WHISPER-21 audio-feedback scenarios. It owns HOW the pipeline is taken to each event so
+// Drives the audio-feedback scenarios. It owns HOW the pipeline is taken to each event so
 // the steps stay one-liners: it toggles the feedback on/off switch, drives the REAL DictationOrchestrator
 // to the requested transition (over the real audio + delivery composition), and asserts at the faked
 // IAudioFeedback port which cue — if any — was played.

@@ -1,5 +1,5 @@
 // A stand-in for the native Silero inference session: returns a preset speech score per window so the
-// @WHISPER-31 scenarios can drive the REAL SileroVad adapter (windowing) and the REAL VadSilencePolicy
+// The scenarios can drive the REAL SileroVad adapter (windowing) and the REAL VadSilencePolicy
 // (gate/trim) without the ONNX model. Reset (called by SileroVad at the start of each analysis) rewinds
 // the score sequence.
 

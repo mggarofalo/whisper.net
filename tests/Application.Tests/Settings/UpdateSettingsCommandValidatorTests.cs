@@ -1,6 +1,6 @@
-// Unit tests for the settings update validator (WHISPER-46): the field rules it enforces — known
+// Unit tests for the settings update validator: the field rules it enforces — known
 // model id, non-empty parseable hotkey, sane silence threshold — and that a valid update passes.
-// These are the branches behind the @WHISPER-46 "rejected before persistence" scenario.
+// These are the branches behind the "rejected before persistence" scenario.
 
 using Application.Settings;
 using FluentValidation.Results;

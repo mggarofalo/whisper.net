@@ -1,4 +1,4 @@
-// A fake HTTP transport for the @WHISPER-40 rephrase scenarios: it records whether (and where) a
+// A fake HTTP transport for the rephrase scenarios: it records whether (and where) a
 // request was sent, so a scenario can prove a disabled client makes NO network call, and can stand in
 // for a healthy or a failing local Ollama without any real socket.
 

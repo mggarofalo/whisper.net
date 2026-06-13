@@ -1,4 +1,4 @@
-// A single entry in the opt-in audit log (WHISPER-34): when an auditable event happened, what it was,
+// A single entry in the opt-in audit log: when an auditable event happened, what it was,
 // and any richer detail (timing, source app, event traces). Privacy-sensitive data lives only here, on
 // the local device, and only when the user has explicitly enabled auditing. An audit record with no
 // event name is meaningless, so that is rejected at construction. Modeled as a record so it round-trips

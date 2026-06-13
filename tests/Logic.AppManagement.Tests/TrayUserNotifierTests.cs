@@ -1,4 +1,4 @@
-// Unit depth for the WHISPER-95 user notifier, beyond the @WHISPER-95 acceptance scenarios. Pins the
+// Unit depth for the user notifier, beyond the acceptance scenarios. Pins the
 // marshaling contract (CheckAccess fast-path inline, non-blocking post otherwise) and the graceful
 // degradation: no presenter or a throwing presenter logs a warning and never lets an exception escape
 // — surfacing one failure must not be able to cause another.

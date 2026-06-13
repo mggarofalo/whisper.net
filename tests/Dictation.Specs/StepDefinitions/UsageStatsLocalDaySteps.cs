@@ -1,4 +1,4 @@
-// Thin step definitions for the @WHISPER-116 local-day bucketing feature. Each step delegates to the
+// Thin step definitions for the local-day bucketing feature. Each step delegates to the
 // UsageStatsLocalDayDriver (injected by the Reqnroll DI plugin); no logic lives here.
 
 using Dictation.Specs.Drivers;

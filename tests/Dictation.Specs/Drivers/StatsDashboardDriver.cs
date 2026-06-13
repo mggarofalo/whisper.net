@@ -1,4 +1,4 @@
-// Drives the @WHISPER-53 stats dashboard scenarios. It owns HOW the dashboard is exercised so the steps
+// Drives the stats dashboard scenarios. It owns HOW the dashboard is exercised so the steps
 // stay one-liners: it builds the REAL StatsViewModel over the REAL Mediator pipeline (GetUsageStats
 // handler + the REAL Logic usage-stats calculator) and a faked IHistoryStore. Because the aggregation is
 // the real calculator's, the assertions prove the dashboard surfaces computed totals (it does no math of

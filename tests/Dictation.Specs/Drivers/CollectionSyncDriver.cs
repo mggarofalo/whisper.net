@@ -1,4 +1,4 @@
-// Drives the @WHISPER-91 collection-synchronization scenarios. It owns HOW the pattern is exercised so
+// Drives the collection-synchronization scenarios. It owns HOW the pattern is exercised so
 // the steps stay one-liners: it builds the REAL HistoryViewModel over the real Mediator pipeline, a
 // faked history store, and the recording synchronizer (asserting registration-at-construction), proves
 // a UiBoundCollection mutation contends for the registered gate, loads history from a thread-pool
@@ -100,7 +100,7 @@ public sealed class CollectionSyncDriver(
 	{
 		string doc = File.ReadAllText(Path.Combine(RepositoryRoot, "docs", "architecture.md"));
 
-		doc.Should().Contain("Background-thread collection updates", "the convention has its own documented section (WHISPER-91 AC3)");
+		doc.Should().Contain("Background-thread collection updates", "the convention has its own documented section");
 		doc.Should().Contain("UiBoundCollection", "the helper type is named so new list-bearing VMs adopt it");
 		doc.Should().Contain("IUiCollectionSynchronizer", "the registration seam is named");
 		doc.Should().Contain("EnableCollectionSynchronization", "the underlying WPF mechanism is named");

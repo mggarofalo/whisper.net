@@ -1,4 +1,4 @@
-// Handles RunDiagnosticsQuery (WHISPER-50): runs every registered IDiagnosticCheck in registration order
+// Handles RunDiagnosticsQuery: runs every registered IDiagnosticCheck in registration order
 // and collects their results into a DiagnosticReport. The aggregation owns one guarantee the individual
 // checks do not: isolation. Each check is awaited inside a try/catch so that a check which throws an
 // unexpected exception is recorded as a Fail and the remaining checks still run to completion — a doctor

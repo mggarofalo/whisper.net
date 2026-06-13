@@ -1,4 +1,4 @@
-// Drives the @WHISPER-33 audio-device + hotkey configuration scenarios. It owns HOW the two settings
+// Drives the audio-device + hotkey configuration scenarios. It owns HOW the two settings
 // view-models are exercised so the steps stay one-liners: it builds the REAL AudioDeviceViewModel and
 // HotkeyViewModel over the REAL Mediator pipeline (ListCaptureDevices / GetSettings / UpdateSettings,
 // including the FluentValidation behavior) and the REAL settings mapper, faking only the device
@@ -66,7 +66,7 @@ public sealed class AudioHotkeyConfigDriver
 
 	// --- hotkey flow ---
 
-	// Open the hotkey section through the REAL navigation lifecycle (WHISPER-109): activation triggers
+	// Open the hotkey section through the REAL navigation lifecycle: activation triggers
 	// the load, so the spec exercises the production path instead of invoking LoadCommand directly.
 	public async Task LoadHotkey()
 	{

@@ -1,4 +1,4 @@
-// Inner TDD loop for SilenceTrimmer (WHISPER-112): end-of-speech is detected by ENERGY (RMS per frame),
+// Inner TDD loop for SilenceTrimmer: end-of-speech is detected by ENERGY (RMS per frame),
 // not raw per-sample amplitude, so quiet trailing speech (real frame energy, low per-sample values) is
 // preserved even when SUSTAINED, while only genuine near-silence (RMS below the threshold) is trimmed —
 // and then only when sustained past the window. A trimmed tail keeps a short pad of the

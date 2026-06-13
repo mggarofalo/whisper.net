@@ -1,4 +1,4 @@
-// Exercises the navigation-sidebar theming requirement (WHISPER-103, made theme-adaptive in WHISPER-122).
+// Exercises the navigation-sidebar theming requirement (made theme-adaptive).
 // The restyle is pure WPF Presentation, so — like the theming/accessibility drivers — this inspects
 // repository artifacts directly rather than driving behavior through IMediator. It proves the checkable
 // facts: the sidebar follows the active theme (labels inherit the theme foreground; the rail is a
@@ -22,12 +22,12 @@ public sealed class SidebarThemeDriver
 
 	public void AssertLabelsInheritTheTheme()
 	{
-		// The nav label uses the Fluent theme's adaptive text brush, so it follows light/dark (WHISPER-123) —
+		// The nav label uses the Fluent theme's adaptive text brush, so it follows light/dark —
 		// not a fixed colour and not the framework default (which would read black-on-dark in dark mode).
 		_resources.Should().Contain("TextFillColorPrimaryBrush",
-			"the nav label foreground is the Fluent adaptive text brush (WHISPER-123)");
+			"the nav label foreground is the Fluent adaptive text brush");
 		_resources.Should().NotContain("NavItemForegroundBrush",
-			"the nav label must not be pinned to a fixed colour (WHISPER-122)");
+			"the nav label must not be pinned to a fixed colour");
 		// The fixed dark palette from the original rail is gone.
 		_resources.Should().NotContain("#1E1E1E", "the rail is no longer a fixed dark panel");
 		_resources.Should().NotContain("#0E639C", "the selected tab is no longer a fixed blue");

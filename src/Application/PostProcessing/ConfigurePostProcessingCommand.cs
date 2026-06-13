@@ -1,4 +1,4 @@
-// CQRS command to change the post-process configuration (WHISPER-41). Carries the full desired
+// CQRS command to change the post-process configuration. Carries the full desired
 // configuration; returns Unit. Validation (FluentValidation in the ValidationBehavior pipeline) runs
 // before the handler, so an invalid configuration (unknown default transform, non-loopback endpoint)
 // never reaches the live holder.

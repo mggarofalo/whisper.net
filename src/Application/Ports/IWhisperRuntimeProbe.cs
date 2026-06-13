@@ -1,4 +1,4 @@
-// Probes whether the Whisper.net NATIVE runtime (whisper.dll / ggml) can actually load (WHISPER-85). This
+// Probes whether the Whisper.net NATIVE runtime (whisper.dll / ggml) can actually load. This
 // is distinct from "is a model downloaded": the native library is what WhisperFactory needs before it can
 // read any model, and a packaging defect (e.g. embedding the natives for single-file self-extract, where
 // the loader can't find them) silently breaks ALL transcription in the installed app. The doctor uses this

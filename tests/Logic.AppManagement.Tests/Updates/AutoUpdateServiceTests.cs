@@ -1,4 +1,4 @@
-// Unit tests for the auto-update policy (WHISPER-29): the opt-in gate (no check when disabled, so no
+// Unit tests for the auto-update policy: the opt-in gate (no check when disabled, so no
 // egress), the happy path (a newer release is downloaded and staged), the up-to-date path, and graceful
 // degradation (an unreachable channel is logged and swallowed, never thrown). Cancellation propagates.
 // Uses a substituted IUpdateSource and a recording logger; no Velopack, no network.

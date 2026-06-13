@@ -1,4 +1,4 @@
-// Drives the @WHISPER-43 settings-persistence scenarios. It owns HOW the settings lifecycle is
+// Drives the settings-persistence scenarios. It owns HOW the settings lifecycle is
 // exercised so the step definitions stay one-liners: it composes the REAL SettingsLifecycleService
 // (Logic) over the REAL SQLite-backed SqliteSettingsStore (Infrastructure) pointed at a private temp
 // database file — only the storage location is controlled, nothing is faked. "Launching" runs the

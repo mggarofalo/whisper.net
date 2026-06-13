@@ -1,4 +1,4 @@
-// Thin step definitions for delivery-strategy selection (@WHISPER-8). Each step delegates to the
+// Thin step definitions for delivery-strategy selection. Each step delegates to the
 // DeliveryStrategyDriver; the "model will transcribe" given is reused from the push-to-talk steps so
 // there is something to deliver.
 

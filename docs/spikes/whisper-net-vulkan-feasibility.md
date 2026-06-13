@@ -1,8 +1,8 @@
 # Spike: Whisper.net + Vulkan feasibility on the RTX 5080 (WHISPER-65)
 
-**Decision: GO for Module 3 with Whisper.net + the Vulkan runtime.**
+**Decision (made, shipped): GO — Whisper.net + the Vulkan runtime.**
 
-Time-boxed spike to de-risk Module 3 before committing to it. The Python predecessor's CUDA path
+Time-boxed spike to de-risk the GPU work before committing to it. The Python predecessor's CUDA path
 hung (CUDA-toolkit version mismatch on the RTX 5080); the hypothesis was that the **Vulkan** runtime
 — which needs no CUDA toolkit, only the GPU driver's Vulkan loader — gives a working GPU path. It
 does.
@@ -71,7 +71,7 @@ Forcing `[Cpu]` loaded the CPU runtime (`LoadedLibrary = Cpu`; logs show `no GPU
 transcribed correctly, and surfaced no error — exactly the "no compatible GPU runtime" behavior the
 user should never see fail.
 
-## Implications for Module 3
+## Implications for the GPU work
 
 - **Use Whisper.net 1.9.x with `Whisper.net.Runtime.Vulkan` + `Whisper.net.Runtime` (CPU).** Vulkan
   sidesteps the CUDA-toolkit hang entirely — it depends only on the driver's Vulkan loader.
@@ -82,7 +82,7 @@ user should never see fail.
   runtime loads, transcription must continue on CPU silently. `RuntimeOptions.LoadedLibrary` is the
   signal to surface (e.g. a tray tooltip "GPU"/"CPU"), not an error.
 - **Multi-GPU note:** two Vulkan devices were enumerated (RTX 5080 at index 0, AMD iGPU at index 1).
-  Device 0 was selected. Module 3 should expose GPU-device selection (or at least pin the
+  Device 0 was selected. A future enhancement could expose GPU-device selection (or at least pin the
   discrete GPU) rather than assuming index 0 is always the dGPU.
 - **Backend evidence for tests:** `RuntimeOptions.LoadedLibrary` and the `LogProvider` device lines
   give a clean, assertable signal that the GPU is engaged — usable in an Infrastructure integration
@@ -96,6 +96,6 @@ dotnet run -- gpu   # prefer Vulkan; downloads jfk.wav + ggml-base.en once
 dotnet run -- cpu   # force CPU-only fallback
 ```
 
-> The probe is **disposable** and intentionally excluded from `Whisper.slnx` and CI. Downloaded
-> artifacts (the model and `jfk.wav`) are gitignored. Delete `spikes/VulkanProbe` once Module 3 work
-> begins; this document is the lasting record.
+> The probe is intentionally excluded from `Whisper.slnx` and CI, and its downloaded artifacts (the
+> model and `jfk.wav`) are gitignored. It is kept as a small, runnable reference for the GPU decision;
+> this document is the lasting record and is authoritative if the probe is ever removed.

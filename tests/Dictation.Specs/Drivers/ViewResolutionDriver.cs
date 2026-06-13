@@ -1,4 +1,4 @@
-// Exercises the @WHISPER-92 view-resolution convention. Like the packaging/guidance/theming drivers,
+// Exercises the view-resolution convention. Like the packaging/guidance/theming drivers,
 // this inspects repository artifacts directly (the convention is pure WPF Presentation): the
 // architecture guide records the implicit-DataTemplate standard, every registered NavigationSection's
 // view-model has a template mapping it to a view, feature-view code-behind is construction-only, and
@@ -20,7 +20,7 @@ public sealed partial class ViewResolutionDriver(IEnumerable<NavigationSection> 
 	{
 		string doc = File.ReadAllText(Path.Combine(RepositoryRoot, "docs", "architecture.md"));
 
-		doc.Should().Contain("View ↔ view-model resolution", "the convention has its own documented section (WHISPER-92 AC1)");
+		doc.Should().Contain("View ↔ view-model resolution", "the convention has its own documented section");
 		doc.Should().Contain("implicit `DataTemplate`", "views are resolved by implicit data templates keyed on the view-model type");
 		doc.Should().Contain("supplied by the DI container", "view-models come from the container, not a locator");
 		doc.Should().Contain("ViewModelLocator", "the rejected locator pattern is named explicitly");
@@ -55,7 +55,7 @@ public sealed partial class ViewResolutionDriver(IEnumerable<NavigationSection> 
 			})
 			.ToArray();
 
-		offenders.Should().BeEmpty("feature-view code-behind holds nothing beyond InitializeComponent (WHISPER-92 AC3)");
+		offenders.Should().BeEmpty("feature-view code-behind holds nothing beyond InitializeComponent");
 	}
 
 	public void AssertNoViewSwitchesOnPropertyNames()
@@ -71,7 +71,7 @@ public sealed partial class ViewResolutionDriver(IEnumerable<NavigationSection> 
 			})
 			.ToArray();
 
-		offenders.Should().BeEmpty("views react to view-model state through bindings, not property-name matching (WHISPER-92 AC2)");
+		offenders.Should().BeEmpty("views react to view-model state through bindings, not property-name matching");
 	}
 
 	private static string StripLineComments(string code) =>

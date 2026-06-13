@@ -1,11 +1,10 @@
-// Inner TDD loop for a model row's download command (WHISPER-81; per-row since WHISPER-107), WPF-free.
-// These pin the download's command semantics over a gated IMediator: each row exposes IsRunning and
-// cannot run concurrently WITH ITSELF (CanExecute is false while that row's download is in flight), a
-// Cancel cancels the in-flight token and resets the row without activating anything, and a failure
-// surfaces a user-facing DownloadError on the row instead of throwing. The whole command is async (no
-// .Result/.Wait), which is what keeps the UI thread free; the ProgressBar + Cancel button that bind to
-// these are Presentation glue verified by smoke. Cross-row concurrency is owned by the @WHISPER-107
-// acceptance scenarios, which drive the real composition.
+// Inner TDD loop for a model row's download command, WPF-free. These pin the download's command
+// semantics over a gated IMediator: each row exposes IsRunning and cannot run concurrently WITH ITSELF
+// (CanExecute is false while that row's download is in flight), a Cancel cancels the in-flight token
+// and resets the row without activating anything, and a failure surfaces a user-facing DownloadError on
+// the row instead of throwing. The whole command is async (no .Result/.Wait), which is what keeps the
+// UI thread free; the ProgressBar + Cancel button that bind to these are Presentation glue verified by
+// smoke. Cross-row concurrency is owned by the acceptance scenarios, which drive the real composition.
 
 using Application.Models;
 using AwesomeAssertions;

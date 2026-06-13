@@ -1,4 +1,4 @@
-// Inner TDD loop for the diagnostics aggregator (WHISPER-50). The handler runs every registered check in
+// Inner TDD loop for the diagnostics aggregator. The handler runs every registered check in
 // order and is the one place that guarantees isolation: a check that throws becomes a Fail result and the
 // remaining checks still run, so the doctor always produces a full report. Also covers the report's
 // derived Overall status (the worst of the results) and that cancellation propagates rather than being

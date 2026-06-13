@@ -1,4 +1,4 @@
-// Thin step definitions for the @WHISPER-92 view-resolution feature. The artifact checks delegate to
+// Thin step definitions for the view-resolution feature. The artifact checks delegate to
 // the ViewResolutionDriver; the device-picker commit behavior (the logic that moved out of the view's
 // code-behind) delegates to the AudioDevicePickerDriver. No logic lives here.
 

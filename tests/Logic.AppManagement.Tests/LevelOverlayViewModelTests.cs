@@ -1,5 +1,5 @@
-// Unit depth for the WHISPER-90 dispatcher seam on the level-overlay view-model, beyond the
-// @WHISPER-90 acceptance scenarios: the handlers run against a synchronous TestUiDispatcher with no
+// Unit depth for the dispatcher seam on the level-overlay view-model, beyond the
+// acceptance scenarios: the handlers run against a synchronous TestUiDispatcher with no
 // live WPF Application — visibility and per-frame level updates are posted (never a blocking call)
 // when off the UI thread, take the CheckAccess fast-path when on it, and Dispose detaches both
 // controller subscriptions.
@@ -47,7 +47,7 @@ public sealed class LevelOverlayViewModelTests
 		EmitFrame(0.5f);
 
 		// Starting recording marshals visibility, state, and the initial elapsed update; the frame marshals
-		// the level — four Posts, never a blocking InvokeAsync (WHISPER-102 added the state/elapsed updates).
+		// the level — four Posts, never a blocking InvokeAsync.
 		_dispatcher.PostCount.Should().Be(4);
 		_dispatcher.InvokeAsyncCount.Should().Be(0, "per-frame updates must never block the audio thread");
 		_viewModel.IsOverlayVisible.Should().BeTrue();

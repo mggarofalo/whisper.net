@@ -1,4 +1,4 @@
-// Inner TDD loop for the post-process pipeline (WHISPER-41): it reads the live holder, normalizes with
+// Inner TDD loop for the post-process pipeline: it reads the live holder, normalizes with
 // the configured filler toggle, applies the configured default transform after normalizing, and degrades
 // safely (original normalized text) when the transform is unknown.
 

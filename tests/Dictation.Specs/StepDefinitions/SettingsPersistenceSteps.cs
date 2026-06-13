@@ -1,4 +1,4 @@
-// @WHISPER-43 — drives the settings load-on-startup / persist-on-shutdown scenarios. Steps stay thin;
+// Drives the settings load-on-startup / persist-on-shutdown scenarios. Steps stay thin;
 // the SettingsPersistenceDriver owns HOW the lifecycle service and the real file-backed store are
 // exercised against a temp directory.
 

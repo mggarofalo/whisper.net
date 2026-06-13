@@ -1,5 +1,5 @@
 // A controllable stand-in for the native global hook, implementing the Infrastructure hotkey seam. It
-// lets the @WHISPER-10 scenarios drive the REAL EventLoopHotkeyListener without an OS hook: the test
+// lets the scenarios drive the REAL EventLoopHotkeyListener without an OS hook: the test
 // decides which raw key codes arrive and when, while Run blocks a pump thread exactly as the real
 // libuiohook loop does, returning only when the listener stops or disposes it. Only the native glue is
 // faked here — the threading, translation, and modifier tracking under test are real.

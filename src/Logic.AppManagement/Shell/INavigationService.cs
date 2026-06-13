@@ -1,4 +1,4 @@
-// The shell's navigation seam (WHISPER-19): it owns which feature view-model is the active content and
+// The shell's navigation seam: it owns which feature view-model is the active content and
 // switches between the registered sections. Navigating resolves the target view-model from the DI
 // container by its section key, activates it, and deactivates the previously active one so exactly one
 // feature view-model is live at a time. The shell view-model binds to this; the thin WPF window binds

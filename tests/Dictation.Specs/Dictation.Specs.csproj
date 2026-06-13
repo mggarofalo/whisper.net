@@ -4,7 +4,7 @@
     Acceptance (BDD) project. Reqnroll feature files drive behavior outside-in through IMediator
     against the REAL Application + Logic.* composition; only the Infrastructure ports are faked. It
     references Domain, Application, and every Logic.* project — deliberately NOT Presentation.
-    Infrastructure IS referenced (since WHISPER-7) so the native adapters' device-independent logic
+    Infrastructure IS referenced so the native adapters' device-independent logic
     can be driven over fake low-level seams (e.g. the capture client); the real device glue stays out
     of the specs and is verified by manual smoke. xUnit v3 test projects are executables.
   -->

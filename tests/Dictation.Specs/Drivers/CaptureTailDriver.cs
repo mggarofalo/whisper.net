@@ -1,4 +1,4 @@
-// Drives the @WHISPER-112 capture-tail scenarios. It owns HOW the post-release timing is exercised so
+// Drives the capture-tail scenarios. It owns HOW the post-release timing is exercised so
 // the steps stay one-liners. The dictation half drives the REAL DictationOrchestrator over the real
 // WasapiAudioSource with the fake device in deferred-stop mode — modeling NAudio's asynchronous stop,
 // where the in-flight tail frames arrive AFTER the stop request — and elapses the post-release grace

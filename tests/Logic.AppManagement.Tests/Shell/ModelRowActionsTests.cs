@@ -1,4 +1,4 @@
-// Inner TDD loop for the model row's contextual actions (WHISPER-105), WPF-free. The compact list shows
+// Inner TDD loop for the model row's contextual actions, WPF-free. The compact list shows
 // only the action that fits each row's state — Download (not downloaded), Cancel (downloading), Select
 // (downloaded but not active) — instead of a permanent three-button strip. These pin the derived flags
 // the view binds (CanDownload / IsDownloading / CanSelect) for every state, and that they re-raise change

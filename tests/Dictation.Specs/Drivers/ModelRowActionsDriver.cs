@@ -1,4 +1,4 @@
-// Drives the @WHISPER-105 contextual-action scenarios. It builds the REAL ModelViewModel over the REAL
+// Drives the contextual-action scenarios. It builds the REAL ModelViewModel over the REAL
 // Mediator pipeline (ListModels / DownloadModel handlers) and the REAL catalog, faking only the
 // device-facing cache, downloader, and lifecycle. So it proves the compact list's rule for real: each row
 // exposes only the action that fits its state (Download / Cancel / Select), derived from the genuine

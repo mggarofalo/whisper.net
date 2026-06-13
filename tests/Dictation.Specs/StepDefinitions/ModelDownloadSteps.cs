@@ -1,4 +1,4 @@
-// Thin step definitions for the @WHISPER-81 model-download feature. Each step delegates to the
+// Thin step definitions for the model-download feature. Each step delegates to the
 // ModelDownloadDriver (injected by the Reqnroll DI plugin); no logic lives here.
 
 using Dictation.Specs.Drivers;

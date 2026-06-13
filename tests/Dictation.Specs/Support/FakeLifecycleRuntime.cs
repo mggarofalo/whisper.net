@@ -1,4 +1,4 @@
-// A fake model runtime for the @WHISPER-15 scenarios: it lets the REAL ModelLifecycle policy run with
+// A fake model runtime for the scenarios: it lets the REAL ModelLifecycle policy run with
 // no native model. Each handle records whether it was warmed up, disposed, or forced to initialize
 // lazily on first transcription, so warmup and switch-release behavior is observable.
 

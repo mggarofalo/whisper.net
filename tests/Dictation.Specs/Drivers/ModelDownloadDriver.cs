@@ -1,7 +1,7 @@
-// Drives the @WHISPER-81 model-download scenarios. It builds the REAL ModelViewModel over the REAL Mediator
+// Drives the model-download scenarios. It builds the REAL ModelViewModel over the REAL Mediator
 // pipeline (ListModels / DownloadModel handlers) and the REAL catalog, faking only the device-facing
 // downloader — gated on a signal so the test can observe a download IN FLIGHT, then cancel it. So it proves
-// the user-visible outcomes WHISPER-81 adds: a download reports determinate progress and is running, a
+// the user-visible outcomes: a download reports determinate progress and is running, a
 // Cancel stops it and leaves the model un-activated, and a failed download surfaces a native error instead
 // of crashing. The ProgressBar + Cancel button that bind to these are Presentation glue verified by smoke.
 
@@ -28,9 +28,9 @@ public sealed class ModelDownloadDriver
 		_downloader = downloader;
 
 		// A DIFFERENT model is the loaded/active one, so the model under test here (base.en, which also
-		// happens to be the persisted default) is cleanly not-active — the @WHISPER-81 assertions then mean
+		// happens to be the persisted default) is cleanly not-active — the assertions then mean
 		// "the download did not activate it" rather than colliding with the persisted-active fallback
-		// (WHISPER-118).
+		//.
 		lifecycle.Status.Returns(new ModelStatus("small.en", ModelState.Ready));
 
 		_viewModel = new ModelViewModel(mediator);
@@ -52,7 +52,7 @@ public sealed class ModelDownloadDriver
 			.Returns<ValueTask<string>>(_ => throw new InvalidOperationException("download failed"));
 
 	// Begin the download but do not await it — it is in flight (blocked) so the test can inspect the running
-	// state and then cancel. The download is owned by the row (WHISPER-107).
+	// state and then cancel. The download is owned by the row.
 	public void StartDownload(string id)
 	{
 		_downloadingId = id;

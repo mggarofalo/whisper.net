@@ -1,4 +1,4 @@
-// Thin step definitions for the @WHISPER-41 post-process pipeline feature. Each step delegates to the
+// Thin step definitions for the post-process pipeline feature. Each step delegates to the
 // PostProcessPipelineDriver (injected by the Reqnroll DI plugin); no logic lives here.
 
 using Dictation.Specs.Drivers;

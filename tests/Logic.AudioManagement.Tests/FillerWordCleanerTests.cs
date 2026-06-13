@@ -1,4 +1,4 @@
-// Inner TDD loop for FillerWordCleaner (WHISPER-36): noise labels are always stripped, fillers are
+// Inner TDD loop for FillerWordCleaner: noise labels are always stripped, fillers are
 // removed only when enabled (with elongation and trailing-punctuation handling), whitespace is
 // collapsed and trimmed, blank input yields empty output, and the function is idempotent.
 

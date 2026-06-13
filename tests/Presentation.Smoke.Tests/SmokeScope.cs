@@ -1,11 +1,11 @@
-// The smoke layer's composition (WHISPER-96): the SAME per-layer registration extensions production
+// The smoke layer's composition: the SAME per-layer registration extensions production
 // and the BDD specs use (AddApplication + AddAppManagement), plus the real WPF collection synchronizer
 // over the inline dispatcher default — so each feature view-model resolves exactly as the shell would
 // resolve it, inside one UI scope.
 //
 // Constructing the ShellViewModel is NOT side-effect-free: its constructor navigates to the first
-// section (Home, which refreshes on activation — WHISPER-106/119) and loads the persisted theme
-// (WHISPER-121). Both run read queries through Mediator (GetSettings / usage / history). Those are
+// section (Home, which refreshes on activation) and loads the persisted theme
+//. Both run read queries through Mediator (GetSettings / usage / history). Those are
 // fire-and-forget commands, so a missing port doesn't fail a test directly — it throws on a background
 // continuation, surfacing as an xUnit "Catastrophic failure" that fails the whole run. So the smoke
 // scope substitutes the read ports that activation path touches with contract-honoring fakes (load
@@ -43,7 +43,7 @@ internal sealed class SmokeScope : IDisposable
 		services.AddApplication();
 		services.AddAppManagement();
 
-		// The real WPF collection synchronizer (WHISPER-91) over the AddAppManagement inline-dispatcher
+		// The real WPF collection synchronizer over the AddAppManagement inline-dispatcher
 		// default, so HistoryViewModel's registration runs the genuine EnableCollectionSynchronization path.
 		services.AddSingleton<IUiCollectionSynchronizer, WpfCollectionSynchronizer>();
 

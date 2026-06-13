@@ -1,4 +1,4 @@
-// Drives the @WHISPER-50 self-diagnostics scenarios. It owns HOW the doctor run is exercised so the
+// Drives the self-diagnostics scenarios. It owns HOW the doctor run is exercised so the
 // steps stay one-liners: it configures the faked Infrastructure ports each check reads (the device
 // enumerator, the settings store, the model cache, the permission probe, and the raw GPU probe behind
 // the real backend selector), then runs the REAL diagnostics through the Mediator pipeline
@@ -57,7 +57,7 @@ public sealed class DiagnosticsDriver
 		_modelCache.GetCachedPath(Arg.Any<Domain.Models.WhisperModelCatalogEntry>()).Returns(@"C:\models\ggml-base.en.bin");
 
 		// The Whisper native runtime loads by default so the other checks have a healthy peer; the
-		// "Whisper unavailable" given (WHISPER-85) overrides it with the packaging-failure verdict.
+		// "Whisper unavailable" given overrides it with the packaging-failure verdict.
 		_whisperProbe.Probe().Returns(new WhisperRuntimeStatus(true, "Whisper native runtime loaded."));
 	}
 

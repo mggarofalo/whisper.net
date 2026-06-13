@@ -1,5 +1,5 @@
 // Renders a DiagnosticReport as a plain-text, console-friendly report for the doctor command
-// (WHISPER-50). Pure and WPF-free so the "prints a clear pass/warn/fail report" behavior is unit-tested
+//. Pure and WPF-free so the "prints a clear pass/warn/fail report" behavior is unit-tested
 // independent of any real console: each check becomes a "[PASS|WARN|FAIL] Name — detail" line, followed
 // by an overall line. The status tags are fixed-width so the columns line up in a terminal.
 

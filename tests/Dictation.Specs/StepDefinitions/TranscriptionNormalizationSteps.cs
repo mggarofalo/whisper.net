@@ -1,4 +1,4 @@
-// Thin step definitions for the @WHISPER-36 transcription-normalization feature. Each step delegates
+// Thin step definitions for the transcription-normalization feature. Each step delegates
 // to the TranscriptionNormalizationDriver (injected by the Reqnroll DI plugin); no logic lives here.
 
 using Dictation.Specs.Drivers;

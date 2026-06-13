@@ -1,4 +1,4 @@
-// Exercises the @WHISPER-93 declarative-event-wiring convention. Like the view-resolution driver, it
+// Exercises the declarative-event-wiring convention. Like the view-resolution driver, it
 // inspects repository artifacts directly (the convention is pure WPF Presentation): no view outside
 // the sanctioned input controls wires events in markup or code-behind, focus-on-activate is one
 // reusable Behavior<T> applied via Interaction.Behaviors, the behaviors library is referenced, and the
@@ -27,7 +27,7 @@ public sealed partial class DeclarativeWiringDriver
 			.ToArray();
 
 		markupOffenders.Should().BeEmpty(
-			"views express event reactions as commands or behaviors, not markup event handlers (WHISPER-93 AC1)");
+			"views express event reactions as commands or behaviors, not markup event handlers");
 
 		// App.xaml.cs is the composition root, not a view: its app-domain/dispatcher unhandled-exception
 		// hooks are lifecycle wiring, not control-event wiring.
@@ -38,13 +38,13 @@ public sealed partial class DeclarativeWiringDriver
 			.ToArray();
 
 		codeBehindOffenders.Should().BeEmpty(
-			"no view subscribes to control events in code-behind for VM behavior (WHISPER-93 AC1)");
+			"no view subscribes to control events in code-behind for VM behavior");
 	}
 
 	public void AssertFocusBehaviorExists()
 	{
 		string path = Path.Combine(PresentationRoot, "Behaviors", "FocusOnActivateBehavior.cs");
-		File.Exists(path).Should().BeTrue("focus-on-activate is a reusable attached behavior (WHISPER-93 AC2)");
+		File.Exists(path).Should().BeTrue("focus-on-activate is a reusable attached behavior");
 
 		string code = File.ReadAllText(path);
 		code.Should().Contain("Behavior<FrameworkElement>", "the behavior builds on the Xaml.Behaviors base type");
@@ -68,13 +68,13 @@ public sealed partial class DeclarativeWiringDriver
 			.Where(file => File.ReadAllText(file).Contains("Loaded=\""))
 			.ToArray();
 
-		offenders.Should().BeEmpty("focus-on-activate replaced the per-view Loaded-handler pattern (WHISPER-93 AC2)");
+		offenders.Should().BeEmpty("focus-on-activate replaced the per-view Loaded-handler pattern");
 	}
 
 	public void AssertBehaviorsLibraryReferenced()
 	{
 		string csproj = File.ReadAllText(Path.Combine(PresentationRoot, "Presentation.csproj"));
-		csproj.Should().Contain("Microsoft.Xaml.Behaviors.Wpf", "the behaviors library is referenced (WHISPER-93 AC3)");
+		csproj.Should().Contain("Microsoft.Xaml.Behaviors.Wpf", "the behaviors library is referenced");
 
 		string packages = File.ReadAllText(Path.Combine(RepositoryRoot, "Directory.Packages.props"));
 		packages.Should().Contain("Microsoft.Xaml.Behaviors.Wpf", "the central package table pins its version");
@@ -85,7 +85,7 @@ public sealed partial class DeclarativeWiringDriver
 		string doc = File.ReadAllText(Path.Combine(RepositoryRoot, "docs", "architecture.md"));
 
 		doc.Should().Contain("behavior vs command vs legitimate code-behind",
-			"the wiring guideline has its own documented section (WHISPER-93 AC3)");
+			"the wiring guideline has its own documented section");
 		doc.Should().Contain("InvokeCommandAction", "the guideline names the trigger action");
 		doc.Should().Contain("CanExecute", "the guideline records that InvokeCommandAction does not honor enablement");
 		doc.Should().Contain("FocusOnActivateBehavior", "the guideline points at the reusable behavior");

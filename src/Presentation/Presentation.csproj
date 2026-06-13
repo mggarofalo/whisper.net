@@ -2,24 +2,24 @@
 
   <!--
     Presentation: the WPF tray application and composition root. The ONLY project permitted to
-    reference Infrastructure; it wires every layer together via the Generic Host (WHISPER-57).
+    reference Infrastructure; it wires every layer together via the Generic Host.
     Windows-only by necessity (WPF), so it retargets to net10.0-windows.
   -->
   <PropertyGroup>
     <TargetFramework>net10.0-windows</TargetFramework>
     <OutputType>WinExe</OutputType>
     <UseWPF>true</UseWPF>
-    <!-- The installer + the in-exe icon (WHISPER-20). One asset, shared by the build and `vpk pack`. -->
+    <!-- The installer + the in-exe icon. One asset, shared by the build and `vpk pack`. -->
     <ApplicationIcon>..\..\assets\whisper.ico</ApplicationIcon>
   </PropertyGroup>
 
   <!--
-    Velopack packaging (WHISPER-20): when a runtime identifier is supplied (the packaging script and the
+    Velopack packaging: when a runtime identifier is supplied (the packaging script and the
     release CI publish with `-r win-x64`), publish a self-contained, single-file build with the .NET 10
     runtime bundled, so an end user installs without a separate .NET install. A normal dev build supplies
     no RID, so this group is inert and `dotnet build` / the specs are unaffected.
 
-    Native libraries are deliberately NOT embedded for self-extract (WHISPER-85): Whisper.net's
+    Native libraries are deliberately NOT embedded for self-extract: Whisper.net's
     NativeLibraryLoader resolves whisper.dll/ggml relative to AppContext.BaseDirectory and cannot find them
     when they are packed into the single file and self-extracted to a temp dir — which silently broke ALL
     transcription in the installed app. With IncludeNativeLibrariesForSelfExtract=false the managed code
@@ -38,9 +38,9 @@
     <PackageReference Include="Microsoft.Extensions.Hosting" />
     <PackageReference Include="H.NotifyIcon.Wpf" />
     <PackageReference Include="CommunityToolkit.Mvvm" />
-    <!-- Declarative event wiring (WHISPER-93): EventTrigger/InvokeCommandAction + Behavior<T> infra. -->
+    <!-- Declarative event wiring: EventTrigger/InvokeCommandAction + Behavior<T> infra. -->
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" />
-    <!-- In-app install/update hooks (WHISPER-20); the UpdateManager auto-update flow follows in WHISPER-29. -->
+    <!-- In-app install/update hooks; the UpdateManager auto-update flow follows separately. -->
     <PackageReference Include="Velopack" />
   </ItemGroup>
 

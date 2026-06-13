@@ -1,4 +1,4 @@
-// Thin step definitions for the @WHISPER-39 tag-driven release pipeline feature. Each step delegates to
+// Thin step definitions for the tag-driven release pipeline feature. Each step delegates to
 // the ReleaseWorkflowDriver (injected by the Reqnroll DI plugin); no logic lives here.
 
 using Dictation.Specs.Drivers;

@@ -1,4 +1,4 @@
-// A configurable stand-in for the capture-device enumerator, so the @WHISPER-13 scenarios can drive
+// A configurable stand-in for the capture-device enumerator, so the scenarios can drive
 // device-selection policy without real hardware. The real NAudio enumerator is verified by manual
 // smoke instead.
 

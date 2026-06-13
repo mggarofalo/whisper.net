@@ -1,4 +1,4 @@
-// Inner TDD loop for the WHISPER-11 SQLite history store: it appends entries and reads them back
+// Inner TDD loop for the SQLite history store: it appends entries and reads them back
 // newest-first, honors the optional limit and inclusive date range, and returns an empty history on a
 // fresh database. Driven against a real temp-file database (schema created on first use by the store).
 
@@ -107,7 +107,7 @@ public sealed class SqliteHistoryStoreTests : IDisposable
 	public async Task Add_logs_and_does_not_throw_when_the_database_is_corrupt()
 	{
 		// A bad database makes initialization fail; recording must degrade safely so the pipeline is never
-		// blocked (WHISPER-24 AC4) — the failure is logged rather than thrown.
+		// blocked — the failure is logged rather than thrown.
 		File.WriteAllText(_fixture.DatabasePath, "this is not a valid sqlite database file");
 		RecordingLogger<SqliteHistoryStore> logger = new();
 

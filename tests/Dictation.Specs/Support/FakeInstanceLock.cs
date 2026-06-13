@@ -1,6 +1,6 @@
 // In-memory stand-in for the OS-global single-instance lock (the IInstanceLock port). A single shared
 // instance models the one named mutex two processes contend for: the first TryAcquire wins, a second
-// fails until the owner Releases. Lets the @WHISPER-25 coordinator be driven for real with no real OS
+// fails until the owner Releases. Lets the coordinator be driven for real with no real OS
 // mutex.
 
 using Application.Ports;

@@ -1,7 +1,7 @@
-// Owns the H.NotifyIcon tray icon for the app's lifetime (WHISPER-18). It builds the system-tray icon
+// Owns the H.NotifyIcon tray icon for the app's lifetime. It builds the system-tray icon
 // and its context menu (a status line, "Open Settings", and "Quit"), binds the menu to the view-model's
 // relay commands, and DATA-BINDS the icon colour, tooltip, and status line to the view-model
-// (WHISPER-92) — no PropertyChanged subscription, no property-name switch — so a renamed view-model
+// — no PropertyChanged subscription, no property-name switch — so a renamed view-model
 // property refactors the nameof-based paths or fails loudly. It is pure view glue over the
 // TrayIconViewModel — all behaviour lives in the controller the view-model wraps — so it is verified
 // by smoke, not by the specs.
@@ -43,7 +43,7 @@ public sealed class TrayIcon : IDisposable
 		_icon.ForceCreate();
 	}
 
-	/// <summary>Shows a tray balloon notification — the presenter the TrayUserNotifier attaches (WHISPER-95).</summary>
+	/// <summary>Shows a tray balloon notification — the presenter the TrayUserNotifier attaches.</summary>
 	public void ShowNotification(string title, string message) =>
 		_icon.ShowNotification(title, message, NotificationIcon.Error);
 

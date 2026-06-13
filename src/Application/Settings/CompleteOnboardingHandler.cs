@@ -1,4 +1,4 @@
-// Handles CompleteOnboardingCommand (WHISPER-51): loads the current settings, persists them with
+// Handles CompleteOnboardingCommand: loads the current settings, persists them with
 // SetupCompleted set, so the next launch reads a completed setup and skips onboarding. AppSettings is a
 // value object with no settable members, so the completed copy is rebuilt through its constructor rather
 // than a `with` expression.

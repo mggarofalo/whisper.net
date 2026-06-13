@@ -16,7 +16,7 @@ public sealed class UpdateSettingsHandler(ISettingsStore store, SettingsMapper m
 		AppSettings settings = mapper.ToDomain(command.Settings);
 		await store.SaveAsync(settings, cancellationToken);
 
-		// Publish the change on the instant-apply channel so running services reconfigure live (WHISPER-78) —
+		// Publish the change on the instant-apply channel so running services reconfigure live —
 		// e.g. the hotkey matcher rebinds without a restart. Published after the save so subscribers never see
 		// a binding that failed to persist; the command has already passed validation, so the value is valid.
 		channel.Publish(settings);

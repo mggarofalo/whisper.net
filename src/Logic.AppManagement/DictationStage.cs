@@ -1,4 +1,4 @@
-// The fine-grained pipeline stage owned by the DictationOrchestrator (WHISPER-14): the explicit states
+// The fine-grained pipeline stage owned by the DictationOrchestrator: the explicit states
 // one utterance moves through end to end. Distinct from Domain.Recording.RecordingState (the coarse
 // Idle/Recording/Transcribing the tray reflects) because it adds a Delivering stage, so the orchestrator
 // can log and reason about the hand-off to text injection as its own step. The orchestrator keeps the

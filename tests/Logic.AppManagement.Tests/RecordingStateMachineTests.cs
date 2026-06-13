@@ -1,4 +1,4 @@
-// Unit depth for the WHISPER-22 recording state machine, beyond the @WHISPER-22 acceptance scenarios.
+// Unit depth for the recording state machine, beyond the acceptance scenarios.
 // Pins down the legal path, the Esc cancel from either in-flight state, the no-op handling of every
 // illegal transition (never an error state), and the observability of each accepted change.
 

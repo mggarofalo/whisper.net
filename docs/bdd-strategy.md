@@ -1,10 +1,10 @@
 # BDD Strategy
 
-A concrete, opinionated Behavior-Driven Development strategy for the new **.NET 10 WPF dictation utility** (tray-resident, Clean Architecture + CQRS via source-generated `Mediator`).
+A concrete, opinionated Behavior-Driven Development strategy for the **.NET 10 WPF dictation utility** (tray-resident, Clean Architecture + CQRS via source-generated `Mediator`).
 
-Audience: an experienced .NET engineer who has never built a BDD project before. Read it top to bottom once; then keep section 8 (adoption path) and the Module 0 checklist open while you wire up the harness.
+Audience: an experienced .NET engineer who has never built a BDD project before. Read it top to bottom once; section 8 (adoption path) and the Module 0 checklist are the quick reference when extending the harness.
 
-> **Scope note.** This document describes the *target* .NET 10 application. The current repository (`whisper-local`) is the Python predecessor; this file is the design record for the rewrite's test strategy.
+> **Scope note.** This is the test strategy for whisper.net — the .NET 10 WPF dictation utility. It originated as the design record for the rewrite of the Python `whisper-local` predecessor; it now documents the strategy the shipped app follows.
 
 ---
 

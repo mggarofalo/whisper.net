@@ -1,4 +1,4 @@
-// The result of matching a transcript against the user's voice commands (WHISPER-35). Either the
+// The result of matching a transcript against the user's voice commands. Either the
 // transcript matched a command — carrying the matched command's identifier so the pipeline can route
 // it — or it did not, in which case the transcript falls through to normal text delivery. This is the
 // scaffolding seam only: it says *whether* a command was recognized, not how to parse or execute one

@@ -1,7 +1,7 @@
-// The shell's navigation implementation (WHISPER-19). It maps the registered section keys to their
+// The shell's navigation implementation. It maps the registered section keys to their
 // view-model types and, on NavigateTo, resolves the target from the DI container, deactivates the
 // outgoing view-model, then activates the incoming one. The feature view-models are registered SCOPED
-// (WHISPER-89), so resolving from the container returns the one cached instance per shell UI scope:
+//, so resolving from the container returns the one cached instance per shell UI scope:
 // navigating back to a section restores its state (selection, page, scroll) instead of rebuilding it.
 // Navigation therefore only toggles activate/deactivate — it never recreates or disposes a view-model;
 // the cached instances are disposed once, by the UI scope, when the shell closes. Resolving from the

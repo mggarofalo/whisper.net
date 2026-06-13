@@ -1,4 +1,4 @@
-// Derives a model's speed/accuracy/memory ratings from its on-disk size (WHISPER-27). Size is a strong,
+// Derives a model's speed/accuracy/memory ratings from its on-disk size. Size is a strong,
 // objective proxy for all three: a bigger Whisper model is more accurate but slower and needs more
 // memory, and a smaller one is the reverse. Two size thresholds split the catalog into small / medium /
 // large tiers, and the ratings track the tier. Pure and deterministic, so the picker's guidance never

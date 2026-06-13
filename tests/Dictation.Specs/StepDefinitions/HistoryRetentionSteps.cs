@@ -1,4 +1,4 @@
-// @WHISPER-17 — drives the retention + paged-browsing scenarios. Steps stay thin; the
+// Drives the retention + paged-browsing scenarios. Steps stay thin; the
 // HistoryRetentionDriver owns HOW the real Mediator pipeline and SQLite store are exercised against a
 // private temp-file database.
 

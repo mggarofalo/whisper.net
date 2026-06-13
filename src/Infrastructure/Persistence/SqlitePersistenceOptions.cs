@@ -1,4 +1,4 @@
-// Configuration for the SQLite persistence store (WHISPER-11): where the single database file lives.
+// Configuration for the SQLite persistence store: where the single database file lives.
 // Bound from the "Persistence" configuration section; when left unset, AddInfrastructure post-configures
 // it to a per-user application-data path so a fresh install needs no configuration.
 

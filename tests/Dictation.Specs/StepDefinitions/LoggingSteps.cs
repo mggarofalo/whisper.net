@@ -1,4 +1,4 @@
-// Thin step definitions for the @WHISPER-73 diagnosable-logging feature. Each step delegates to the
+// Thin step definitions for the diagnosable-logging feature. Each step delegates to the
 // LoggingDriver (injected by the Reqnroll DI plugin); no logic lives here.
 
 using Dictation.Specs.Drivers;

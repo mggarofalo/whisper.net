@@ -1,4 +1,4 @@
-// Boundary projection of the UsageSummary domain aggregate for the dashboard (WHISPER-24). Mirrors the
+// Boundary projection of the UsageSummary domain aggregate for the dashboard. Mirrors the
 // domain shape — overall totals plus the per-day breakdown — so the Mapperly projection stays trivial.
 
 namespace Application.Statistics;

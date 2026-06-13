@@ -1,4 +1,4 @@
-// Turns WPF data-binding trace errors into test failures (WHISPER-96 AC1). WPF reports a broken
+// Turns WPF data-binding trace errors into test failures. WPF reports a broken
 // binding path as a trace-level message and otherwise carries on silently — exactly the failure mode
 // the smoke layer exists to catch. While in scope, every error-level entry on the data-binding trace
 // source is collected; tests assert the collection is empty after the first bind.

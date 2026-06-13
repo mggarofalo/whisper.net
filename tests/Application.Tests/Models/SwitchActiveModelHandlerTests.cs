@@ -1,4 +1,4 @@
-// Unit tests for SwitchActiveModelHandler (WHISPER-98). Switching the active model must do two things:
+// Unit tests for SwitchActiveModelHandler. Switching the active model must do two things:
 // switch the runtime lifecycle AND persist settings.ModelId — the value WhisperTranscriber loads. The
 // pre-fix handler only switched the lifecycle, so dictation kept loading the default model. These pin
 // the persistence (preserving the other settings) and the change broadcast, and the no-op guard.
@@ -38,7 +38,7 @@ public sealed class SwitchActiveModelHandlerTests
 		await _lifecycle.Received(1).SwitchAsync("large-v3", Arg.Any<CancellationToken>());
 
 		// settings.ModelId is persisted as the new model; every other setting is preserved, and setup is
-		// marked completed because a model is now active (WHISPER-82).
+		// marked completed because a model is now active.
 		await _store.Received(1).SaveAsync(
 			Arg.Is<AppSettings>(s =>
 				s.ModelId == "large-v3" &&

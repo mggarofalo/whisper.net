@@ -1,4 +1,4 @@
-// Exercises the tag-driven release workflow for the @WHISPER-39 scenarios. Like the packaging and
+// Exercises the tag-driven release workflow. Like the packaging and
 // repository-guidance drivers, it inspects the repository artifact directly — `.github/workflows/
 // release.yml` — because the release contract lives in that workflow, not in the app's runtime
 // composition. It asserts the guarantees that make a release correct and safe: it runs only on a version

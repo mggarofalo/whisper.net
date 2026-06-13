@@ -1,4 +1,4 @@
-// Drives the @WHISPER-18 tray scenarios. It owns HOW the tray coordination is exercised so the step
+// Drives the tray scenarios. It owns HOW the tray coordination is exercised so the step
 // definitions stay one-liners: it builds the REAL TrayController over the REAL RecordingStateMachine,
 // with the IShellPresenter and IHostApplicationLifetime seams faked. The tray icon's status, its
 // "Open Settings" action, and its "Quit" graceful shutdown are validated at the controller boundary;

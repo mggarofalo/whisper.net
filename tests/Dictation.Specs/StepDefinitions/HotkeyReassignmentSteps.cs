@@ -1,4 +1,4 @@
-// Thin step definitions for the @WHISPER-75 hotkey-reassignment feature. Each step delegates to the
+// Thin step definitions for the hotkey-reassignment feature. Each step delegates to the
 // HotkeyConfigurationDriver (injected by the Reqnroll DI plugin); no logic lives here.
 
 using Dictation.Specs.Drivers;

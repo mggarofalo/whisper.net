@@ -1,6 +1,6 @@
-// Unit tests for the paged browse slice (WHISPER-17): the query validator's paging rules and the
+// Unit tests for the paged browse slice: the query validator's paging rules and the
 // handler's newest-first ordering, paging math, and optional case-insensitive text filter (the edge
-// cases behind the @WHISPER-17 scenarios). Uses a substituted IHistoryStore and the real HistoryMapper.
+// cases behind the scenarios). Uses a substituted IHistoryStore and the real HistoryMapper.
 
 using Application.History;
 using Application.Ports;

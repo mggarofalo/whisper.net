@@ -1,8 +1,8 @@
-// The theme switcher's view-model (WHISPER-121): exposes the System / Light / Dark choices and the
+// The theme switcher's view-model: exposes the System / Light / Dark choices and the
 // persisted selection for the sidebar footer to bind. It depends on nothing but IMediator — it loads via
 // GetSettingsQuery and persists a change via UpdateSettingsCommand (carrying the whole settings DTO with
 // the theme swapped, so the rest of the user's settings are preserved). Persisting publishes the change on
-// the instant-apply channel (WHISPER-78), which the App applies to WPF's ThemeMode live. The
+// the instant-apply channel, which the App applies to WPF's ThemeMode live. The
 // programmatic selection a load performs is suppressed (IsLoading) so only a genuine user pick commits —
 // the same commit-on-genuine-change discipline as the audio-device picker. Built on CommunityToolkit.Mvvm
 // and WPF-free so the behavior is driven for real in specs; the thin footer control binds to it.

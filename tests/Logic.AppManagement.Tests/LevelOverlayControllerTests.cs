@@ -1,4 +1,4 @@
-// Unit depth for the WHISPER-26 level-overlay controller, beyond the @WHISPER-26 acceptance scenarios.
+// Unit depth for the level-overlay controller, beyond the acceptance scenarios.
 // Pins down show-on-record / hide-on-stop visibility, that the level only moves while recording, that
 // louder audio reads higher than quieter audio (smoothed), and that the meter resets when recording
 // stops. The audio source is an NSubstitute fake whose FrameAvailable the test raises directly.
@@ -48,7 +48,7 @@ public sealed class LevelOverlayControllerTests
 		_controller.IsVisible.Should().BeTrue();
 		_controller.State.Should().Be(OverlayState.Recording);
 
-		// Stop -> Transcribing: the overlay stays up so the user sees the transcribe step (WHISPER-102).
+		// Stop -> Transcribing: the overlay stays up so the user sees the transcribe step.
 		_stateMachine.RequestStop();
 		_controller.IsVisible.Should().BeTrue();
 		_controller.State.Should().Be(OverlayState.Transcribing);
@@ -103,7 +103,7 @@ public sealed class LevelOverlayControllerTests
 		_controller.Level.Should().Be(0);
 	}
 
-	// --- WHISPER-101: perceptual (dBFS) mapping ---
+	// --- Perceptual (dBFS) mapping ---
 
 	// Emit enough constant frames that the exponential smoothing has converged to the per-frame level, so
 	// the resulting band can be asserted regardless of the smoothing factor.
@@ -172,7 +172,7 @@ public sealed class LevelOverlayControllerTests
 		_controller.Level.Should().BeLessThan(1.0, "without constantly pegging");
 	}
 
-	// --- WHISPER-102: state, elapsed, near-cap, and error feedback ---
+	// --- State, elapsed, near-cap, and error feedback ---
 
 	[Fact]
 	public void Returning_to_idle_resets_state_and_hides()
@@ -293,7 +293,7 @@ public sealed class LevelOverlayControllerTests
 		_controller.IsVisible.Should().BeFalse();
 	}
 
-	// --- WHISPER-129: model warm-up status ---
+	// --- Model warm-up status ---
 
 	[Fact]
 	public void A_warm_up_started_message_shows_the_overlay_in_the_warming_state()

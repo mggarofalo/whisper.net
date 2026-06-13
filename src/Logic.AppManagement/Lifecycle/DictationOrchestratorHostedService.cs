@@ -1,6 +1,6 @@
-// Activates the end-to-end dictation pipeline for the application's lifetime (WHISPER-14). It closes the
-// production wiring the earlier modules left for M7: the raw global-key edges from IHotkeyListener are
-// forwarded into the HotkeyActivationController (chord/push-to-talk/toggle matching, WHISPER-16), whose
+// Activates the end-to-end dictation pipeline for the application's lifetime. It closes the
+// production wiring the earlier modules left: the raw global-key edges from IHotkeyListener are
+// forwarded into the HotkeyActivationController (chord/push-to-talk/toggle matching), whose
 // start/stop requests the DictationOrchestrator turns into capture -> transcribe -> deliver.
 //
 // The orchestrator is scoped — it shares one Mediator scope with the delivery handlers it dispatches —
@@ -58,7 +58,7 @@ public sealed class DictationOrchestratorHostedService(IServiceScopeFactory scop
 
 	private void OnKeyDown(object? sender, KeyboardKeyEventArgs e)
 	{
-		// Esc exits continuous dictation mode and returns the pipeline to Idle (WHISPER-28); it is not a
+		// Esc exits continuous dictation mode and returns the pipeline to Idle; it is not a
 		// recording chord, so it is handled here rather than forwarded to the activation controller.
 		if (e.Key == KeyboardKey.Escape)
 		{

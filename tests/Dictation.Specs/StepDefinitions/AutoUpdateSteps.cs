@@ -1,6 +1,6 @@
-// Thin step definitions for the @WHISPER-29 signed auto-update feature. Each step delegates to the
+// Thin step definitions for the signed auto-update feature. Each step delegates to the
 // AutoUpdateDriver (injected by the Reqnroll DI plugin); no logic lives here. The "packaging
-// configuration" given is shared with the @WHISPER-20 packaging steps.
+// configuration" given is shared with the packaging steps.
 
 using Dictation.Specs.Drivers;
 using Reqnroll;

@@ -1,6 +1,6 @@
-// The set of Whisper model ids the app recognizes today, used by the settings validator to reject an
-// unknown model before it is persisted. This is a deliberately small placeholder: Module 3 introduces
-// the real model registry (download state, sizes, GPU suitability) and will supersede this list.
+// The set of Whisper model ids the settings validator accepts before a selection is persisted. The
+// model registry (Logic.ModelManagement) owns download/cache state, sizes, and GPU suitability; this
+// stays the validator's allow-list of recognized ids.
 
 namespace Application.Settings;
 

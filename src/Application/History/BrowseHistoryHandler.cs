@@ -1,7 +1,7 @@
 // Handles BrowseHistoryQuery: loads the date-range-filtered entries through the IHistoryStore port, then
 // enforces the query's contract — newest-first ordering, the optional case-insensitive text filter, and
 // paging — and projects to DTOs. The ordering/filter/paging live here (not faked behind the store) so the
-// @WHISPER-17 scenarios validate real handler behavior. The validator guarantees a positive page size and
+// scenarios validate real handler behavior. The validator guarantees a positive page size and
 // a page of at least one before this runs.
 
 using Application.Interfaces;

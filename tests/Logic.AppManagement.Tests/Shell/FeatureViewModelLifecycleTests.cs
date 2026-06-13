@@ -1,9 +1,9 @@
-// Unit depth for the WHISPER-94 activation lifecycle, beyond the @WHISPER-94 acceptance scenarios.
+// Unit depth for the activation lifecycle, beyond the acceptance scenarios.
 // Pins the contract on the reference recipient (HotkeyViewModel over a real WeakReferenceMessenger):
 // the registration exists exactly while the section is active, an inactive cached view-model gets no
 // callbacks, double transitions are idempotent, and — the leak half — a registered, never-deactivated
 // view-model is still garbage-collectable, because the weak messenger cannot root it. Activation also
-// triggers the settings load (WHISPER-109), pinned here so the section can never again show no binding
+// triggers the settings load, pinned here so the section can never again show no binding
 // while AssignAsync silently no-ops on its null-settings guard.
 
 using Application.Settings;
@@ -30,7 +30,7 @@ public sealed class FeatureViewModelLifecycleTests
 	private static SettingsChangedMessage ChangeTo(string chord) =>
 		new(new AppSettings("base.en", HotkeyBinding.Parse(chord), silenceThresholdMs: 700, fillerWordRemovalEnabled: false));
 
-	// Activation triggers the settings load (WHISPER-109), so the mediator substitute must serve a valid
+	// Activation triggers the settings load, so the mediator substitute must serve a valid
 	// DTO — a bare substitute would fault the activation-triggered load with a null result.
 	private static IMediator MediatorReturningSettings()
 	{
@@ -64,7 +64,7 @@ public sealed class FeatureViewModelLifecycleTests
 		await (_viewModel.LoadCommand.ExecutionTask ?? Task.CompletedTask);
 
 		_viewModel.CurrentHotkey.Should().Be(LoadedChord,
-			"activation must load the persisted binding (WHISPER-109) so the section never shows it as unset");
+			"activation must load the persisted binding so the section never shows it as unset");
 		_viewModel.HotkeyInput.Should().Be(LoadedChord,
 			"the activation-triggered load seeds the editable chord with the current binding");
 	}
@@ -113,7 +113,7 @@ public sealed class FeatureViewModelLifecycleTests
 		GC.Collect();
 
 		reference.IsAlive.Should().BeFalse(
-			"the WeakReferenceMessenger must not root a registered view-model (WHISPER-94 AC2)");
+			"the WeakReferenceMessenger must not root a registered view-model");
 	}
 
 	// Kept non-inlined so the only strong reference dies with the method frame.

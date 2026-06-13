@@ -1,4 +1,4 @@
-// Normalizes raw Whisper output before it is delivered (WHISPER-36). Two independent steps:
+// Normalizes raw Whisper output before it is delivered. Two independent steps:
 //   1. Noise-label stripping (ALWAYS on): Whisper emits bracketed/parenthesized non-speech labels such
 //      as [BLANK_AUDIO], [SILENCE], [ S ], or (music). These are removed whole, brackets included.
 //   2. Filler-word removal (GATED by the "remove filler words" setting): spoken disfluencies (um, uh,

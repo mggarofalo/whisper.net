@@ -1,9 +1,9 @@
-// Unit depth for the WHISPER-108 first-activation auto-load, beyond the @WHISPER-108 acceptance
-// scenarios. Pins the base mechanism on a minimal counting view-model: the hook command runs exactly
-// once per cached instance (first activation only — re-activation must never re-query), it runs AFTER
-// OnActivated so a section's live subscriptions exist before its first load, and a section that
-// declares no load (the default null hook) activates cleanly. (Home grew its own dashboard load in
-// WHISPER-106, so the no-load case is pinned on a minimal stub here rather than on a real section.)
+// Unit depth for the first-activation auto-load, beyond the acceptance scenarios. Pins the base
+// mechanism on a minimal counting view-model: the hook command runs exactly once per cached instance
+// (first activation only — re-activation must never re-query), it runs AFTER OnActivated so a
+// section's live subscriptions exist before its first load, and a section that declares no load (the
+// default null hook) activates cleanly. (Home grew its own dashboard load separately, so the no-load
+// case is pinned on a minimal stub here rather than on a real section.)
 
 using AwesomeAssertions;
 using CommunityToolkit.Mvvm.Input;
@@ -21,7 +21,7 @@ public sealed class FeatureViewModelFirstActivationTests
 
 		viewModel.OnNavigatedTo();
 
-		viewModel.LoadCount.Should().Be(1, "the first activation must trigger the load (WHISPER-108)");
+		viewModel.LoadCount.Should().Be(1, "the first activation must trigger the load");
 	}
 
 	[Fact]
@@ -85,6 +85,6 @@ public sealed class FeatureViewModelFirstActivationTests
 	}
 
 	// A section that declares no first-activation load — the default null hook. Stands in for the old
-	// empty Home section (which became a loading dashboard in WHISPER-106).
+	// empty Home section (which became a loading dashboard).
 	internal sealed class PlainViewModel : FeatureViewModel;
 }

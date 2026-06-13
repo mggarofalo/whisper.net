@@ -1,5 +1,5 @@
 // Runs the auto-update check once at startup, as a hosted service so the Generic Host owns its lifetime
-// (WHISPER-29). The check runs in the background (fire-and-forget) so it never delays launch, and the
+//. The check runs in the background (fire-and-forget) so it never delays launch, and the
 // policy it calls already swallows and logs failures — so a slow or unreachable channel can neither block
 // startup nor crash the app. When auto-update is disabled (the default) the policy returns immediately
 // without any network access.

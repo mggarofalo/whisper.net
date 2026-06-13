@@ -3,21 +3,21 @@
   <!--
     Logic.AppManagement: application-lifecycle behaviors (profiles, app rules, command mode,
     continuous-dictation policy) and the dictation orchestrator that wires the end-to-end pipeline
-    (WHISPER-14). Pure logic over Application ports + Domain types — no OS or Infrastructure concerns.
+. Pure logic over Application ports + Domain types — no OS or Infrastructure concerns.
     Depends on Application and Domain, plus the sibling Logic.AudioManagement for capture normalization
     (CaptureBuffer); the architecture tests forbid only Infrastructure/Presentation references here.
   -->
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" />
-    <!-- IHostedService + AddHostedService for the host-owned background components (WHISPER-12). -->
+    <!-- IHostedService + AddHostedService for the host-owned background components. -->
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
-    <!-- IMediator: the orchestrator dispatches the delivery pipeline through Mediator (WHISPER-14). -->
+    <!-- IMediator: the orchestrator dispatches the delivery pipeline through Mediator. -->
     <PackageReference Include="Mediator.Abstractions" />
-    <!-- ILogger<T> for the orchestrator's structural transition/duration logging (WHISPER-14). -->
+    <!-- ILogger<T> for the orchestrator's structural transition/duration logging. -->
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
     <!--
-      MVVM primitives for the dashboard shell view-models (WHISPER-19). CommunityToolkit.Mvvm is a
+      MVVM primitives for the dashboard shell view-models. CommunityToolkit.Mvvm is a
       UI-framework-agnostic library (ObservableObject / [ObservableProperty] / [RelayCommand]) with no
       WPF dependency, so the shell + feature view-models live here — WPF-free and unit-testable — while
       the thin WPF views in Presentation merely bind to them.

@@ -26,7 +26,7 @@ public sealed class HotkeyBindingTests
 	}
 
 	[Theory]
-	[InlineData("ctrl+alt+k", "Ctrl + Alt + K")]     // the spaced form the capture control displays (WHISPER-79)
+	[InlineData("ctrl+alt+k", "Ctrl + Alt + K")]     // the spaced form the capture control displays
 	[InlineData("f13", "F13")]
 	[InlineData("ctrl+win", "Ctrl + Win")]
 	public void Display_chord_spaces_the_canonical_separators(string raw, string expected)

@@ -1,4 +1,4 @@
-// Drives the @WHISPER-80 audio-device picker scenarios. It exercises the REAL AudioDeviceViewModel over the
+// Drives the audio-device picker scenarios. It exercises the REAL AudioDeviceViewModel over the
 // REAL Mediator pipeline (ListCaptureDevices / GetSettings / UpdateSettings) and the REAL settings mapper,
 // faking only the device enumerator and the settings store (with a round-trip so a commit is visible to the
 // next load). So it proves at the view-model boundary: the picker lists active devices by friendly name and
@@ -57,7 +57,7 @@ public sealed class AudioDevicePickerDriver
 
 	public Task PickDevice(string deviceId) => _viewModel.SelectCommand.ExecuteAsync(deviceId);
 
-	// A selection change as the ComboBox's two-way SelectedValue binding performs it (WHISPER-92): set
+	// A selection change as the ComboBox's two-way SelectedValue binding performs it: set
 	// the property and await the commit the view-model decides to make (if any).
 	public async Task ChangeSelection(string deviceId)
 	{

@@ -1,4 +1,4 @@
-// Thin step definitions for the @WHISPER-129 model warm-up status feature. Each step delegates to the
+// Thin step definitions for the model warm-up status feature. Each step delegates to the
 // ModelWarmupStatusDriver (injected by the Reqnroll DI plugin); no logic lives here.
 
 using Dictation.Specs.Drivers;

@@ -1,8 +1,8 @@
 // The IVad adapter: the device-independent windowing logic of voice-activity detection over the
 // IVadSession seam. It slices the clip into fixed-size windows, scores each through the session, and
 // returns the per-window probabilities. The threshold/gate/trim policy lives in Logic; this adapter
-// only measures. Driven over a fake session in the @WHISPER-31 specs; OnnxVadSession supplies the
-// real Silero model (manual smoke).
+// only measures. Driven over a fake session in the VAD specs; OnnxVadSession supplies the real Silero
+// model (manual smoke).
 
 using Application.Ports;
 using Domain.Audio;

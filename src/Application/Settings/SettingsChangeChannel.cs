@@ -1,5 +1,5 @@
-// The instant-apply live-propagation channel (WHISPER-78), generalizing/replacing the ad-hoc
-// SettingsChangeBroadcaster (WHISPER-75). It publishes a committed, valid settings change as a typed
+// The instant-apply live-propagation channel, generalizing/replacing the ad-hoc
+// SettingsChangeBroadcaster. It publishes a committed, valid settings change as a typed
 // SettingsChangedMessage over CommunityToolkit's IMessenger (a WeakReferenceMessenger in composition), so
 // running services that registered weakly reconfigure live — within one message round-trip, no restart.
 //

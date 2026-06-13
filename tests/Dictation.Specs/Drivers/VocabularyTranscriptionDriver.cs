@@ -1,4 +1,4 @@
-// Drives the @WHISPER-38 AC4 scenario: the REAL WhisperTranscriber over a capturing fake engine seam.
+// Drives the scenario: the REAL WhisperTranscriber over a capturing fake engine seam.
 // It transcribes, mutates the custom vocabulary, transcribes again, and lets the steps assert that the
 // second transcription was conditioned with the new term while the engine was loaded only once — i.e.
 // the change took effect without restarting the engine. No model file content, no native library.

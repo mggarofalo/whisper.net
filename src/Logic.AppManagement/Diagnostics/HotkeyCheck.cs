@@ -1,4 +1,4 @@
-// Hotkey diagnostic (WHISPER-50): confirms the configured global hotkey can be registered. Registering a
+// Hotkey diagnostic: confirms the configured global hotkey can be registered. Registering a
 // global hotkey means installing the low-level keyboard hook (SharpHook), which the OS only allows when
 // the app has the required input permission — the same permission dictation delivery needs. So the check
 // reads the configured chord from settings and asks the IPermissionProbe whether that hook can be

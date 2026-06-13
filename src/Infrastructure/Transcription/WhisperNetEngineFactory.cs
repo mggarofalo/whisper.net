@@ -1,6 +1,6 @@
 // Loads a Whisper.net model from a local file onto the selected backend. It sets the native runtime
 // order BEFORE the factory loads the library — Vulkan first (with CPU fallback) when the GPU contact
-// point chose the GPU, CPU only otherwise — exactly as the WHISPER-65 spike proved. A load failure on
+// point chose the GPU, CPU only otherwise. A load failure on
 // an existing-but-unreadable file is converted into a typed ModelLoadException so callers never see a
 // raw native crash. Loading reads the local file only; there is no network access.
 

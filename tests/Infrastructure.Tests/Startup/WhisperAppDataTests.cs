@@ -1,4 +1,4 @@
-// Pins the per-user data-directory resolution for WHISPER-86 so it can never again equal — or sit
+// Pins the per-user data-directory resolution so it can never again equal — or sit
 // beneath — the Velopack install root (%LOCALAPPDATA%\<PackId>). That collision is what broke
 // install/update: the installer's "remove existing application directory" step tripped over user data,
 // and an open rolling-log handle inside the install dir blocked updates while the app ran. If anyone

@@ -2,7 +2,7 @@
 
   <!--
     Unit tests for the Domain layer — exhaustive, fast coverage of the entities and value objects and
-    every invariant they enforce. This is the inner xUnit loop behind the @WHISPER-42 domain
+    every invariant they enforce. This is the inner xUnit loop behind the domain
     scenarios. Uses AwesomeAssertions for expressive assertions; xUnit v3 test projects are
     executables.
   -->

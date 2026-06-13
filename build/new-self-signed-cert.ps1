@@ -1,7 +1,7 @@
 #requires -Version 7
 <#
 .SYNOPSIS
-    Generates a self-signed Authenticode code-signing certificate for personal/dev signing (WHISPER-72).
+    Generates a self-signed Authenticode code-signing certificate for personal/dev signing.
 
 .DESCRIPTION
     For a personal project, this mints a throwaway self-signed code-signing certificate and surfaces the
@@ -17,8 +17,8 @@
     HONEST LIMITATION: a self-signed certificate only makes the signature valid on machines where the
     certificate is trusted (use -Trust to import it locally). It does NOT earn Windows SmartScreen
     reputation — first-run SmartScreen may still warn ("More info -> Run anyway"). A SmartScreen-trusted
-    "verified publisher" requires a CA-issued OV/EV certificate or Azure Trusted Signing (tracked by
-    WHISPER-69). This script is for local/personal builds, not for publicly distributed releases.
+    "verified publisher" requires a CA-issued OV/EV certificate or Azure Trusted Signing. This script
+    is for local/personal builds, not for publicly distributed releases.
 
 .PARAMETER Password
     The PFX password. If omitted, a random strong password is generated and printed once.
@@ -121,7 +121,7 @@ try {
 
     Write-Host ''
     Write-Host 'Note: self-signed signing is trusted only where the cert is installed; it does not bypass' -ForegroundColor Yellow
-    Write-Host 'Windows SmartScreen. A SmartScreen-verified publisher needs a CA cert (WHISPER-69).' -ForegroundColor Yellow
+    Write-Host 'Windows SmartScreen. A SmartScreen-verified publisher needs a CA cert.' -ForegroundColor Yellow
 }
 finally {
     $securePassword.Dispose()

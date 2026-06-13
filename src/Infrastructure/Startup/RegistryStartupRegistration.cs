@@ -1,5 +1,5 @@
 // The IStartupRegistration adapter: the single place that touches the Windows registry to manage the
-// launch-at-login entry (WHISPER-32). It writes the current executable path under the current-user
+// launch-at-login entry. It writes the current executable path under the current-user
 // (HKCU) Run key, so registration needs no elevation. Every operation is idempotent — CreateSubKey +
 // SetValue overwrite a single entry, and DeleteValue tolerates a missing value — so repeated toggles
 // never leave duplicates or orphans. IsEnabled reads the real key, so the toggle reflects reality.

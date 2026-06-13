@@ -1,6 +1,6 @@
-// Handles SwitchActiveModelCommand (WHISPER-27): switches the model lifecycle to the requested model
+// Handles SwitchActiveModelCommand: switches the model lifecycle to the requested model
 // (releasing the currently loaded model and loading the new one) AND persists the choice as
-// settings.ModelId (WHISPER-98). The persistence is essential: WhisperTranscriber resolves the model to
+// settings.ModelId. The persistence is essential: WhisperTranscriber resolves the model to
 // load from settings.ModelId, so without saving it the user's selection would never reach transcription
 // — dictation would keep loading the default model. The change is broadcast (like UpdateSettings) so the
 // in-memory settings holder stays in sync and a graceful shutdown does not clobber the new value. The id
@@ -32,7 +32,7 @@ public sealed class SwitchActiveModelHandler(
 		if (!string.Equals(current.ModelId, command.ModelId, StringComparison.Ordinal))
 		{
 			// A model becoming active means first-run setup is effectively done, so mark it completed
-			// (WHISPER-82) — the launch flow then goes straight to the tray instead of re-prompting.
+			// — the launch flow then goes straight to the tray instead of re-prompting.
 			AppSettings updated = new(
 				command.ModelId,
 				current.Hotkey,
@@ -46,7 +46,7 @@ public sealed class SwitchActiveModelHandler(
 
 			// Publish the change on the instant-apply channel so running services apply it live and the
 			// in-memory holder is kept current, so a graceful shutdown persists the new model rather than
-			// overwriting it with a stale value (WHISPER-78).
+			// overwriting it with a stale value.
 			channel.Publish(updated);
 		}
 

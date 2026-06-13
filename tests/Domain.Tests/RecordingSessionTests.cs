@@ -1,5 +1,5 @@
 // Covers the RecordingSession entity: valid lifecycle (start then end, with duration) and the
-// temporal invariant that an end can never precede a start. The @WHISPER-42 scenario exercises the
+// temporal invariant that an end can never precede a start. The domain scenario exercises the
 // rejection path; these tests add the happy path and identity behavior the scenario does not.
 
 using AwesomeAssertions;

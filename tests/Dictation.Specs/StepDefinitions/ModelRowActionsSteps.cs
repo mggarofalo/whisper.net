@@ -1,6 +1,6 @@
-// Thin step definitions for the @WHISPER-105 contextual-action feature. Each step delegates to the
+// Thin step definitions for the contextual-action feature. Each step delegates to the
 // ModelRowActionsDriver (injected by the Reqnroll DI plugin); no logic lives here. The step text is
-// distinct from the @WHISPER-81 / @WHISPER-107 download steps so Reqnroll binds each unambiguously.
+// distinct from the download steps so Reqnroll binds each unambiguously.
 
 using Dictation.Specs.Drivers;
 using Reqnroll;

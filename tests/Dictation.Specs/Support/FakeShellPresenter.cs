@@ -1,4 +1,4 @@
-// In-memory stand-in for the IShellPresenter port for the @WHISPER-18 / @WHISPER-25 scenarios. Records
+// In-memory stand-in for the IShellPresenter port. Records
 // how many times the shell was asked to surface the settings window, so specs assert "Open Settings"
 // (and, later, single-instance activation) reached the presenter without a real WPF window.
 

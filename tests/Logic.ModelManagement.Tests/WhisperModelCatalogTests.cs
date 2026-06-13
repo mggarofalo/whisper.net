@@ -1,4 +1,4 @@
-// Inner TDD loop for the WHISPER-4 model registry: it enumerates the supported Whisper variants with a
+// Inner TDD loop for the model registry: it enumerates the supported Whisper variants with a
 // canonical ggml file name and a positive size, and resolves ids case-insensitively (unknown ids yield
 // null). The catalog is pure data, so these assert its shape, not behavior over a device.
 

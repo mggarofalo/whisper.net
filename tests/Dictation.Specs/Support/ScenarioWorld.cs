@@ -10,7 +10,7 @@ namespace Dictation.Specs.Support;
 public sealed class ScenarioWorld
 {
 	// The clip "captured" for this scenario. It carries speech-level energy by default so delivery scenarios
-	// pass the no-speech gate (WHISPER-125): the trimmer collapses silence to empty and the pipeline skips
+	// pass the no-speech gate: the trimmer collapses silence to empty and the pipeline skips
 	// transcription. Its exact content is otherwise irrelevant while the transcriber is faked; a scenario
 	// testing silence sets this to AudioClip.OneSecondOfSilence() explicitly.
 	public AudioClip CapturedClip { get; set; } = SpeechLevelClip();

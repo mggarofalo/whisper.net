@@ -1,4 +1,4 @@
-// SQLite-backed implementation of the ISettingsStore port (WHISPER-11): the user's settings persisted as
+// SQLite-backed implementation of the ISettingsStore port: the user's settings persisted as
 // a single JSON document (the Application DTO, hotkey as its canonical chord string) in a one-row settings
 // table, so the stored shape stays free of domain construction rules; the SettingsMapper converts to/from
 // the validated domain AppSettings. A first run with no stored row yields AppSettings.Default and persists

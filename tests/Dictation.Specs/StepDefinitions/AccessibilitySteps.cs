@@ -1,4 +1,4 @@
-// Thin step definitions for the @WHISPER-83 accessibility feature. Each step delegates to the
+// Thin step definitions for the accessibility feature. Each step delegates to the
 // AccessibilityDriver (injected by the Reqnroll DI plugin), which inspects the settings view XAML directly.
 
 using Dictation.Specs.Drivers;

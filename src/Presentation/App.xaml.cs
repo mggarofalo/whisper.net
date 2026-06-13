@@ -1,8 +1,7 @@
 // Presentation composition root. Builds the Generic Host, wiring Serilog and every layer through its
-// per-layer DI extension, then starts the host so it owns the application lifetime (WHISPER-12). There
+// per-layer DI extension, then starts the host so it owns the application lifetime. There
 // is deliberately no StartupUri and no window: launching starts the registered IHostedServices (the
-// global hotkey listener today) and the process runs tray-resident — the tray icon arrives in
-// WHISPER-18. Unhandled exceptions are logged before the process exits, and shutdown is graceful: the
+// global hotkey listener today) and the process runs tray-resident. Unhandled exceptions are logged before the process exits, and shutdown is graceful: the
 // host's StopAsync stops every hosted service before exit. The host shares the exact registration
 // extensions the BDD specs reuse, so production and test composition cannot drift.
 
@@ -43,15 +42,15 @@ public partial class App
 
 	protected override void OnStartup(StartupEventArgs e)
 	{
-		// Velopack install/update hooks (WHISPER-20): must run before anything else so that, when the
+		// Velopack install/update hooks: must run before anything else so that, when the
 		// installer or updater launches the app with a hook argument (first-install, update, uninstall), it
 		// performs the hook and exits instead of starting the tray app. On a normal launch this is a no-op.
-		// The in-app auto-update check that consumes this is wired in WHISPER-29.
+		// The in-app auto-update check that consumes this is wired up separately.
 		VelopackApp.Build().Run();
 
 		base.OnStartup(e);
 
-		// Native theming (WHISPER-84): opt into WPF's built-in Fluent theme, following the OS Light/Dark
+		// Native theming: opt into WPF's built-in Fluent theme, following the OS Light/Dark
 		// preference and accent colour, so the settings window looks native with no third-party dependency.
 		// ThemeMode is experimental in .NET 10 (WPF0001); the opt-in is deliberate and isolated to this one
 		// line so it cannot destabilize the app's logic. Rationale is recorded in docs/theming.md.
@@ -59,7 +58,7 @@ public partial class App
 		ThemeMode = ThemeMode.System;
 #pragma warning restore WPF0001
 
-		// Doctor / selftest (WHISPER-50): when launched with --doctor, run the environment checks, print the
+		// Doctor / selftest: when launched with --doctor, run the environment checks, print the
 		// pass/warn/fail report to the launching terminal, set the exit code from the result, and exit
 		// without going tray-resident. This is the diagnostics entry point users attach to a bug report.
 		if (DoctorMode.IsRequested(e.Args))
@@ -72,29 +71,29 @@ public partial class App
 		builder.Services.AddSerilogLogging(builder.Configuration);
 		builder.Services.AddWhisperServices(builder.Configuration);
 
-		// UI-thread marshaling seam (WHISPER-90): the one production IUiDispatcher, wrapping the dispatcher
+		// UI-thread marshaling seam: the one production IUiDispatcher, wrapping the dispatcher
 		// of the UI thread OnStartup runs on. View-models and the shell presenter marshal through it instead
 		// of touching the WPF application's dispatcher by hand (null-safe at shutdown, testable with a fake).
 		builder.Services.AddSingleton<IUiDispatcher>(new WpfUiDispatcher(Dispatcher));
 
-		// Cross-thread collection binding (WHISPER-91): list-bearing view-models register their bound
+		// Cross-thread collection binding: list-bearing view-models register their bound
 		// collections (with the gate their mutations take) so a background-thread update binds safely.
 		builder.Services.AddSingleton<IUiCollectionSynchronizer, WpfCollectionSynchronizer>();
 
-		// Tray UI (WHISPER-18): the shell presenter (settings window), the tray coordination, and its
+		// Tray UI: the shell presenter (settings window), the tray coordination, and its
 		// view-model. Registered here in the composition root because they are Presentation concerns; the
 		// controller resolves the host-provided IHostApplicationLifetime for graceful Quit.
 		builder.Services.AddSingleton<IShellPresenter, WpfShellPresenter>();
 		builder.Services.AddSingleton<TrayController>();
 		builder.Services.AddSingleton<TrayIconViewModel>();
 
-		// Level overlay (WHISPER-26): the recording-state-driven mini-recorder. The controller (Logic) and
+		// Level overlay: the recording-state-driven mini-recorder. The controller (Logic) and
 		// its view-model are composed here in the Presentation root; the window itself is created after the
 		// host starts so it lives on the UI thread.
 		builder.Services.AddSingleton<LevelOverlayController>();
 		builder.Services.AddSingleton<LevelOverlayViewModel>();
 
-		// Single-instance coordination (WHISPER-25): resolves the Infrastructure lock + signal and the
+		// Single-instance coordination: resolves the Infrastructure lock + signal and the
 		// shell presenter to surface the running instance on a second launch.
 		builder.Services.AddSingleton<SingleInstanceCoordinator>();
 		_host = builder.Build();
@@ -102,7 +101,7 @@ public partial class App
 		ILogger<App> logger = _host.Services.GetRequiredService<ILogger<App>>();
 		RegisterUnhandledExceptionLogging(logger, _host.Services.GetRequiredService<IUserNotifier>());
 
-		// Single-instance enforcement (WHISPER-25): become the sole instance, or signal the already-running
+		// Single-instance enforcement: become the sole instance, or signal the already-running
 		// instance to surface and exit without starting a second host. Done before the host starts so a
 		// second launch never installs a second hotkey hook or tray icon. The lock is released when the
 		// host disposes the coordinator on graceful shutdown, so a later launch becomes the sole instance.
@@ -120,7 +119,7 @@ public partial class App
 		IHostApplicationLifetime lifetime = _host.Services.GetRequiredService<IHostApplicationLifetime>();
 		lifetime.ApplicationStopping.Register(() => Dispatcher.Invoke(ShutdownApplication));
 
-		// Subscribe the overlay controller to the app-wide signals BEFORE the host starts (WHISPER-131). It is
+		// Subscribe the overlay controller to the app-wide signals BEFORE the host starts. It is
 		// a lazily-resolved singleton, and the model warm-up hosted service broadcasts ModelWarmupChangedMessage
 		// during _host.Start() below. Resolved (as it was) only when the overlay window is created after Start,
 		// it would miss that first "warming" broadcast — the messenger does not replay — so the warming pill
@@ -137,21 +136,21 @@ public partial class App
 		// the app's lifetime and is disposed on exit.
 		_trayIcon = new TrayIcon(_host.Services.GetRequiredService<TrayIconViewModel>());
 
-		// Error surfacing (WHISPER-95): now that the tray icon exists, attach the balloon presenter so
+		// Error surfacing: now that the tray icon exists, attach the balloon presenter so
 		// backend failures become visible tray notifications instead of log-only events.
 		_host.Services.GetRequiredService<TrayUserNotifier>().AttachPresenter(_trayIcon.ShowNotification);
 
-		// The level overlay lives for the app's lifetime, hidden until recording starts (WHISPER-26).
+		// The level overlay lives for the app's lifetime, hidden until recording starts.
 		_levelOverlay = new LevelOverlay(_host.Services.GetRequiredService<LevelOverlayViewModel>());
 
-		// Theme (WHISPER-121): apply the persisted Light/Dark/System preference, and re-apply it live when
+		// Theme: apply the persisted Light/Dark/System preference, and re-apply it live when
 		// the user changes it in the sidebar switcher (a settings change is broadcast on the instant-apply
 		// channel). The System default set in OnStartup stands until the async settings read completes.
 		WatchThemePreference();
 
 		logger.LogInformation("Whisper host started; running tray-resident with no startup window.");
 
-		// First-run setup (WHISPER-82): there is no separate onboarding window any more — settings IS the
+		// First-run setup: there is no separate onboarding window any more — settings IS the
 		// single source of truth. On launch, open the settings window when the app is unconfigured (no
 		// active model OR setup not completed) so the user finishes setup over the real settings views;
 		// otherwise stay tray-only. Fire-and-forget so the settings/cache read runs off the UI thread
@@ -210,7 +209,7 @@ public partial class App
 		_host!.Services.GetRequiredService<IShellPresenter>().ShowSettings();
 	}
 
-	// Apply the persisted theme preference and re-apply it whenever settings change (WHISPER-121). The
+	// Apply the persisted theme preference and re-apply it whenever settings change. The
 	// switcher persists via UpdateSettings, which broadcasts SettingsChangedMessage; ThemeMode must be set
 	// on the UI thread, and the message can arrive on a background thread, so both paths marshal.
 	private void WatchThemePreference()
@@ -290,14 +289,14 @@ public partial class App
 
 		DispatcherUnhandledException += (_, args) =>
 		{
-			// Record the failure (now to the persistent file sink, WHISPER-73) and keep the tray app alive
+			// Record the failure (now to the persistent file sink) and keep the tray app alive
 			// instead of letting an error in a single UI callback tear the whole process down with no trace —
 			// which is what made the onboarding window appear to "just close". Marking it handled stops the
 			// default terminate; a genuinely fatal error still surfaces via AppDomain.UnhandledException.
 			logger.LogCritical(args.Exception, "Unhandled dispatcher exception; the UI action was aborted but the app keeps running.");
 			args.Handled = true;
 
-			// Additionally surface a non-technical notice (WHISPER-95): a silently-aborted UI action would
+			// Additionally surface a non-technical notice: a silently-aborted UI action would
 			// otherwise look like the app ignoring the user. Exception details stay in the log.
 			notifier.NotifyError(
 				"Something went wrong",

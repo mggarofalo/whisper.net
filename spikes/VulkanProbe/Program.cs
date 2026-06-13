@@ -1,4 +1,4 @@
-// DISPOSABLE SPIKE (WHISPER-65). Answers the Module 3 go/no-go question: does Whisper.net transcribe
+// DISPOSABLE SPIKE. Answers the Module 3 go/no-go question: does Whisper.net transcribe
 // via the Vulkan runtime on this machine's RTX 5080, is the GPU actually engaged, and does CPU
 // fallback work? Run it twice:
 //   dotnet run -- gpu   (prefer Vulkan, fall back to CPU)

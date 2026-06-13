@@ -178,7 +178,7 @@ instead of recreating. The lifecycle rule:
 
 `HotkeyViewModel` is the reference recipient: it registers for `SettingsChangedMessage` on activate
 (so an instant-apply commit refreshes its displayed binding) and unregisters on deactivate — the
-contract M12 live-apply recipients follow.
+contract live-apply recipients follow.
 
 ## CQRS via source-generated Mediator
 

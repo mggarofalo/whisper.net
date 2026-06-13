@@ -1,4 +1,4 @@
-// The outcome of applying an output transform (WHISPER-37). Carries the resulting Text plus a Status
+// The outcome of applying an output transform. Carries the resulting Text plus a Status
 // the caller can branch on, so every non-success path is recoverable rather than an exception:
 //   Applied          - the rephrase model rewrote the text.
 //   Disabled         - AI rephrase is off/unavailable; Text is the original, unchanged (graceful).

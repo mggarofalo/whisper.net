@@ -1,4 +1,4 @@
-// Drives the @WHISPER-79 hotkey-capture scenarios at the WPF-free seam. The reusable WPF control is thin
+// Drives the hotkey-capture scenarios at the WPF-free seam. The reusable WPF control is thin
 // glue verified by smoke; what matters — and what this exercises — is the capture brain
 // (HotkeyCaptureInterpreter) feeding the validated HotkeyViewModel.HotkeyInput over the REAL Mediator
 // pipeline and faked settings store. So it proves: a full combination is captured and displayed spaced, a

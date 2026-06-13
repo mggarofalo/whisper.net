@@ -1,8 +1,8 @@
-// Drives the @WHISPER-114 live-history scenarios. It builds the REAL HistoryViewModel over the REAL
+// Drives the live-history scenarios. It builds the REAL HistoryViewModel over the REAL
 // Mediator pipeline (BrowseHistory to load, RecordTranscription to record) and the scenario's shared
 // messenger + collection synchronizer, faking only the history store. The section is entered through the
 // REAL activation lifecycle (OnNavigatedTo registers the live feed and runs the first-activation load),
-// so recording a transcription while it is open publishes the WHISPER-114 message that prepends the new
+// so recording a transcription while it is open publishes the message that prepends the new
 // entry live — no Refresh, no re-query, preserving the loaded page.
 
 using Application.History;
@@ -47,7 +47,7 @@ public sealed class LiveHistoryDriver
 	}
 
 	// Switch away (deactivate -> unregister the feed) then back (re-activate; the cached section does not
-	// re-query, WHISPER-108), so a live entry added while active must still be present.
+	// re-query), so a live entry added while active must still be present.
 	public async Task SwitchAwayAndBack()
 	{
 		_viewModel.OnNavigatedFrom();

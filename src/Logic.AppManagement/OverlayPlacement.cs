@@ -1,4 +1,4 @@
-// Where the dictation overlay sits on screen (WHISPER-100). The geometry is pure and WPF-free so it can
+// Where the dictation overlay sits on screen. The geometry is pure and WPF-free so it can
 // be unit-tested: given the work area (the screen minus the taskbar) and the overlay's size, it returns
 // the overlay's top-left so the overlay is horizontally centered and anchored a small margin above the
 // bottom of the work area. The WPF overlay window resolves the actual work area (of the monitor holding

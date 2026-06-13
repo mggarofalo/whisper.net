@@ -1,10 +1,10 @@
-// The formalized activation lifecycle for cached feature view-models (WHISPER-94). Sections are cached
-// per shell UI scope (WHISPER-89), so navigation toggles activation instead of recreating: the
+// The formalized activation lifecycle for cached feature view-models. Sections are cached
+// per shell UI scope, so navigation toggles activation instead of recreating: the
 // navigation service calls OnNavigatedTo/OnNavigatedFrom, this base flips IsActive exactly once per
 // transition, and the OnActivated/OnDeactivated hooks are where a view-model registers and removes its
 // live subscriptions (messenger registrations, controller events). The rule: an inactive cached
 // view-model holds no live subscriptions and gets no callbacks; instances are disposed only when the
-// shell's UI scope tears down. Data sections also auto-load on FIRST activation (WHISPER-108) via the
+// shell's UI scope tears down. Data sections also auto-load on FIRST activation via the
 // FirstActivationLoadCommand hook, so no section opens empty waiting for a manual Refresh; the
 // once-per-instance guard keeps cached sections from re-querying on every tab switch.
 // See docs/architecture.md ("View-model activation lifecycle").
@@ -20,15 +20,15 @@ public abstract partial class FeatureViewModel : ObservableValidator, IFeatureVi
 	[ObservableProperty]
 	private bool _isActive;
 
-	// Per-instance (the cache is per shell UI scope, WHISPER-89): set before the command runs so even a
+	// Per-instance (the cache is per shell UI scope): set before the command runs so even a
 	// re-entrant activation could never queue a second auto-load.
 	private bool _hasAutoLoaded;
 
 	/// <summary>
-	/// The load command the base executes once, on this section's FIRST activation (WHISPER-108), so a
+	/// The load command the base executes once, on this section's FIRST activation, so a
 	/// data section opens populated instead of empty. Later activations of the cached instance do not
 	/// re-query — Refresh stays the explicit manual re-query. Sections that must re-sync on EVERY
-	/// activation (the hotkey section, WHISPER-109) keep their own OnActivated trigger and leave this null.
+	/// activation (the hotkey section) keep their own OnActivated trigger and leave this null.
 	/// </summary>
 	protected virtual IAsyncRelayCommand? FirstActivationLoadCommand => null;
 

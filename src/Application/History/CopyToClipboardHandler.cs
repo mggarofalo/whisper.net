@@ -1,4 +1,4 @@
-// Handles CopyToClipboardCommand (WHISPER-45): writes the given text to the system clipboard through the
+// Handles CopyToClipboardCommand: writes the given text to the system clipboard through the
 // IClipboard port. The clipboard call is a fast, synchronous local OS operation, so the handler simply
 // invokes it and completes.
 

@@ -3,10 +3,10 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:shell="clr-namespace:Presentation.Shell">
     <UserControl.Resources>
-        <!-- Declared locally (WHISPER-96) so the view is self-contained: parse-time StaticResource only
+        <!-- Declared locally so the view is self-contained: parse-time StaticResource only
              sees the view's own resources and the Application, and the smoke harness composes without one. -->
         <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
-        <!-- Render stored-UTC timestamps in the user's local time (WHISPER-115); storage stays UTC. -->
+        <!-- Render stored-UTC timestamps in the user's local time; storage stays UTC. -->
         <shell:UtcToLocalConverter x:Key="UtcToLocal" />
     </UserControl.Resources>
     <DockPanel Margin="24">
@@ -21,14 +21,14 @@
                     Command="{Binding LoadCommand}"
                     Margin="16,0,0,0"
                     Padding="12,4" />
-            <!-- Disabled once the history is exhausted (WHISPER-110): the view-model tracks whether a
+            <!-- Disabled once the history is exhausted: the view-model tracks whether a
                  further page may exist, so the button never offers a silent no-op. -->
             <Button Content="Load more"
                     Command="{Binding NextPageCommand}"
                     IsEnabled="{Binding HasMorePages}"
                     Margin="8,0,0,0"
                     Padding="12,4" />
-            <!-- Lightweight loading state (WHISPER-108): visible while the activation-triggered load runs. -->
+            <!-- Lightweight loading state: visible while the activation-triggered load runs. -->
             <TextBlock Text="Loading…"
                        Opacity="0.7"
                        Margin="16,0,0,0"

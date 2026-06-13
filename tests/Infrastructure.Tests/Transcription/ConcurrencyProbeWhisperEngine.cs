@@ -1,4 +1,4 @@
-// A fake engine for the WHISPER-130 inference race: it parks inside an inference call until released and
+// A fake engine for the inference concurrency race: it parks inside an inference call until released and
 // records the maximum number of inference calls observed running at once. The transcriber shares ONE engine
 // between the startup warm-up and a real dictation, and whisper_full is not safe to run concurrently on a
 // single context — so a test can use this probe to prove the transcriber serializes the two (it must never

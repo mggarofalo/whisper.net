@@ -1,4 +1,4 @@
-// A synchronous, recording IUiDispatcher for the @WHISPER-90 scenarios and any spec that drives a
+// A synchronous, recording IUiDispatcher for any spec that drives a
 // view-model: it runs every queued action inline (deterministic — no real dispatcher loop) while
 // counting how work arrived, so specs assert the marshaling contract (posted vs fast-path) without a
 // live WPF Application. CheckAccess is settable: false simulates a caller on a background thread,

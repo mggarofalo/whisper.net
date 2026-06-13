@@ -1,4 +1,4 @@
-// Inner TDD loop for the settings-holder sync (WHISPER-98). The lifecycle service loads settings into
+// Inner TDD loop for the settings-holder sync. The lifecycle service loads settings into
 // the shared holder on startup and writes the holder back on shutdown. The gap: nothing updated the
 // holder when settings changed mid-session, so a graceful shutdown overwrote the store with the stale
 // startup snapshot — silently reverting the model/hotkey/device the user changed. These pin that the

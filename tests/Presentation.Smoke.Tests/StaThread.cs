@@ -1,4 +1,4 @@
-// Runs a test body on a dedicated STA thread (WHISPER-96): WPF elements demand single-threaded
+// Runs a test body on a dedicated STA thread: WPF elements demand single-threaded
 // apartment affinity, and creating each test's visual objects on its own STA thread keeps the smoke
 // layer deterministic without an application loop or an STA test-framework dependency. Failures are
 // rethrown on the test thread with their original stack.

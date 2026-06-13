@@ -5,7 +5,7 @@
              xmlns:behaviors="clr-namespace:Presentation.Behaviors"
              xmlns:controls="clr-namespace:Presentation.Shell.Controls"
              KeyboardNavigation.TabNavigation="Local">
-    <!-- AdornerDecorator (WHISPER-77) so the validated chord field renders its native error adorner. -->
+    <!-- AdornerDecorator so the validated chord field renders its native error adorner. -->
     <AdornerDecorator>
         <StackPanel Margin="24">
             <TextBlock Text="Dictation hotkey"
@@ -27,7 +27,7 @@
                 <!-- The capture control records a pressed combination into the validated HotkeyInput, so an
                      invalid/unregisterable combo flags an adorner and the Save button (gated by
                      AssignCommand.CanExecute) disables. Press Esc/Backspace in the field to clear. The
-                     focus-on-activate behavior (WHISPER-93) puts the keyboard in the capture field each
+                     focus-on-activate behavior puts the keyboard in the capture field each
                      time the section is shown. -->
                 <controls:HotkeyCaptureControl AutomationProperties.Name="Dictation hotkey"
                                                Chord="{Binding HotkeyInput, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}">

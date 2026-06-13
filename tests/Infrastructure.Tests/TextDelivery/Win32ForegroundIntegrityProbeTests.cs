@@ -1,4 +1,4 @@
-// Unit coverage for the pure integrity-RID comparison at the heart of the WHISPER-6 probe. The Win32
+// Unit coverage for the pure integrity-RID comparison at the heart of the foreground integrity probe. The Win32
 // token plumbing around it is the I/O boundary (verified by smoke); this pins the one decision that
 // matters: a higher foreground RID means the focused window outranks us and input would be UIPI-dropped.
 

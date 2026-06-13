@@ -1,4 +1,4 @@
-// Inner TDD loop for the shell view-model caching fix (WHISPER-89). These pin the navigation contract
+// Inner TDD loop for the shell view-model caching fix. These pin the navigation contract
 // at the NavigationService + DI-scope boundary, WPF-free: feature view-models are resolved scoped, so
 // navigating back to a section returns the SAME cached instance (state preserved), navigation only
 // toggles activate/deactivate (it never disposes the outgoing view-model), and the cached instances are

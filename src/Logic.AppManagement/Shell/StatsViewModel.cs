@@ -1,4 +1,4 @@
-// The shell's stats dashboard (WHISPER-53): shows the headline usage figures — total transcriptions,
+// The shell's stats dashboard: shows the headline usage figures — total transcriptions,
 // total words, and estimated time saved. It depends on nothing but IMediator and does no arithmetic of
 // its own: it dispatches GetUsageStatsQuery and binds the projected totals, so all aggregation stays
 // behind the Application layer (the Logic calculator). Refreshing re-runs the query, and an empty
@@ -30,7 +30,7 @@ public sealed partial class StatsViewModel : FeatureViewModel
 	[ObservableProperty]
 	private TimeSpan _estimatedTimeSaved;
 
-	// Auto-load the totals on first activation (WHISPER-108): the dashboard opens populated, the cached
+	// Auto-load the totals on first activation: the dashboard opens populated, the cached
 	// instance does not re-query on later tab switches, and Refresh stays the manual re-query.
 	protected override IAsyncRelayCommand FirstActivationLoadCommand => RefreshCommand;
 

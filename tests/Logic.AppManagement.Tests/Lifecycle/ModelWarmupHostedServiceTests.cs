@@ -1,4 +1,4 @@
-// Inner TDD loop for the startup model warm-up (WHISPER-127). The service preloads the dictation model
+// Inner TDD loop for the startup model warm-up. The service preloads the dictation model
 // (ITranscriber.PreloadAsync) in the background on startup so the first dictation isn't slowed by the cold
 // load, and re-warms when the active model changes. These pin: a warm-up fires on startup; a model change
 // re-warms; an unrelated settings change does not; and a warm-up failure is swallowed (never crashes the
@@ -104,7 +104,7 @@ public sealed class ModelWarmupHostedServiceTests
 		await service.StopAsync(CancellationToken.None);
 	}
 
-	// --- WHISPER-129: the app-wide warm-up status signal ---
+	// --- The app-wide warm-up status signal ---
 
 	// Records the IsWarming flags published on the shared messenger, in order. The recipient is kept alive
 	// by the test (the weak messenger would otherwise drop it), and the list is guarded because the warm-up

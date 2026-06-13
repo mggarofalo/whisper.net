@@ -1,6 +1,6 @@
-// Unit depth for the WHISPER-114 live history feed, beyond the @WHISPER-114 acceptance scenarios. Pins
-// that a recorded-transcription message prepends the new entry newest-first and clears the empty state
-// while the section is active; that the feed is only live while active (WHISPER-94 — no prepend after
+// Unit depth for the live history feed, beyond the acceptance scenarios. Pins that a
+// recorded-transcription message prepends the new entry newest-first and clears the empty state
+// while the section is active; that the feed is only live while active (no prepend after
 // deactivation); and that a redelivered message never doubles an entry already shown.
 
 using Application.History;
@@ -69,7 +69,7 @@ public sealed class HistoryViewModelLiveFeedTests
 
 		_messenger.Send(new TranscriptionRecordedMessage(Dto("ignored while inactive")));
 
-		_viewModel.Entries.Should().BeEmpty("an inactive cached section holds no live subscription (WHISPER-94)");
+		_viewModel.Entries.Should().BeEmpty("an inactive cached section holds no live subscription");
 	}
 
 	[Fact]

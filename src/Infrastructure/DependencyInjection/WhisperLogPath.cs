@@ -1,8 +1,8 @@
-// The on-disk location of the application's log files (WHISPER-73). Logs live beside the model cache under
+// The on-disk location of the application's log files. Logs live beside the model cache under
 // LocalApplicationData (machine-local, not roaming) so a bug report from an installed tray app has a single
 // well-known place to attach. Kept tiny and free of Serilog so it is trivially unit-testable and reusable.
 // The directory itself comes from WhisperAppData, the single source of truth for per-user data locations
-// (WHISPER-86) — so logs never sit inside the Velopack install root.
+// — so logs never sit inside the Velopack install root.
 
 namespace Infrastructure.DependencyInjection;
 

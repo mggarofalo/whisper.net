@@ -1,9 +1,9 @@
-// The tray icon's coordination logic (WHISPER-18), kept out of Presentation so it can be driven for
+// The tray icon's coordination logic, kept out of Presentation so it can be driven for
 // real in specs. It mirrors the live recording status (subscribing to the RecordingStateMachine) into
 // a status the tray icon reflects plus a human-readable tooltip, and exposes the two menu actions:
 // Open Settings surfaces the settings window through the IShellPresenter seam, and Quit triggers a
-// graceful host shutdown via IHostApplicationLifetime (the same mechanism the host bootstrap wired in
-// WHISPER-12). The thin H.NotifyIcon view binds to this; it owns no UI itself.
+// graceful host shutdown via IHostApplicationLifetime (the same mechanism the host bootstrap wires up).
+// The thin H.NotifyIcon view binds to this; it owns no UI itself.
 
 using Application.Ports;
 using Domain.Recording;

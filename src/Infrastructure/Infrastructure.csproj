@@ -7,7 +7,7 @@
     Logic.* project. Only Presentation is allowed to reference Infrastructure in turn.
   -->
   <ItemGroup>
-    <!-- The interop struct-size guard (WHISPER-88) needs to read an internal of Win32KeyboardInput. -->
+    <!-- The interop struct-size guard needs to read an internal of Win32KeyboardInput. -->
     <InternalsVisibleTo Include="Infrastructure.Tests" />
   </ItemGroup>
 
@@ -29,12 +29,12 @@
     <PackageReference Include="Whisper.net" />
     <PackageReference Include="Whisper.net.Runtime" />
     <PackageReference Include="Whisper.net.Runtime.Vulkan" />
-    <!-- In-app auto-update over the release channel (WHISPER-29): the UpdateManager adapter. -->
+    <!-- In-app auto-update over the release channel: the UpdateManager adapter. -->
     <PackageReference Include="Velopack" />
   </ItemGroup>
 
   <!--
-    Voice-activity detection model (WHISPER-31/66): the Silero VAD ONNX asset (MIT, ~1.8 MB) ships with
+    Voice-activity detection model: the Silero VAD ONNX asset (MIT, ~1.8 MB) ships with
     the app — no runtime download. It copies to `assets/silero_vad.onnx` in the build output, which is
     where OnnxVadSession resolves it (AppContext.BaseDirectory/assets). Declared once here: Content with
     CopyToOutputDirectory flows transitively to every referencing project (Presentation, the test

@@ -1,5 +1,5 @@
 // A no-op hosted service whose only job is to record that the Generic Host started and stopped it,
-// via the shared LifecycleProbe. Lets the @WHISPER-12 scenarios prove the host drives an arbitrary
+// via the shared LifecycleProbe. Lets the scenarios prove the host drives an arbitrary
 // IHostedService through its lifecycle, independent of any production component.
 
 using Microsoft.Extensions.Hosting;

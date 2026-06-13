@@ -1,4 +1,4 @@
-// Thin step definitions for the @WHISPER-30 hotkey-rebinding feature. Each step delegates to the
+// Thin step definitions for the hotkey-rebinding feature. Each step delegates to the
 // HotkeyRebindingDriver (injected by the Reqnroll DI plugin); no logic lives here.
 
 using Dictation.Specs.Drivers;

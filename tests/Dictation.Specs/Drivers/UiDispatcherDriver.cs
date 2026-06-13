@@ -1,4 +1,4 @@
-// Drives the @WHISPER-90 UI-dispatcher-seam scenarios. It owns HOW the seam is exercised so the steps
+// Drives the UI-dispatcher-seam scenarios. It owns HOW the seam is exercised so the steps
 // stay one-liners: it builds the REAL TrayIconViewModel / LevelOverlayViewModel over their real
 // controllers (real RecordingStateMachine, faked shell/lifetime/audio seams) and a synchronous
 // RecordingUiDispatcher, drives controller events as production threads would, and asserts both the
@@ -39,8 +39,8 @@ public sealed class UiDispatcherDriver : IDisposable
 
 	public void CreateOverlayViewModel()
 	{
-		// The messenger and clock are incidental here (this driver tests the dispatcher seam, WHISPER-90);
-		// the overlay's limit/failure feedback is exercised by the @WHISPER-102 driver.
+		// The messenger and clock are incidental here (this driver tests the dispatcher seam);
+		// the overlay's limit/failure feedback is exercised by the overlay driver.
 		_overlayController = new LevelOverlayController(_stateMachine, _audioSource, new WeakReferenceMessenger(), new ManualTimeProvider());
 		_overlayViewModel = new LevelOverlayViewModel(_overlayController, _dispatcher);
 	}
@@ -102,7 +102,7 @@ public sealed class UiDispatcherDriver : IDisposable
 			.Where(file => File.ReadAllText(file).Contains("Application.Current.Dispatcher"))
 			.ToArray();
 
-		offenders.Should().BeEmpty("all UI-thread marshaling goes through the IUiDispatcher seam (WHISPER-90 AC1)");
+		offenders.Should().BeEmpty("all UI-thread marshaling goes through the IUiDispatcher seam");
 	}
 
 	private static string FindRepositoryRoot()

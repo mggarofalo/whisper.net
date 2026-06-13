@@ -1,4 +1,4 @@
-// @WHISPER-11 — drives the SQLite persistence scenarios. Steps stay thin; the PersistenceDriver owns HOW
+// Drives the SQLite persistence scenarios. Steps stay thin; the PersistenceDriver owns HOW
 // the real migration runner and SQLite store are exercised against a private temp-file database.
 
 using Dictation.Specs.Drivers;

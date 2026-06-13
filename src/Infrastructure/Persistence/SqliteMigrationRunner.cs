@@ -1,4 +1,4 @@
-// Brings a SQLite database up to the latest known schema version (WHISPER-11). The applied version is
+// Brings a SQLite database up to the latest known schema version. The applied version is
 // tracked with SQLite's built-in user_version PRAGMA, so the runner applies, in order, only the
 // migrations newer than the database's current version: a fresh database runs every migration, an older
 // one runs just the pending tail, and an up-to-date one runs nothing — making a second run a no-op

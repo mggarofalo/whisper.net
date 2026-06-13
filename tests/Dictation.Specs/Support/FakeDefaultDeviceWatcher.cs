@@ -1,4 +1,4 @@
-// A controllable stand-in for the WASAPI notification client: lets the @WHISPER-13 hot-swap scenario
+// A controllable stand-in for the WASAPI notification client: lets the hot-swap scenario
 // simulate the OS switching the default capture device by raising DefaultChanged on demand.
 
 using Application.Ports;

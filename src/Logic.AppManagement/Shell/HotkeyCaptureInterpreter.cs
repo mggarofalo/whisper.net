@@ -1,4 +1,4 @@
-// The WPF-free brain of the reusable hotkey-capture control (WHISPER-79). The control is a thin WPF
+// The WPF-free brain of the reusable hotkey-capture control. The control is a thin WPF
 // UserControl: on each PreviewKeyDown it maps the WPF Key (resolving the Alt Key.System -> SystemKey case)
 // and the live ModifierKeys to the Domain vocabulary, then asks this interpreter what to do. Keeping the
 // decision here — not in the control — means the capture rules (ignore a standalone modifier, complete on a

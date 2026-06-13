@@ -1,4 +1,4 @@
-// Enforces the clean-architecture dependency direction at test time (WHISPER-54). Each test maps to
+// Enforces the clean-architecture dependency direction at test time. Each test maps to
 // one rule from the acceptance criteria; NetArchTest inspects the compiled assemblies for forbidden
 // namespace dependencies. The project-reference graph gives the structural guarantee — these tests
 // guard it from regressing as real code is added to the (currently thin) layers.
@@ -21,7 +21,7 @@ public sealed class DependencyRuleTests
 	// Persistence technology must stay behind the Infrastructure ports — no core project may touch SQLite.
 	private const string SqliteNs = "Microsoft.Data.Sqlite";
 
-	// The opt-in audit log must be local-only — its storage adapter may not touch the network (WHISPER-34).
+	// The opt-in audit log must be local-only — its storage adapter may not touch the network.
 	private const string NetworkNs = "System.Net";
 
 	private static Assembly Load(string assemblyName) => Assembly.Load(new AssemblyName(assemblyName));
@@ -85,7 +85,7 @@ public sealed class DependencyRuleTests
 		}
 	}
 
-	// WHISPER-11 AC1: the SQLite persistence lives entirely behind the ports — no Application or Logic code
+	// The SQLite persistence lives entirely behind the ports — no Application or Logic code
 	// references Microsoft.Data.Sqlite directly. (Domain is already covered by depending on nothing above it.)
 	[Fact]
 	public void No_core_project_depends_on_sqlite()
@@ -98,7 +98,7 @@ public sealed class DependencyRuleTests
 		}
 	}
 
-	// WHISPER-34 AC4: audit data is local-only — the SQLite audit-log adapter has no network dependency.
+	// Audit data is local-only — the SQLite audit-log adapter has no network dependency.
 	[Fact]
 	public void The_audit_log_adapter_has_no_network_dependency()
 	{

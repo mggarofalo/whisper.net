@@ -1,4 +1,4 @@
-// Drives the @WHISPER-121 theme-switcher scenarios over the REAL ThemeViewModel and Mediator pipeline
+// Drives the theme-switcher scenarios over the REAL ThemeViewModel and Mediator pipeline
 // (GetSettings to load, UpdateSettings to persist + broadcast), with a round-tripping settings store: a
 // SaveAsync is reflected in the next LoadAsync, so choosing a theme is observed as the persisted
 // ThemePreference and survives a reload. Applying the choice to WPF's ThemeMode is the App's job and a

@@ -1,4 +1,4 @@
-// Port for the opt-in audit log (WHISPER-34). Implemented in Infrastructure (the SQLite store); faked in
+// Port for the opt-in audit log. Implemented in Infrastructure (the SQLite store); faked in
 // specs that do not exercise the real store. The gating policy (off by default, written only when the
 // user has enabled auditing) lives in Logic, not here — this port only appends, counts, and clears.
 // Local-only by design: no method sends anything off the device.

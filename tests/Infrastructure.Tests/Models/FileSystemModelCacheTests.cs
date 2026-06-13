@@ -1,4 +1,4 @@
-// Inner TDD loop for the WHISPER-4 cache detector: it reports a model present when its file exists in
+// Inner TDD loop for the cache detector: it reports a model present when its file exists in
 // the cache directory and absent otherwise, using only the filesystem (no network), and resolves the
 // path a model occupies. Driven against a real temp directory.
 

@@ -1,4 +1,4 @@
-// Thin step definitions for the @WHISPER-20 self-contained installer packaging feature. Each step
+// Thin step definitions for the self-contained installer packaging feature. Each step
 // delegates to the PackagingDriver (injected by the Reqnroll DI plugin); no logic lives here.
 
 using Dictation.Specs.Drivers;

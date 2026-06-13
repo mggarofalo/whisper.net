@@ -1,6 +1,6 @@
 // The typed error raised when a transcription is requested against a model file that does not exist on
 // disk. Surfacing this instead of letting the native loader crash lets the app fail gracefully (prompt
-// the user, fall back, log) — the behavior WHISPER-3 requires for a missing/invalid model.
+// the user, fall back, log) for a missing/invalid model.
 
 namespace Domain.Models;
 

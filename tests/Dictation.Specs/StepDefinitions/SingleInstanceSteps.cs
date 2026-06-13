@@ -1,4 +1,4 @@
-// @WHISPER-25 — drives the single-instance scenarios. Steps stay thin; the SingleInstanceDriver
+// Drives the single-instance scenarios. Steps stay thin; the SingleInstanceDriver
 // exercises the real SingleInstanceCoordinator over fake lock + signal seams (modelling the OS-global
 // mutex and cross-process activation) and the shared fake shell presenter.
 

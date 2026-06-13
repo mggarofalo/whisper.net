@@ -1,4 +1,4 @@
-// The typed message broadcast on the instant-apply channel (WHISPER-78) when settings are committed.
+// The typed message broadcast on the instant-apply channel when settings are committed.
 // Generalizes the ad-hoc SettingsChangeBroadcaster: instead of a bespoke event, a committed, valid change
 // is sent through CommunityToolkit's IMessenger as this strongly-typed message, so any running service can
 // register weakly for it and reconfigure live (e.g. the hotkey matcher rebinds) without an app restart.

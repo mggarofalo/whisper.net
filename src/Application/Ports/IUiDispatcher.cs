@@ -1,4 +1,4 @@
-// The UI-thread marshaling seam (WHISPER-90). View-models (and any logic that must touch UI-bound
+// The UI-thread marshaling seam. View-models (and any logic that must touch UI-bound
 // state) marshal through this port instead of hand-rolling calls against the WPF application's
 // dispatcher, so they are unit-testable with a synchronous test dispatcher and null-safe at shutdown,
 // where the live application object is already gone. The seam is

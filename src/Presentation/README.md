@@ -1,8 +1,8 @@
 # Presentation
 
 The WPF tray application and **composition root**. The only project permitted to reference
-Infrastructure; it wires every layer together via the Generic Host (WHISPER-57). The tray icon and
-level overlay arrive in M6/M7; the dashboard & settings UI is built iteratively in M10.
+Infrastructure; it wires every layer together via the Generic Host (WHISPER-57). It hosts the tray
+icon, the live recording/level overlay, and the dashboard & settings UI.
 
 The view-models are **not** here — they are WPF-free and live in `Logic.AppManagement` (the dashboard
 `ShellViewModel` and its feature view-models, the `TrayController`, the `LevelOverlayController`), so

@@ -26,30 +26,30 @@ public static class InfrastructureServiceCollectionExtensions
 {
 	public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration? configuration = null)
 	{
-		// Microphone capture (WHISPER-7): the WASAPI source over the real NAudio device client.
+		// Microphone capture: the WASAPI source over the real NAudio device client.
 		services.AddSingleton<IAudioCaptureClient, NAudioCaptureClient>();
 		services.AddSingleton<IAudioSource, WasapiAudioSource>();
 
-		// Audio feedback (WHISPER-21): plays a distinct synthesized tone per dictation cue. Constructing
+		// Audio feedback: plays a distinct synthesized tone per dictation cue. Constructing
 		// it touches no device — playback happens fire-and-forget in Play and swallows any failure.
 		services.AddSingleton<IAudioFeedback, AudioFeedbackPlayer>();
 
-		// Voice-activity detection (WHISPER-31): the Silero adapter over the on-device ONNX session.
+		// Voice-activity detection: the Silero adapter over the on-device ONNX session.
 		// The session loads its model lazily, so resolving the port never requires the asset present.
 		services.AddSingleton<IVadSession>(_ => new OnnxVadSession(
 			Path.Combine(AppContext.BaseDirectory, "assets", "silero_vad.onnx")));
 		services.AddSingleton<IVad, SileroVad>();
 
-		// Device enumeration + default-change notification (WHISPER-13). Both create their underlying
+		// Device enumeration + default-change notification. Both create their underlying
 		// NAudio enumerator lazily, so resolving the ports touches no audio hardware.
 		services.AddSingleton<IAudioDeviceEnumerator, NAudioDeviceEnumerator>();
 		services.AddSingleton<IDefaultDeviceWatcher, NAudioDefaultDeviceWatcher>();
 
-		// GPU runtime detection (WHISPER-9): the raw Vulkan-loader probe the GPU contact point consults.
+		// GPU runtime detection: the raw Vulkan-loader probe the GPU contact point consults.
 		// It resolves the loader without initializing a device, so it returns promptly and never hangs.
 		services.AddSingleton<IGpuProbe, VulkanGpuProbe>();
 
-		// Transcription (WHISPER-3): the Whisper.net adapter over an internal engine seam. The model is
+		// Transcription: the Whisper.net adapter over an internal engine seam. The model is
 		// loaded lazily on first transcription, so resolving the port touches no model file or native
 		// library; the model path/language come from the bound WhisperOptions.
 		services.AddOptions<WhisperOptions>();
@@ -61,15 +61,15 @@ public static class InfrastructureServiceCollectionExtensions
 		services.AddSingleton<IWhisperEngineFactory, WhisperNetEngineFactory>();
 		services.AddSingleton<ITranscriber, WhisperTranscriber>();
 
-		// Whisper native-runtime probe (WHISPER-85): lets the doctor verify the native library actually
+		// Whisper native-runtime probe: lets the doctor verify the native library actually
 		// loads, catching the packaging defect that silently broke transcription in the installed app.
 		services.AddSingleton<IWhisperRuntimeProbe, WhisperRuntimeProbe>();
 
-		// Model lifecycle runtime (WHISPER-15): the native load/warmup/transcribe/release operations the
+		// Model lifecycle runtime: the native load/warmup/transcribe/release operations the
 		// lifecycle policy (Logic.ModelManagement) drives, built on the Whisper.net engine seam above.
 		services.AddSingleton<IModelRuntime, WhisperModelRuntime>();
 
-		// Model registry cache + download (WHISPER-4). Cache detection is filesystem-only (no network).
+		// Model registry cache + download. Cache detection is filesystem-only (no network).
 		// The downloader fetches a missing model from Hugging Face — the one model-related egress — and
 		// verifies it before moving it into the cache. No background fetch is wired: a download happens
 		// only when explicitly requested. The cache directory defaults to a per-user folder when unset.
@@ -91,7 +91,7 @@ public static class InfrastructureServiceCollectionExtensions
 		services.AddSingleton<IModelDownloadSource>(_ => new HuggingFaceModelDownloadSource(new HttpClient()));
 		services.AddSingleton<IModelDownloader, ModelDownloader>();
 
-		// Text delivery: the two strategies and the factory that routes between them (WHISPER-2/5/8).
+		// Text delivery: the two strategies and the factory that routes between them.
 		// SendInputTextInjector types Unicode keystrokes over the Win32 SendInput seam (the universal path
 		// that lands even in terminals that ignore paste); ClipboardTextInjector writes text, issues Ctrl+V,
 		// and restores the prior clipboard unless a concurrent copy advanced the change count. Both are
@@ -103,24 +103,24 @@ public static class InfrastructureServiceCollectionExtensions
 		services.AddSingleton<ClipboardTextInjector>();
 		services.AddSingleton<ITextInjectorFactory, TextInjectorFactory>();
 
-		// UIPI / elevation detection (WHISPER-6): lets the delivery pipeline detect a higher-integrity
+		// UIPI / elevation detection: lets the delivery pipeline detect a higher-integrity
 		// foreground window and surface that synthetic input would be dropped, instead of failing silently.
 		services.AddSingleton<IForegroundIntegrityProbe, Win32ForegroundIntegrityProbe>();
 
-		// Input permissions (WHISPER-51): onboarding checks that the OS allows synthetic input + the global
+		// Input permissions: onboarding checks that the OS allows synthetic input + the global
 		// hook. On Windows these need no separate grant, so the probe reports them present.
 		services.AddSingleton<IPermissionProbe, Permissions.InputPermissionProbe>();
 
-		// Global hotkeys (WHISPER-10): the SharpHook event-loop hook behind the IHotkeyListener port,
+		// Global hotkeys: the SharpHook event-loop hook behind the IHotkeyListener port,
 		// pumped on its own dedicated thread. Singleton so the single OS hook lives for the app's run.
 		services.AddSingleton<IGlobalKeyHook, SharpHookGlobalKeyHook>();
 		services.AddSingleton<IHotkeyListener, EventLoopHotkeyListener>();
 
-		// In-app auto-update (WHISPER-29): Velopack UpdateManager over the configured GitHub Releases feed.
+		// In-app auto-update: Velopack UpdateManager over the configured GitHub Releases feed.
 		// Constructing it touches no network; the update policy only calls it when the user has opted in.
 		services.AddSingleton<IUpdateSource, Updates.VelopackUpdateSource>();
 
-		// Persistence (WHISPER-11): a single SQLite database backs both the settings and history ports. The
+		// Persistence: a single SQLite database backs both the settings and history ports. The
 		// migration runner brings the schema to the latest version on first use (WAL mode, idempotent); the
 		// database file defaults to a per-user application-data path when not configured, so a fresh install
 		// needs none. No Application or Logic code references SQLite — it lives entirely behind these ports.
@@ -144,7 +144,7 @@ public static class InfrastructureServiceCollectionExtensions
 		services.AddSingleton<IHistoryStore, SqliteHistoryStore>();
 		services.AddSingleton<IAuditLog, SqliteAuditLog>();
 
-		// Opt-in localhost AI rephrase (WHISPER-40): the single disclosed transcript-bearing network seam.
+		// Opt-in localhost AI rephrase: the single disclosed transcript-bearing network seam.
 		// Disabled by default; when enabled the endpoint must be loopback, enforced by a validator that
 		// rejects a remote host rather than letting it be silently used.
 		OptionsBuilder<OllamaRephraseOptions> rephraseOptions = services.AddOptions<OllamaRephraseOptions>();
@@ -160,7 +160,7 @@ public static class InfrastructureServiceCollectionExtensions
 			serviceProvider.GetRequiredService<IOptions<OllamaRephraseOptions>>(),
 			serviceProvider.GetRequiredService<ILogger<OllamaRephraseClient>>()));
 
-		// Run on login (WHISPER-32): the registry-backed launch-at-login registration under the current-user
+		// Run on login: the registry-backed launch-at-login registration under the current-user
 		// Run key (no elevation). The key/value default to the standard Windows Run key when not configured.
 		services.AddOptions<StartupRegistrationOptions>();
 		if (configuration is not null)
@@ -180,7 +180,7 @@ public static class InfrastructureServiceCollectionExtensions
 			return new RegistryStartupRegistration(serviceProvider.GetRequiredService<IOptions<StartupRegistrationOptions>>());
 		});
 
-		// Single-instance enforcement (WHISPER-25): a named Mutex (the lock) and a named EventWaitHandle
+		// Single-instance enforcement: a named Mutex (the lock) and a named EventWaitHandle
 		// (cross-process activation), both in the current-user session namespace — no elevation. Built
 		// behind an OS guard for the same reason as the registry adapter above (portable net10.0 target).
 		services.AddSingleton<IInstanceLock>(_ =>

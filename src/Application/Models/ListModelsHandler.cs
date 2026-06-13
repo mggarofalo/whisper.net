@@ -1,8 +1,8 @@
-// Handles ListModelsQuery (WHISPER-27): reads the on-device catalog and, for each entry, derives its
+// Handles ListModelsQuery: reads the on-device catalog and, for each entry, derives its
 // ratings from size, asks the cache whether it is already downloaded, and marks the active model. The
 // active model is the one the lifecycle currently has loaded; before anything is loaded (e.g. just after
-// launch) it falls back to the persisted selection in settings.ModelId (WHISPER-118), so the picker
-// agrees with the rest of the app — which reads settings.ModelId (WHISPER-98) — instead of showing
+// launch) it falls back to the persisted selection in settings.ModelId, so the picker
+// agrees with the rest of the app — which reads settings.ModelId — instead of showing
 // nothing active until the user re-selects. Projection over ports; listing never triggers a download.
 
 using Application.Interfaces;

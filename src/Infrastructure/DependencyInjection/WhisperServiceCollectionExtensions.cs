@@ -24,7 +24,7 @@ public static class WhisperServiceCollectionExtensions
 		services.AddGpuContactPoint(configuration);
 		services.AddInfrastructure(configuration);
 
-		// The host-owned background components (WHISPER-12): start the long-lived hotkey listener as a
+		// The host-owned background components: start the long-lived hotkey listener as a
 		// hosted service so the Generic Host owns its lifetime. Only the full production composition wires
 		// these — the specs drive them through their own host, so this stays out of the scenario container.
 		services.AddAppManagementHostedServices();

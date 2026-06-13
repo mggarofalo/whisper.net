@@ -1,4 +1,4 @@
-// Thin step definitions for the @WHISPER-106 Home dashboard feature. Each step delegates to the
+// Thin step definitions for the Home dashboard feature. Each step delegates to the
 // HomeDashboardDriver (injected by the Reqnroll DI plugin); no logic lives here.
 
 using Dictation.Specs.Drivers;

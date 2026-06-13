@@ -1,4 +1,4 @@
-// Guard for the SendInput interop layout (WHISPER-88). SendInput requires cbSize == sizeof(INPUT); a
+// Guard for the SendInput interop layout. SendInput requires cbSize == sizeof(INPUT); a
 // union sized for only KEYBDINPUT (24 bytes) instead of the larger MOUSEINPUT (32) made Marshal.SizeOf
 // 32 on x64 where Windows expects 40, so SendInput rejected every batch with ERROR_INVALID_PARAMETER and
 // no transcribed text was ever typed. This pins the marshaled size so the regression can't return. The

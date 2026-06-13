@@ -1,6 +1,6 @@
 // Covers the UsageStats value object: the non-negative invariant on both totals, the derived
 // time-saved estimate, structural equality, and the zeroed Empty instance the aggregation query
-// returns for empty history (WHISPER-48).
+// returns for empty history.
 
 using AwesomeAssertions;
 using Domain;

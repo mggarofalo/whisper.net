@@ -1,4 +1,4 @@
-// Drives the @WHISPER-41 scenarios against the REAL post-process pipeline (IPostProcessor) and the REAL
+// Drives the post-process pipeline scenarios against the REAL post-process pipeline (IPostProcessor) and the REAL
 // ConfigurePostProcessing command flowing through IMediator (so the FluentValidation ValidationBehavior
 // runs). The rephrase port is faked. Proves hot-reload (a mediated config change is applied on the next
 // post-process call, same pipeline instance), the ordered normalize -> transform steps, and that an

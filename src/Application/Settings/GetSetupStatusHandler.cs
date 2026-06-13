@@ -1,4 +1,4 @@
-// Handles GetSetupStatusQuery (WHISPER-82): decides whether the app is configured enough to skip first-run
+// Handles GetSetupStatusQuery: decides whether the app is configured enough to skip first-run
 // setup. It is configured only when the user finished setup AND the selected model is actually present in
 // the local cache — so a fresh install (setup not completed) and a completed setup whose model file is gone
 // ("no active model") both report not-configured, and the launch flow opens the settings window. Pure

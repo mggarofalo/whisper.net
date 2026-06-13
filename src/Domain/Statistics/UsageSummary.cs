@@ -1,4 +1,4 @@
-// A richer usage aggregate than UsageStats (WHISPER-24): how many transcriptions were recorded, the
+// A richer usage aggregate than UsageStats: how many transcriptions were recorded, the
 // total characters produced and audio time captured, plus a per-day breakdown so the dashboard can chart
 // usage over time. Computed from transcript history; the per-day rows carry the same measures scoped to a
 // single calendar day. All totals are non-negative by construction (they sum non-negative entry values).

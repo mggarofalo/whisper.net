@@ -1,4 +1,4 @@
-// Thin step definitions for the @WHISPER-14 end-to-end orchestration feature. Each step delegates to
+// Thin step definitions for the end-to-end orchestration feature. Each step delegates to
 // the DictationOrchestratorDriver (injected by the Reqnroll DI plugin); no logic lives here.
 
 using Dictation.Specs.Drivers;

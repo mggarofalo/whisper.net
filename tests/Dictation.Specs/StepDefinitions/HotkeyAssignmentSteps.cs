@@ -1,4 +1,4 @@
-// Thin step definitions for the @WHISPER-109 hotkey-assignment feature. Each step delegates to the
+// Thin step definitions for the hotkey-assignment feature. Each step delegates to the
 // HotkeyAssignmentDriver (injected by the Reqnroll DI plugin); no logic lives here.
 
 using Dictation.Specs.Drivers;

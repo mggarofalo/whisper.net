@@ -1,4 +1,4 @@
-// Thin step definitions for the @WHISPER-72 self-signed code-signing feature. Each step delegates to the
+// Thin step definitions for the self-signed code-signing feature. Each step delegates to the
 // SelfSignedSigningDriver (injected by the Reqnroll DI plugin); no logic lives here. The "packaging
 // configuration" Given is reused from PackagingSteps; this binding owns only the documentation Given.
 

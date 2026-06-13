@@ -1,4 +1,4 @@
-// Tunables for trailing-silence trimming (WHISPER-112). End-of-speech is detected by ENERGY, not by raw
+// Tunables for trailing-silence trimming. End-of-speech is detected by ENERGY, not by raw
 // per-sample amplitude: the clip is scanned in short frames (FrameMs) and a frame counts as silence only
 // when its RMS energy is below EnergyThreshold. A per-sample threshold cut quiet word endings — the
 // individual samples of a word trailing off dip below the amplitude bar even though the frame still

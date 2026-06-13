@@ -1,4 +1,4 @@
-// Port for matching a transcribed utterance against the user's defined voice commands (WHISPER-35).
+// Port for matching a transcribed utterance against the user's defined voice commands.
 // The dictation delivery pipeline consults it after transcription and before text delivery: a match
 // routes the transcript to the command branch, no match lets it fall through to normal typing. This is
 // the hook + abstraction only — a real command catalogue and execution engine live behind a future

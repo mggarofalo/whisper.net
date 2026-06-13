@@ -1,8 +1,8 @@
-// Inner TDD loop for the settings/feature view-model foundation (WHISPER-76). These pin the
+// Inner TDD loop for the settings/feature view-model foundation. These pin the
 // foundational contract M12 builds on, WPF-free: every settings/feature view-model is an
 // ObservableValidator (so it is both observable and validation-capable), and every one of its
 // source-generated [ObservableProperty] members raises INotifyPropertyChanged when it changes — no
-// hand-written, magic-string OnPropertyChanged. The outer @WHISPER-76 scenario drives this down.
+// hand-written, magic-string OnPropertyChanged. The outer acceptance scenario drives this down.
 
 using System.ComponentModel;
 using System.Reflection;
@@ -18,7 +18,7 @@ namespace Logic.AppManagement.Tests.Shell;
 
 public sealed class SettingsViewModelObservabilityTests
 {
-	// Every settings/feature view-model migrated to the validation-capable base in WHISPER-76.
+	// Every settings/feature view-model migrated to the validation-capable base.
 	public static TheoryData<string> MigratedViewModels =>
 	[
 		nameof(HomeViewModel),
@@ -36,7 +36,7 @@ public sealed class SettingsViewModelObservabilityTests
 		object viewModel = Create(viewModelName);
 
 		viewModel.Should().BeAssignableTo<ObservableValidator>(
-			"settings/feature view-models share the validation-capable observable base after WHISPER-76");
+			"settings/feature view-models share the validation-capable observable base");
 	}
 
 	[Theory]

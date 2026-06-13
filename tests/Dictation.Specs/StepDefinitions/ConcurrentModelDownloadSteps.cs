@@ -1,6 +1,6 @@
-// Thin step definitions for the @WHISPER-107 concurrent-download feature. Each step delegates to the
+// Thin step definitions for the concurrent-download feature. Each step delegates to the
 // ConcurrentModelDownloadDriver (injected by the Reqnroll DI plugin); no logic lives here. The step text
-// is deliberately distinct from the @WHISPER-81 single-download steps so Reqnroll binds each
+// is deliberately distinct from the single-download steps so Reqnroll binds each
 // unambiguously.
 
 using Dictation.Specs.Drivers;

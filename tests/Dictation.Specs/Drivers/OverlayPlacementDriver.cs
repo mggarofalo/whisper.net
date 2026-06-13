@@ -1,4 +1,4 @@
-// Drives the @WHISPER-100 overlay-placement scenarios over the REAL, WPF-free OverlayPlacement geometry
+// Drives the overlay-placement scenarios over the REAL, WPF-free OverlayPlacement geometry
 // in Logic. It owns HOW placement is exercised so the steps stay one-liners: given a work area and the
 // overlay size, it computes the bottom-center origin and asserts the overlay is horizontally centered,
 // anchored a margin above the bottom, and within the work area. The WPF window that resolves the actual

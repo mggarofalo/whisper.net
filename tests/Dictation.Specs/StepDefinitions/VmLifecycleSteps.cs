@@ -1,4 +1,4 @@
-// Thin step definitions for the @WHISPER-94 activation-lifecycle feature. Each step delegates to the
+// Thin step definitions for the activation-lifecycle feature. Each step delegates to the
 // VmLifecycleDriver (injected by the Reqnroll DI plugin); no logic lives here.
 
 using Dictation.Specs.Drivers;

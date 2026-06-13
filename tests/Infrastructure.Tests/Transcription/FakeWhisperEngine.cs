@@ -20,7 +20,7 @@ internal sealed class FakeWhisperEngineFactory : IWhisperEngineFactory
 	public ComputeBackend? LastBackend { get; private set; }
 	public string? LastLanguage { get; private set; }
 
-	// The decoding options the most recent transcription was conditioned with (WHISPER-38).
+	// The decoding options the most recent transcription was conditioned with.
 	public DecodingOptions? LastDecodingOptions { get; private set; }
 
 	public IWhisperEngine Create(string modelPath, ComputeBackend backend, string? language)

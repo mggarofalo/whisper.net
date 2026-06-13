@@ -6,7 +6,7 @@
 //   * a growable RECORDING buffer that, once recording starts, is seeded with the preroll and then
 //     accumulates frames for as long as the user keeps dictating.
 //
-// The max duration is a SOFT limit (WHISPER-111): whisper.cpp handles arbitrary-length clips
+// The max duration is a SOFT limit: whisper.cpp handles arbitrary-length clips
 // internally, so nothing is ever dropped — the buffer keeps growing past the limit, and the
 // NearMaxDuration / MaxDurationReached events (each firing once per recording, at 80% and 100% of the
 // limit) let the orchestration layer warn the user instead. A HARD failsafe ceiling backs the soft
@@ -18,7 +18,7 @@
 //
 // THREADING: Append runs on the capture thread while StartRecording / StopRecording / DiscardRecording
 // run on the orchestrator thread — and they genuinely overlap (frames keep flowing through the
-// post-release grace window, WHISPER-112, and a cancel stops mid-stream), so every mutable field is
+// post-release grace window, and a cancel stops mid-stream), so every mutable field is
 // guarded by one private lock. The limit events are raised OUTSIDE the lock (the firing decision is
 // captured inside it) because their handlers re-enter the orchestration — the hard-limit handler stops
 // this very buffer — and must never run with the recording store's lock held.
@@ -49,7 +49,7 @@ public sealed class CaptureBuffer
 
 	private readonly List<float> _recording; // growable accumulation buffer, reused across recordings
 	private readonly int _capacityHintSamples; // the reuse capacity the store is trimmed back to
-	private readonly int _maxDurationSamples; // the soft limit (WHISPER-111), in target-rate samples
+	private readonly int _maxDurationSamples; // the soft limit, in target-rate samples
 	private readonly int _nearMaxDurationSamples; // 80% of the soft limit, in target-rate samples
 	private readonly int _hardMaxDurationSamples; // the hard failsafe ceiling, in target-rate samples
 	private bool _isRecording;
@@ -105,14 +105,14 @@ public sealed class CaptureBuffer
 	}
 
 	/// <summary>
-	/// Raised once per recording when it reaches 80% of the soft max-duration limit (WHISPER-111), so
+	/// Raised once per recording when it reaches 80% of the soft max-duration limit, so
 	/// the user can be warned before the limit. Recording continues; nothing is dropped.
 	/// </summary>
 	public event EventHandler? NearMaxDuration;
 
 	/// <summary>
 	/// Raised once per recording when it reaches the soft max-duration limit. The limit is soft
-	/// (WHISPER-111): recording continues and every later sample is retained.
+	///: recording continues and every later sample is retained.
 	/// </summary>
 	public event EventHandler? MaxDurationReached;
 

@@ -1,4 +1,4 @@
-// Drives the @WHISPER-10 global-hotkey-listening scenarios. It owns HOW the listener is exercised so
+// Drives the global-hotkey-listening scenarios. It owns HOW the listener is exercised so
 // the step definitions stay one-liners: it starts/disposes the REAL EventLoopHotkeyListener through
 // the IHotkeyListener port, feeds raw key codes in via the fake hook, records the domain key edges the
 // port raises, and asserts at that boundary (translated key + modifier snapshot). The chord parsing

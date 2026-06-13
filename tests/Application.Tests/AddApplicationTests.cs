@@ -1,4 +1,4 @@
-// Verifies the Application composition entry point (WHISPER-55): AddApplication registers the
+// Verifies the Application composition entry point: AddApplication registers the
 // Mediator with a scoped lifetime and produces a resolvable IMediator.
 
 using Application.DependencyInjection;

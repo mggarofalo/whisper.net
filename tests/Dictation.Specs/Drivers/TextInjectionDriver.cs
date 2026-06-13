@@ -1,4 +1,4 @@
-// The Driver owns HOW keystroke delivery is exercised, so the @WHISPER-2 steps stay one-liners that
+// The Driver owns HOW keystroke delivery is exercised, so the steps stay one-liners that
 // only describe WHAT. It drives the REAL SendInputTextInjector over a recording fake keyboard — the
 // same pattern the capture specs use (real adapter logic, fake OS seam) — and asserts at the boundary
 // that the focused field receives the exact characters. Because delivery is by typing, not paste, the

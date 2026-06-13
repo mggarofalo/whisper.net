@@ -1,4 +1,4 @@
-// Thin step definitions for the @WHISPER-45 history browser feature. Each step delegates to the
+// Thin step definitions for the history browser feature. Each step delegates to the
 // HistoryBrowserDriver (injected by the Reqnroll DI plugin); no logic lives here.
 
 using Dictation.Specs.Drivers;

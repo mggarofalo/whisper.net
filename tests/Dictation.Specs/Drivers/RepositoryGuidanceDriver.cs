@@ -1,4 +1,4 @@
-// Exercises the repository's own guidance + commit-hook conventions for the @WHISPER-60 scenarios.
+// Exercises the repository's own guidance + commit-hook conventions.
 // Unlike the dictation drivers (which drive behavior through IMediator), this one inspects repository
 // artifacts directly: it reads CLAUDE.md and runs the REAL .husky/commit-msg hook against sample
 // messages, asserting at the same boundary a developer hits when committing.

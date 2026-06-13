@@ -1,4 +1,4 @@
-// Inner TDD loop for the WHISPER-34 SQLite audit log: it appends records, counts them, clears them, and
+// Inner TDD loop for the SQLite audit log: it appends records, counts them, clears them, and
 // reports zero on a fresh database; a write against a corrupt database is logged and swallowed rather than
 // throwing (so auditing never blocks the pipeline). Driven against a real temp-file database.
 

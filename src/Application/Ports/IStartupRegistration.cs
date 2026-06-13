@@ -1,4 +1,4 @@
-// Port for the OS "launch at user login" registration (WHISPER-32). Implemented in Infrastructure
+// Port for the OS "launch at user login" registration. Implemented in Infrastructure
 // against the current-user registry Run key (no elevation); faked in specs. Deliberately synchronous:
 // the underlying registry operations are fast, local, and have no async API worth surfacing.
 //

@@ -1,4 +1,4 @@
-// Edge-case depth for the WHISPER-7 capture adapter, beyond the @WHISPER-7 acceptance scenarios.
+// Edge-case depth for the capture adapter, beyond the acceptance scenarios.
 // Drives the real WasapiAudioSource over a fake capture client (no device) and pins down the format
 // lifecycle, sample-content fidelity, clean-stop semantics, and pre-start / not-started guards.
 

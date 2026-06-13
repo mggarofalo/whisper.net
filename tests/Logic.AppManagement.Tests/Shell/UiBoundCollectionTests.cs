@@ -1,4 +1,4 @@
-// Unit depth for the WHISPER-91 collection-sync pattern, beyond the @WHISPER-91 acceptance scenarios.
+// Unit depth for the collection-sync pattern, beyond the acceptance scenarios.
 // Pins that EVERY mutation kind on UiBoundCollection holds the Gate while its change notification
 // fires (the contract WPF's collection synchronization relies on), and that HistoryViewModel registers
 // its Entries with the gate through the seam at construction.

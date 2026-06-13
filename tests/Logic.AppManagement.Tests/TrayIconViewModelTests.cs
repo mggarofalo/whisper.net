@@ -1,4 +1,4 @@
-// Unit depth for the WHISPER-90 dispatcher seam on the tray view-model, beyond the @WHISPER-90
+// Unit depth for the dispatcher seam on the tray view-model, beyond the
 // acceptance scenarios: the handlers run against a synchronous TestUiDispatcher with no live WPF
 // Application — an off-UI-thread status change is posted through the seam, an on-UI-thread change
 // takes the CheckAccess fast-path, and Dispose detaches the controller subscription.

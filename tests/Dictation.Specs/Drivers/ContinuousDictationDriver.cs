@@ -1,4 +1,4 @@
-// Drives the @WHISPER-28 continuous-dictation scenarios. It owns HOW the mode is exercised so the steps
+// Drives the continuous-dictation scenarios. It owns HOW the mode is exercised so the steps
 // stay one-liners: it enters continuous mode and starts an active session on the REAL DictationOrchestrator
 // (over the real WasapiAudioSource fed by the fake capture client and the real delivery pipeline), runs a
 // full utterance, and asserts the orchestrator auto-restarts recording — or, on Esc, exits to idle without
@@ -23,7 +23,7 @@ public sealed class ContinuousDictationDriver(
 	ManualTimeProvider time,
 	AudioBufferingOptions bufferingOptions)
 {
-	// Speech-level energy (not silence) so the captured clip passes the no-speech gate (WHISPER-125); the
+	// Speech-level energy (not silence) so the captured clip passes the no-speech gate; the
 	// content is otherwise irrelevant while the transcriber is faked.
 	private static float[] SpokenFrame()
 	{

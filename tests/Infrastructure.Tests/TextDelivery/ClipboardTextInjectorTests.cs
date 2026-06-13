@@ -1,4 +1,4 @@
-// Pins down the WHISPER-5 clipboard-paste policy over fake seams (no real clipboard or input): the
+// Pins down the clipboard-paste policy over fake seams (no real clipboard or input): the
 // delivered text is on the clipboard at the moment Ctrl+V fires, the user's prior contents are restored
 // afterward, and — crucially — a concurrent copy that lands during delivery is never clobbered. The
 // guard is the change count: restore only happens when it is exactly where our own write left it.

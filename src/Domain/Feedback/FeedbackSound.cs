@@ -1,5 +1,5 @@
 // The non-visual cues the dictation pipeline can play so the user hears where they are without looking
-// (WHISPER-21): a sound when recording starts, when it stops, and when transcription completes. Lives
+//: a sound when recording starts, when it stops, and when transcription completes. Lives
 // in Domain because the orchestrator that fires these and the Infrastructure player that renders them
 // both speak these three cues.
 

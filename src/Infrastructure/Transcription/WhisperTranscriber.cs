@@ -26,13 +26,13 @@ public sealed class WhisperTranscriber(
 	IOptions<WhisperOptions> options) : ITranscriber, IAsyncDisposable
 {
 	// A tenth of a second of digital silence — enough to force the native init (shader compilation /
-	// model upload) during warm-up so the first real utterance pays none of that lazy-init cost (WHISPER-127).
+	// model upload) during warm-up so the first real utterance pays none of that lazy-init cost.
 	private static readonly AudioClip WarmupClip = new(new float[1_600], 16_000);
 
 	private readonly WhisperOptions _options = options.Value;
 	private readonly SemaphoreSlim _loadGate = new(1, 1);
 
-	// Serializes INFERENCE on the shared engine (WHISPER-130). The engine is loaded once and reused, so the
+	// Serializes INFERENCE on the shared engine. The engine is loaded once and reused, so the
 	// startup warm-up (PreloadAsync) and the first real dictation (TranscribeAsync) run on the SAME native
 	// context — and whisper_full is not safe to run concurrently there. Without this gate a dictation that
 	// lands while the warm-up inference is still in flight races it and comes back empty: the lost first
@@ -50,7 +50,7 @@ public sealed class WhisperTranscriber(
 		// vocabulary biases the next utterance without reloading the (expensive) model.
 		DecodingOptions decodingOptions = vocabularyConditioner.Assemble(_options.CustomVocabulary);
 
-		// Serialize against any in-flight warm-up/inference on the shared engine (WHISPER-130): wait here
+		// Serialize against any in-flight warm-up/inference on the shared engine: wait here
 		// rather than race whisper_full on the same context, which loses the utterance.
 		await _inferenceGate.WaitAsync(cancellationToken).ConfigureAwait(false);
 		try
@@ -74,7 +74,7 @@ public sealed class WhisperTranscriber(
 		}
 	}
 
-	// Warm-up (WHISPER-127): load the active model now and run one throwaway inference over silence so the
+	// Warm-up: load the active model now and run one throwaway inference over silence so the
 	// FIRST real dictation isn't slowed by the cold load + native init. Reuses the same load path as a real
 	// transcription, so a missing/absent model surfaces ModelNotFoundException for the caller (the startup
 	// warm-up service) to swallow — warm-up is best-effort and must never crash the host or block startup.
@@ -82,7 +82,7 @@ public sealed class WhisperTranscriber(
 	{
 		IWhisperEngine engine = await EnsureEngineLoadedAsync(cancellationToken).ConfigureAwait(false);
 
-		// Hold the inference gate across the warm-up inference (WHISPER-130) so a real dictation that arrives
+		// Hold the inference gate across the warm-up inference so a real dictation that arrives
 		// mid warm-up waits for it instead of running whisper_full concurrently on the same context.
 		await _inferenceGate.WaitAsync(cancellationToken).ConfigureAwait(false);
 		try
@@ -147,7 +147,7 @@ public sealed class WhisperTranscriber(
 	// Resolves the model file to load. An explicit WhisperOptions.ModelPath (config override) wins; otherwise
 	// the ACTIVE model from settings is resolved through the catalog + cache — the same resolution the doctor's
 	// model check uses — so the model the user downloaded and selected is the one transcription loads
-	// (WHISPER-87). Returns an empty path when there is no active/known model, surfaced as ModelNotFound above.
+	//. Returns an empty path when there is no active/known model, surfaced as ModelNotFound above.
 	private async ValueTask<string> ResolveModelPathAsync(CancellationToken cancellationToken)
 	{
 		if (!string.IsNullOrWhiteSpace(_options.ModelPath))

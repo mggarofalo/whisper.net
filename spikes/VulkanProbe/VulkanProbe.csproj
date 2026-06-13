@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    DISPOSABLE SPIKE (WHISPER-65) — NOT part of Whisper.slnx and NOT built by CI. Opts out of central
+    DISPOSABLE SPIKE — NOT part of Whisper.slnx and NOT built by CI. Opts out of central
     package management so the Whisper.net runtime versions can be pinned inline here without polluting
     the solution's central package list. Exists only to answer the Module 3 go/no-go question; delete
     once that decision is recorded.

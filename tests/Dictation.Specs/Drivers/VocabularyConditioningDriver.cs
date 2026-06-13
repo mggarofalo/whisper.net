@@ -1,4 +1,4 @@
-// Drives the @WHISPER-38 assembly scenarios against the REAL VocabularyConditioner resolved from DI.
+// Drives the assembly scenarios against the REAL VocabularyConditioner resolved from DI.
 // The conditioner is a pure function, so the driver simply feeds it a vocabulary and asserts on the
 // assembled DecodingOptions — no model, no native library, no transcription.
 

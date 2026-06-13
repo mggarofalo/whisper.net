@@ -6,7 +6,7 @@
 // a chord with a primary key, that key must be down. The toggle latch here is self-contained
 // (alternating start/stop); reconciling it with externally-driven state (e.g. an Esc cancel) is the
 // orchestration layer's job in M7. One reconcile it DOES own: if the binding is reconfigured while a
-// recording is live, it asks that recording to cancel before swapping (WHISPER-126) so the orchestrator
+// recording is live, it asks that recording to cancel before swapping so the orchestrator
 // can never be left stuck Recording with no chord able to stop it.
 
 using Domain.Input;
@@ -25,7 +25,7 @@ public sealed class HotkeyActivationController
 
 	// Whether the controller currently believes a recording is in flight — set on a start request, cleared
 	// on a stop. It mirrors what the orchestrator thinks, so a reconfigure can tell whether it is about to
-	// orphan a live recording (WHISPER-126).
+	// orphan a live recording.
 	private bool _recordingActive;
 
 	/// <summary>Raised when the bound chord asks recording to start.</summary>
@@ -36,7 +36,7 @@ public sealed class HotkeyActivationController
 
 	/// <summary>Raised when a live recording must be abandoned (the binding changed under it), so the
 	/// orchestrator discards the in-flight capture and returns to Idle instead of being left stuck
-	/// Recording (WHISPER-126). Distinct from a normal stop: the captured audio is thrown away, not typed.</summary>
+	/// Recording. Distinct from a normal stop: the captured audio is thrown away, not typed.</summary>
 	public event EventHandler? RecordingCancelRequested;
 
 	public HotkeyBinding Binding => _binding;
@@ -52,7 +52,7 @@ public sealed class HotkeyActivationController
 		// orphaning it in the orchestrator (stuck Recording, so the next start is a no-op and no overlay
 		// ever appears, and the abandoned capture later transcribes as a hallucination). Ask the in-flight
 		// recording to cancel first, so the pipeline returns to a clean Idle before the binding swaps
-		// (WHISPER-126). This commonly happens when the user types the new chord into the capture UI while
+		//. This commonly happens when the user types the new chord into the capture UI while
 		// the old hotkey is still armed on the global hook, then assigns it while the keys are still held.
 		if (_recordingActive)
 		{
@@ -120,7 +120,7 @@ public sealed class HotkeyActivationController
 
 	private void Raise(bool start)
 	{
-		// Track in-flight state so a reconfigure can tell it would orphan a live recording (WHISPER-126).
+		// Track in-flight state so a reconfigure can tell it would orphan a live recording.
 		_recordingActive = start;
 		(start ? RecordingStartRequested : RecordingStopRequested)?.Invoke(this, EventArgs.Empty);
 	}

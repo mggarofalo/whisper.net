@@ -1,5 +1,5 @@
 // Inner TDD loop for CaptureBuffer: the preroll ring retains only the most recent samples, recording
-// is seeded with that preroll, the soft max-duration limit (WHISPER-111) signals once at 80% and once
+// is seeded with that preroll, the soft max-duration limit signals once at 80% and once
 // at 100% while every sample — including those past the limit — is retained, the hard failsafe limit
 // signals once at the configured ceiling without truncating the tail that drains after it, the buffer
 // is reusable across recordings (all limit signals re-arm per recording), a discard abandons the
@@ -230,7 +230,7 @@ public sealed class CaptureBufferTests
 	public void Appends_after_the_hard_limit_are_retained_until_the_recording_is_stopped()
 	{
 		// The hard failsafe stops the recording through the NORMAL stop path, which drains the device's
-		// in-flight tail through the post-release grace window (WHISPER-112) — so samples arriving
+		// in-flight tail through the post-release grace window — so samples arriving
 		// between the ceiling firing and the stop finalizing must still land in the clip, never be
 		// dropped. The ceiling bounds the recording by STOPPING it, not by truncating it.
 		CaptureBuffer buffer = NewBuffer(prerollMs: 0, maxMs: 2, hardMaxMs: 4);
@@ -334,7 +334,7 @@ public sealed class CaptureBufferTests
 	public async Task Concurrent_appends_and_a_stop_neither_throw_nor_tear_the_clip()
 	{
 		// The capture thread appends while the orchestrator thread finalizes — frames keep flowing
-		// through the post-release grace window (WHISPER-112), and a cancel stops mid-stream. Hammer
+		// through the post-release grace window, and a cancel stops mid-stream. Hammer
 		// that interleaving: every Append must land atomically (the snapshot holds whole frames only,
 		// every sample intact) and nothing may throw.
 		const int frameSize = 8;

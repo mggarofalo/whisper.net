@@ -1,4 +1,4 @@
-// The privacy gate for the opt-in audit log (WHISPER-34). It reads the LIVE settings holder on every
+// The privacy gate for the opt-in audit log. It reads the LIVE settings holder on every
 // call, so enabling or disabling auditing takes effect immediately, without an app restart: when
 // AuditLogEnabled is off (the default), nothing is written; when on, the record is appended to the local
 // audit log via the port. Keeping the gate here (Logic) keeps the policy out of the Infrastructure store,

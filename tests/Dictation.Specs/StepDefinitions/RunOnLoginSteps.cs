@@ -1,4 +1,4 @@
-// @WHISPER-32 — drives the run-on-login scenarios. Steps stay thin; the RunOnLoginDriver sends the
+// Drives the run-on-login scenarios. Steps stay thin; the RunOnLoginDriver sends the
 // real SetRunOnLoginCommand / GetRunOnLoginQuery through IMediator over a fake startup registration.
 
 using Dictation.Specs.Drivers;

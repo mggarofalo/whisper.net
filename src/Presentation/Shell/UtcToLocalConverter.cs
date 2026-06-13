@@ -1,4 +1,4 @@
-// Converts a UTC DateTimeOffset to the user's local time, for display only (WHISPER-115). History entries
+// Converts a UTC DateTimeOffset to the user's local time, for display only. History entries
 // (and the Home dashboard's recent list) store and query their timestamps in UTC — correct — but a
 // StringFormat on a UTC DateTimeOffset renders the UTC wall-clock, so a 9pm-local dictation showed as the
 // next day. This converter is applied in the timestamp bindings so the local conversion happens only at

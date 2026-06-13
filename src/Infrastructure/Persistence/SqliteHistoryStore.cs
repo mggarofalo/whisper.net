@@ -1,4 +1,4 @@
-// SQLite-backed implementation of the IHistoryStore port (WHISPER-11): appends completed transcriptions
+// SQLite-backed implementation of the IHistoryStore port: appends completed transcriptions
 // and reads them back newest-first, optionally bounded by an inclusive date range and/or a maximum count.
 // Each entry's timestamp is stored twice — the original DateTimeOffset as a round-trip ("O") string for
 // lossless reload, and its UtcTicks as an integer for correct chronological ordering and range filtering

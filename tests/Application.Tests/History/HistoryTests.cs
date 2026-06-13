@@ -1,6 +1,6 @@
-// Unit tests for the history slice (WHISPER-47): the command validator's rules, the record handler's
+// Unit tests for the history slice: the command validator's rules, the record handler's
 // persistence, and the query handler's newest-first ordering + limit (the edge cases behind the
-// @WHISPER-47 scenarios). Uses a substituted IHistoryStore and the real HistoryMapper.
+// scenarios). Uses a substituted IHistoryStore and the real HistoryMapper.
 
 using Application.Configuration;
 using Application.History;

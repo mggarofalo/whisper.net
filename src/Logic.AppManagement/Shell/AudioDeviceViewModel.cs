@@ -1,5 +1,5 @@
-// The shell's audio device section (WHISPER-33; ComboBox + missing-device handling in WHISPER-80): lists
-// the available capture devices and the current selection, and persists a change. It depends on nothing but
+// The shell's audio device section: lists the available capture devices and the current selection,
+// and persists a change. It depends on nothing but
 // IMediator — it loads via ListCaptureDevicesQuery + GetSettingsQuery and saves via UpdateSettingsCommand,
 // carrying the whole settings DTO with the device swapped so the rest of the user's settings are preserved.
 // A persisted device that is no longer present does not crash or silently blank the picker: the view-model
@@ -34,8 +34,8 @@ public sealed partial class AudioDeviceViewModel : FeatureViewModel
 	private string? _selectedDeviceId;
 
 	/// <summary>Set when the persisted device is no longer present: a clear fallback message for the view,
-	/// null when the selected device is available. Surfacing this (instead of a blank picker) is the
-	/// device-removed handling of WHISPER-80.</summary>
+	/// null when the selected device is available. Surfacing this instead of a blank picker handles
+	/// the device-removed case.</summary>
 	[ObservableProperty]
 	private string? _unavailableDeviceWarning;
 
@@ -48,11 +48,11 @@ public sealed partial class AudioDeviceViewModel : FeatureViewModel
 	/// against to tell a real user pick from the programmatic selection a reload performs.</summary>
 	public string? CommittedDeviceId => _settings?.CaptureDeviceId;
 
-	// Auto-load the device list on first activation (WHISPER-108): the picker opens populated, the cached
+	// Auto-load the device list on first activation: the picker opens populated, the cached
 	// instance does not re-query on later tab switches, and Refresh stays the manual re-query.
 	protected override IAsyncRelayCommand FirstActivationLoadCommand => LoadCommand;
 
-	// The commit decision that used to live in the view's SelectionChanged code-behind (WHISPER-92):
+	// The commit decision that used to live in the view's SelectionChanged code-behind:
 	// the ComboBox two-way binds SelectedDeviceId, and a change commits only when it is a genuine user
 	// pick — never while a load repopulates the picker, and only when the choice differs from what is
 	// already persisted (so the missing-device fallback to system default is never written back).

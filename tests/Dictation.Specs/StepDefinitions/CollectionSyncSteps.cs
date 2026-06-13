@@ -1,4 +1,4 @@
-// Thin step definitions for the @WHISPER-91 collection-synchronization feature. Each step delegates to
+// Thin step definitions for the collection-synchronization feature. Each step delegates to
 // the CollectionSyncDriver (injected by the Reqnroll DI plugin); no logic lives here.
 
 using Dictation.Specs.Drivers;

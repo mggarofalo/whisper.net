@@ -17,12 +17,13 @@ maintainer path: build → sign → package → install → run.
 ```bash
 dotnet restore Whisper.slnx
 dotnet build   Whisper.slnx -p:TreatWarningsAsErrors=true
-dotnet test    Whisper.slnx --filter "Category!=wip"
+dotnet test    Whisper.slnx --filter "Category!=wip&Category!=slow"
 npm install    # one-time: installs the commitlint commit-msg hook
 ```
 
-`dotnet build` warns-as-errors exactly as CI does; `Category!=wip` runs the full non-work-in-progress
-suite (xUnit unit tests + Reqnroll `@WHISPER-<id>` scenarios).
+`dotnet build` warns-as-errors exactly as CI does; `Category!=wip&Category!=slow` is the fast gate
+(xUnit unit tests + Reqnroll `@WHISPER-<id>` scenarios), excluding the `@slow` real-model VAD tests —
+run those with `--filter "Category=slow"`.
 
 ## 2. Package the installer
 

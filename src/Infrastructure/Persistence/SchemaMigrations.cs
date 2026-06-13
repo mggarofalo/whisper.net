@@ -1,4 +1,4 @@
-// The ordered, forward-only schema migrations for the SQLite store (WHISPER-11). Each migration's
+// The ordered, forward-only schema migrations for the SQLite store. Each migration's
 // Version is the schema version (SQLite's built-in user_version PRAGMA) the database is at AFTER it is
 // applied; the runner applies, in order, every migration whose Version exceeds the database's current
 // user_version. Migrations are additive and are never edited once shipped — a new schema change is a new
@@ -37,11 +37,11 @@ internal static class SchemaMigrations
 			);
 			"""),
 
-		// v3: the captured audio duration per transcription, in ticks, for usage statistics (WHISPER-24).
+		// v3: the captured audio duration per transcription, in ticks, for usage statistics.
 		// Existing rows default to zero (duration was not recorded before this migration).
 		new(3, "ALTER TABLE history ADD COLUMN duration_ticks INTEGER NOT NULL DEFAULT 0;"),
 
-		// v4: the opt-in audit log (WHISPER-34). A separate, local-only table; rows are written only when
+		// v4: the opt-in audit log. A separate, local-only table; rows are written only when
 		// the user has explicitly enabled auditing. occurred_ticks orders records chronologically.
 		new(4, """
 			CREATE TABLE audit_log (

@@ -1,4 +1,4 @@
-// Drives the @WHISPER-16 activation-mode scenarios. It owns HOW a chord is exercised so the steps stay
+// Drives the activation-mode scenarios. It owns HOW a chord is exercised so the steps stay
 // one-liners: it configures the REAL HotkeyActivationController with a binding + mode, then replays the
 // key-down/key-up edges a chord produces — building up the live modifier set exactly as the listener
 // would — and records the recording start/stop requests the controller raises. Asserting at that
@@ -34,7 +34,7 @@ public sealed class HotkeyActivationDriver
 	}
 
 	// Reassign the binding without resetting the live modifier set we are tracking — modelling the user
-	// assigning a new hotkey while the old chord is still physically held (WHISPER-126).
+	// assigning a new hotkey while the old chord is still physically held.
 	public void Reassign(string binding, ActivationMode mode) =>
 		_controller.Configure(HotkeyBinding.Parse(binding), mode);
 

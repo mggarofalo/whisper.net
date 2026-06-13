@@ -1,4 +1,4 @@
-// Verifies the M1 Mapperly mapper set (WHISPER-49) as REAL generated code (never substituted): every
+// Verifies the M1 Mapperly mapper set as REAL generated code (never substituted): every
 // DTO <-> Domain pair round-trips without losing data and supporting value objects (HotkeyBinding) map
 // faithfully. The remaining house rules are enforced where they actually live — at compile time: the
 // [Mapper] partial classes only generate because they are well-formed, and "no [UseMapper] / no

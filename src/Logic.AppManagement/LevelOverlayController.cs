@@ -1,13 +1,12 @@
-// The level overlay's coordination logic (WHISPER-26; feedback in WHISPER-102), kept out of Presentation
-// so it can be driven for real in specs. It mirrors the live recording state (subscribing to the
-// RecordingStateMachine the orchestrator drives) into an IsVisible flag and a presentation State
-// (Recording / Transcribing / Error), turns the audio frames captured during recording into a smoothed,
-// perceptual input level in [0, 1] the meter reflects (WHISPER-101), tracks the elapsed recording time on
-// the injected TimeProvider, and listens on the shared IMessenger for the WHISPER-111 soft/hard limit
-// signals (raising a near-cap warning before any audio could be lost) and for a dictation failure (a
-// brief, auto-dismissed error state). The thin WPF overlay binds to this; it owns no UI itself, and the
-// level math never touches or blocks the dictation pipeline (it only observes the frames the capture
-// already raises).
+// The level overlay's coordination logic, kept out of Presentation so it can be driven for real in
+// specs. It mirrors the live recording state (subscribing to the RecordingStateMachine the orchestrator
+// drives) into an IsVisible flag and a presentation State (Recording / Transcribing / Error), turns
+// the audio frames captured during recording into a smoothed, perceptual input level in [0, 1] the
+// meter reflects, tracks the elapsed recording time on the injected TimeProvider, and listens on the
+// shared IMessenger for soft/hard limit signals (raising a near-cap warning before any audio could be
+// lost) and for a dictation failure (a brief, auto-dismissed error state). The thin WPF overlay binds
+// to this; it owns no UI itself, and the level math never touches or blocks the dictation pipeline (it
+// only observes the frames the capture already raises).
 
 using Application.Dictation;
 using Application.Models;
@@ -23,14 +22,14 @@ public sealed class LevelOverlayController : IDisposable
 	// does not jitter frame-to-frame (no jank), high enough that it still feels live.
 	private const double SmoothingFactor = 0.3;
 
-	// The dBFS window the meter spans (WHISPER-101). Raw RMS is near 0 for silence and ~1 only at full
+	// The dBFS window the meter spans. Raw RMS is near 0 for silence and ~1 only at full
 	// digital scale, but speech sits around 0.02-0.1 RMS, so a linear meter barely moves. Mapping RMS to
 	// dBFS and normalizing this window to [0, 1] puts normal speech (~-26 dBFS) mid-bar, floors anything
 	// below -60 dBFS at silence, and lets loud speech approach full scale without pegging unless it is
 	// actually at 0 dBFS.
 	private const double MinimumDecibels = -60.0;
 
-	// How long the error state lingers before the overlay dismisses itself (WHISPER-102): long enough to
+	// How long the error state lingers before the overlay dismisses itself: long enough to
 	// read, short enough not to nag in a windowless app.
 	private static readonly TimeSpan ErrorDismissAfter = TimeSpan.FromSeconds(4);
 
@@ -47,7 +46,7 @@ public sealed class LevelOverlayController : IDisposable
 
 	private DateTimeOffset _recordingStartedAt;
 
-	// The model warm-up signal (WHISPER-129), tracked independently of the recording state: a background
+	// The model warm-up signal, tracked independently of the recording state: a background
 	// reason to show the pill. Recording/transcribing/error always take precedence; warming only owns the
 	// pill while the pipeline is otherwise at rest.
 	private bool _isWarming;
@@ -72,14 +71,14 @@ public sealed class LevelOverlayController : IDisposable
 		_stateMachine.StateChanged += OnStateChanged;
 		_audioSource.FrameAvailable += OnFrameAvailable;
 
-		// The WHISPER-111 soft/hard limit signals and the WHISPER-102 failure signal arrive on the shared
-		// messenger (published by the orchestrator). Weak registration; removed on Dispose.
+		// The soft/hard limit signals and the failure signal arrive on the shared messenger (published by
+		// the orchestrator). Weak registration; removed on Dispose.
 		_messenger.Register<LevelOverlayController, DictationNearLimitMessage>(this, (recipient, _) => recipient.RaiseNearCap());
 		_messenger.Register<LevelOverlayController, DictationAtLimitMessage>(this, (recipient, _) => recipient.RaiseNearCap());
 		_messenger.Register<LevelOverlayController, DictationHardLimitStopMessage>(this, (recipient, _) => recipient.RaiseNearCap());
 		_messenger.Register<LevelOverlayController, DictationFailedMessage>(this, (recipient, _) => recipient.RaiseError());
 
-		// Model warm-up (WHISPER-129): the warm-up service broadcasts started/cleared on the same messenger,
+		// Model warm-up: the warm-up service broadcasts started/cleared on the same messenger,
 		// so the pill can announce "warming up" until the model is ready. Weak registration; removed on Dispose.
 		_messenger.Register<LevelOverlayController, ModelWarmupChangedMessage>(this, (recipient, message) => recipient.OnWarmupChanged(message.IsWarming));
 	}
@@ -97,7 +96,7 @@ public sealed class LevelOverlayController : IDisposable
 	public TimeSpan Elapsed { get; private set; }
 
 	/// <summary>True once the current recording has neared (or reached) the duration cap — a warning before
-	/// any audio could be lost (WHISPER-111). Reset when the next recording starts.</summary>
+	/// any audio could be lost. Reset when the next recording starts.</summary>
 	public bool NearCap { get; private set; }
 
 	/// <summary>Raised when <see cref="IsVisible"/> changes, so the view can show/hide the overlay.</summary>
@@ -239,7 +238,7 @@ public sealed class LevelOverlayController : IDisposable
 		ShowWarmingOrHide();
 	}
 
-	// React to the app-wide warm-up signal (WHISPER-129). Warming is a BACKGROUND cue: if a dictation is
+	// React to the app-wide warm-up signal. Warming is a BACKGROUND cue: if a dictation is
 	// already using the pill (recording/transcribing, or an error on its dismiss timer), just remember the
 	// flag — it is applied when that releases the pill (ReturnToRest / OnErrorDismissed). Otherwise reflect it
 	// now. The "owned by a dictation" test is what is currently on the pill, not the recording state machine:
@@ -302,7 +301,7 @@ public sealed class LevelOverlayController : IDisposable
 		LevelChanged?.Invoke(this, EventArgs.Empty);
 	}
 
-	// Map a frame's RMS to a perceptual 0-1 meter level (WHISPER-101): convert to dBFS and normalize the
+	// Map a frame's RMS to a perceptual 0-1 meter level: convert to dBFS and normalize the
 	// MinimumDecibels..0 dBFS window to [0, 1]. Digital silence (rms <= 0) and anything below the floor
 	// read 0; full digital scale (0 dBFS) reads 1.
 	public static double ToPerceptualLevel(double rms)

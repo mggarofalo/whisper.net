@@ -1,4 +1,4 @@
-// Exercises the real Serilog wiring for the @WHISPER-73 scenarios. Unlike the artifact-inspecting
+// Exercises the real Serilog wiring for the logging scenarios. Unlike the artifact-inspecting
 // packaging drivers, this drives the actual AddSerilogLogging composition: it points the log directory at
 // a temp folder via configuration, resolves an ILogger<T> from the built provider, logs, then disposes the
 // provider (which flushes the file sink) and asserts the event landed in a rolling .log file. That proves

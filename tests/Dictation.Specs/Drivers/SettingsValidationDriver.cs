@@ -1,4 +1,4 @@
-// Drives the @WHISPER-77 native-validation scenarios. It exercises the REAL HotkeyViewModel over the REAL
+// Drives the native-validation scenarios. It exercises the REAL HotkeyViewModel over the REAL
 // Mediator pipeline (GetSettings / UpdateSettings, including the FluentValidation backstop) and the REAL
 // settings mapper, faking only the settings store. The view-model validates the edited chord with
 // DataAnnotations + INotifyDataErrorInfo, so the driver can assert at the view-model boundary that an
