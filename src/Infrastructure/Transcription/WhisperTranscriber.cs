@@ -31,6 +31,14 @@ public sealed class WhisperTranscriber(
 
 	private readonly WhisperOptions _options = options.Value;
 	private readonly SemaphoreSlim _loadGate = new(1, 1);
+
+	// Serializes INFERENCE on the shared engine (WHISPER-130). The engine is loaded once and reused, so the
+	// startup warm-up (PreloadAsync) and the first real dictation (TranscribeAsync) run on the SAME native
+	// context — and whisper_full is not safe to run concurrently there. Without this gate a dictation that
+	// lands while the warm-up inference is still in flight races it and comes back empty: the lost first
+	// utterance. Holding it makes that dictation wait for the warm-up to finish, then transcribe cleanly.
+	// Distinct from _loadGate, which only guards the one-time model LOAD, not the per-call inference.
+	private readonly SemaphoreSlim _inferenceGate = new(1, 1);
 	private IWhisperEngine? _engine;
 	private string? _loadedModelPath;
 
@@ -42,18 +50,28 @@ public sealed class WhisperTranscriber(
 		// vocabulary biases the next utterance without reloading the (expensive) model.
 		DecodingOptions decodingOptions = vocabularyConditioner.Assemble(_options.CustomVocabulary);
 
-		StringBuilder text = new();
-		List<TranscriptionSegment> segments = [];
-
-		await foreach (WhisperSegment segment in engine
-			.TranscribeAsync(clip.Samples, clip.SampleRate, decodingOptions, cancellationToken)
-			.ConfigureAwait(false))
+		// Serialize against any in-flight warm-up/inference on the shared engine (WHISPER-130): wait here
+		// rather than race whisper_full on the same context, which loses the utterance.
+		await _inferenceGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+		try
 		{
-			text.Append(segment.Text);
-			segments.Add(new TranscriptionSegment(segment.Text, segment.Start, segment.End, segment.Probability));
-		}
+			StringBuilder text = new();
+			List<TranscriptionSegment> segments = [];
 
-		return new TranscriptionResult(text.ToString().Trim(), segments);
+			await foreach (WhisperSegment segment in engine
+				.TranscribeAsync(clip.Samples, clip.SampleRate, decodingOptions, cancellationToken)
+				.ConfigureAwait(false))
+			{
+				text.Append(segment.Text);
+				segments.Add(new TranscriptionSegment(segment.Text, segment.Start, segment.End, segment.Probability));
+			}
+
+			return new TranscriptionResult(text.ToString().Trim(), segments);
+		}
+		finally
+		{
+			_inferenceGate.Release();
+		}
 	}
 
 	// Warm-up (WHISPER-127): load the active model now and run one throwaway inference over silence so the
@@ -64,13 +82,23 @@ public sealed class WhisperTranscriber(
 	{
 		IWhisperEngine engine = await EnsureEngineLoadedAsync(cancellationToken).ConfigureAwait(false);
 
-		// Drain the warm-up inference; its output is discarded. DecodingOptions.Default keeps warm-up
-		// independent of the live custom vocabulary, which conditions only real transcriptions.
-		await foreach (WhisperSegment _ in engine
-			.TranscribeAsync(WarmupClip.Samples, WarmupClip.SampleRate, DecodingOptions.Default, cancellationToken)
-			.ConfigureAwait(false))
+		// Hold the inference gate across the warm-up inference (WHISPER-130) so a real dictation that arrives
+		// mid warm-up waits for it instead of running whisper_full concurrently on the same context.
+		await _inferenceGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+		try
 		{
-			// Warm-up output is intentionally ignored.
+			// Drain the warm-up inference; its output is discarded. DecodingOptions.Default keeps warm-up
+			// independent of the live custom vocabulary, which conditions only real transcriptions.
+			await foreach (WhisperSegment _ in engine
+				.TranscribeAsync(WarmupClip.Samples, WarmupClip.SampleRate, DecodingOptions.Default, cancellationToken)
+				.ConfigureAwait(false))
+			{
+				// Warm-up output is intentionally ignored.
+			}
+		}
+		finally
+		{
+			_inferenceGate.Release();
 		}
 	}
 
@@ -141,5 +169,6 @@ public sealed class WhisperTranscriber(
 		}
 
 		_loadGate.Dispose();
+		_inferenceGate.Dispose();
 	}
 }

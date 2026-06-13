@@ -35,7 +35,7 @@ public sealed class WhisperTranscriberTests : IDisposable
 	}
 
 	private WhisperTranscriber CreateTranscriber(
-		FakeWhisperEngineFactory factory,
+		IWhisperEngineFactory factory,
 		string modelPath,
 		string language = "en",
 		IReadOnlyList<string>? vocabulary = null) =>
@@ -251,6 +251,34 @@ public sealed class WhisperTranscriberTests : IDisposable
 		Func<Task> act = async () => await transcriber.PreloadAsync(CancellationToken.None);
 
 		await act.Should().ThrowAsync<ModelNotFoundException>();
+	}
+
+	[Fact]
+	public async Task Serializes_warm_up_and_a_dictation_so_the_first_utterance_is_not_lost()
+	{
+		// WHISPER-130: the startup warm-up and a real dictation share ONE engine. Without serialization both
+		// run whisper_full concurrently on the same context, and a dictation that lands while the warm-up
+		// inference is still in flight comes back empty — the lost first utterance. The transcriber must make
+		// the dictation WAIT for the in-flight warm-up, then transcribe cleanly (decided: wait, not cancel).
+		ConcurrencyProbeWhisperEngineFactory factory = new();
+		await using WhisperTranscriber transcriber = CreateTranscriber(factory, ExistingModelFile());
+
+		// Warm-up loads the engine and parks inside the throwaway inference, holding it in flight.
+		Task warmUp = transcriber.PreloadAsync(CancellationToken.None).AsTask();
+		await factory.Engine.FirstInferenceEntered;
+
+		// A real dictation arrives mid warm-up. With no gate it would enter inference concurrently.
+		Task<TranscriptionResult> dictation = transcriber.TranscribeAsync(Clip(), CancellationToken.None).AsTask();
+		await Task.Delay(50, TestContext.Current.CancellationToken); // give the (buggy) concurrent path a chance to enter inference
+
+		factory.Engine.MaxConcurrent.Should().Be(1, "warm-up and a dictation must never run inference at once");
+		dictation.IsCompleted.Should().BeFalse("the dictation must wait for the in-flight warm-up, not race it");
+
+		// Warm-up finishes; the dictation now runs to completion and returns its transcript (not lost).
+		factory.Engine.Release();
+		(await dictation).Text.Should().Be("hi");
+		await warmUp;
+		factory.Engine.MaxConcurrent.Should().Be(1);
 	}
 
 	[Fact]
