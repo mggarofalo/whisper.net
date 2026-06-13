@@ -20,7 +20,13 @@ public sealed class WasapiAudioSource(IAudioCaptureClient client) : IAudioSource
 	public event EventHandler<AudioCaptureFailedEventArgs>? CaptureFailed;
 
 	// Begins capture. A second call while already running is a no-op so callers can't double-open the
-	// device. Subscriptions and Format are established before Start so the very first frame is valid.
+	// device. The device only negotiates its real mix format DURING Start (the NAudioCaptureClient exposes a
+	// placeholder until then), so Format MUST be read AFTER client.Start() — reading it before captured the
+	// first recording at the wrong sample rate (e.g. 48 kHz audio tagged 16 kHz, never downsampled, so it
+	// played back 3x too slow and Whisper could not transcribe it), while every later recording happened to
+	// reuse the previously-negotiated format and worked (WHISPER-132). Subscriptions are wired before Start so
+	// no frame is missed; OnDataAvailable's _running/Format guards drop any frame that races the brief gap
+	// between Start returning and the format being read (the first real buffer is milliseconds away).
 	public void Start()
 	{
 		if (_running)
@@ -30,9 +36,9 @@ public sealed class WasapiAudioSource(IAudioCaptureClient client) : IAudioSource
 
 		client.DataAvailable += OnDataAvailable;
 		client.RecordingStopped += OnRecordingStopped;
+		client.Start();
 		Format = client.Format;
 		_running = true;
-		client.Start();
 	}
 
 	// Requests a stop; teardown (unsubscribe, clear Format, release) happens when the client reports
