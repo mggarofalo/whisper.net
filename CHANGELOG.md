@@ -6,6 +6,15 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-06-24
+
+### Security
+
+- **Patched the bundled SQLite (CVE-2025-6965).** Forced the transitive `SQLitePCLRaw` native bundle up
+  to the `3.0.x` line (SQLite ≥ 3.50.2), resolving the high-severity memory-corruption advisory
+  GHSA-2m69-gcr7-jv3q that the `2.1.11` bundle — pulled transitively by `Microsoft.Data.Sqlite` — shipped.
+  (WHISPER-133)
+
 ## [0.2.0] - 2026-06-24
 
 ### Changed
@@ -202,6 +211,7 @@ that shipped in 0.1.0, organized by category.
 - **The persisted active model is shown in the picker** before it loads. (WHISPER-118)
 - **The Home dashboard refreshes** on every activation. (WHISPER-119)
 
-[Unreleased]: https://github.com/mggarofalo/whisper.net/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/mggarofalo/whisper.net/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/mggarofalo/whisper.net/releases/tag/v0.2.1
 [0.2.0]: https://github.com/mggarofalo/whisper.net/releases/tag/v0.2.0
 [0.1.0]: https://github.com/mggarofalo/whisper.net/releases/tag/v0.1.0
