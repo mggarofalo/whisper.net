@@ -6,6 +6,18 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-06-24
+
+### Changed
+
+- **Application and tray icon are now a speech bubble.** The executable, installer, and window use a
+  brand-blue speech-bubble icon rendered from the new `assets/whisper.svg` source, and the
+  notification-area tray icon is the same glyph tinted by recording state — grey idle, red recording,
+  orange transcribing — replacing the previous coloured dot.
+- **The app registers as "Whisper" in Windows.** The assembly title and product name are set to
+  "Whisper" so the taskbar and notification-area personalization list show "Whisper" instead of
+  "Presentation".
+
 ## [0.1.0] - 2026-06-13
 
 First public release — whisper.net leaves alpha. A local, GPU-accelerated, tray-resident speech-to-text
@@ -190,5 +202,6 @@ that shipped in 0.1.0, organized by category.
 - **The persisted active model is shown in the picker** before it loads. (WHISPER-118)
 - **The Home dashboard refreshes** on every activation. (WHISPER-119)
 
-[Unreleased]: https://github.com/mggarofalo/whisper.net/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/mggarofalo/whisper.net/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/mggarofalo/whisper.net/releases/tag/v0.2.0
 [0.1.0]: https://github.com/mggarofalo/whisper.net/releases/tag/v0.1.0
