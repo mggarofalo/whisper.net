@@ -17,6 +17,9 @@
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
     <PackageReference Include="Microsoft.Extensions.Logging" />
     <PackageReference Include="Microsoft.Data.Sqlite" />
+    <!-- Security override of a transitive dep: forces the vulnerable SQLitePCLRaw native bundle up to a
+         patched SQLite (WHISPER-133 / CVE-2025-6965). Version is pinned in Directory.Packages.props. -->
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" />
     <PackageReference Include="Serilog" />
     <PackageReference Include="Serilog.Extensions.Logging" />
     <PackageReference Include="Serilog.Settings.Configuration" />
