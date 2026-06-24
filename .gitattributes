@@ -20,3 +20,7 @@
 *.wav  binary
 *.bin  binary
 *.onnx binary
+*.ico  binary
+
+# SVG is text (XML); keep it LF like our other text assets.
+*.svg  text eol=lf
