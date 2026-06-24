@@ -11,6 +11,13 @@
     <UseWPF>true</UseWPF>
     <!-- The installer + the in-exe icon. One asset, shared by the build and `vpk pack`. -->
     <ApplicationIcon>..\..\assets\whisper.ico</ApplicationIcon>
+    <!--
+      User-facing name. The assembly (and so Presentation.exe, which pack.ps1 launches by name) stays
+      "Presentation", but AssemblyTitle drives the Win32 FileDescription that Windows shows in the
+      taskbar / notification-area personalization list, so the app reads as "Whisper" there.
+    -->
+    <AssemblyTitle>Whisper</AssemblyTitle>
+    <Product>Whisper</Product>
   </PropertyGroup>
 
   <!--
@@ -48,6 +55,18 @@
     <None Update="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      Tray glyphs: the speech bubble tinted per recording state. Embedded as WPF resources so the
+      RecordingStateToIconSourceConverter can address them by pack:// URI. They must be .ico (not .png):
+      H.NotifyIcon resolves the IconSource URI to a stream and feeds it to System.Drawing.Icon, which
+      only parses the ICO container. Re-render from assets/whisper.svg if the brand changes.
+    -->
+    <Resource Include="Resources\tray-idle.ico" />
+    <Resource Include="Resources\tray-recording.ico" />
+    <Resource Include="Resources\tray-transcribing.ico" />
   </ItemGroup>
 
   <ItemGroup>
