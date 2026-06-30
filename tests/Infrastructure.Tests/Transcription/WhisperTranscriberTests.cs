@@ -292,6 +292,37 @@ public sealed class WhisperTranscriberTests : IDisposable
 		await act.Should().ThrowAsync<OperationCanceledException>();
 	}
 
+	[Fact]
+	public async Task Disposing_while_a_load_is_in_flight_cancels_cleanly_without_an_objectdisposed_exception()
+	{
+		// WHISPER-137: a warm-up that is mid-load when the host disposes the transcriber must not release a
+		// disposed gate. Park the load inside backend selection so it holds the load gate when disposal
+		// races it — the exact shutdown-vs-warm-up race that surfaced ObjectDisposedException in the logs.
+		TaskCompletionSource entered = new();
+		TaskCompletionSource<BackendSelection> release = new();
+		_backendSelector.SelectBackendAsync(Arg.Any<CancellationToken>()).Returns(_ =>
+		{
+			entered.TrySetResult();
+			return new ValueTask<BackendSelection>(release.Task);
+		});
+
+		FakeWhisperEngineFactory factory = new(new WhisperSegment("x", TimeSpan.Zero, TimeSpan.Zero, 1f));
+		WhisperTranscriber transcriber = CreateTranscriber(factory, ExistingModelFile());
+
+		Task warmUp = transcriber.PreloadAsync(CancellationToken.None).AsTask();
+		await entered.Task; // the load now holds the load gate, parked in backend selection
+
+		// Dispose races the in-flight load: it cancels the warm-up, then drains the gate before tearing it down.
+		ValueTask dispose = transcriber.DisposeAsync();
+		release.SetResult(new BackendSelection(ComputeBackend.Cpu, "test")); // let the parked load complete
+
+		await dispose; // disposal completes without throwing
+
+		// The warm-up unwinds as cancellation — never an ObjectDisposedException from releasing a disposed gate.
+		Func<Task> awaitWarmUp = async () => await warmUp;
+		await awaitWarmUp.Should().ThrowAsync<OperationCanceledException>();
+	}
+
 	public void Dispose()
 	{
 		foreach (string file in _tempFiles)
