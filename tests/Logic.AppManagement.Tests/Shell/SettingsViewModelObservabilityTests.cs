@@ -73,7 +73,7 @@ public sealed class SettingsViewModelObservabilityTests
 		nameof(AudioDeviceViewModel) => new AudioDeviceViewModel(Substitute.For<IMediator>(), new Logic.AudioManagement.DeviceSelectionPolicy()),
 		nameof(HotkeyViewModel) => new HotkeyViewModel(Substitute.For<IMediator>(), new CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger()),
 		nameof(HistoryViewModel) => new HistoryViewModel(Substitute.For<IMediator>(), new CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger(), Substitute.For<IUiCollectionSynchronizer>()),
-		nameof(StatsViewModel) => new StatsViewModel(Substitute.For<IMediator>()),
+		nameof(StatsViewModel) => new StatsViewModel(Substitute.For<IMediator>(), new CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger()),
 		_ => throw new ArgumentOutOfRangeException(nameof(viewModelName), viewModelName, "unknown view-model"),
 	};
 

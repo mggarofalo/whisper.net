@@ -6,8 +6,8 @@
 // real in specs; the thin view binds to it. Entries is a UiBoundCollection registered through the
 // collection-sync seam at construction, so an off-UI-thread mutation (the live
 // feed, published from the record path) binds safely instead of throwing. The live feed is subscribed
-// only while the section is active (messenger discipline) and prepends the new entry without
-// re-querying, so the user's browsed page and scroll position are preserved.
+// for the section's whole lifetime (so an entry recorded while another section is open is not missed) and
+// prepends the new entry without re-querying, so the user's browsed page and scroll position are preserved.
 
 using Application.History;
 using Application.Ports;
@@ -30,15 +30,15 @@ public sealed partial class HistoryViewModel : FeatureViewModel
 		_mediator = mediator;
 		_messenger = messenger;
 		synchronizer.Enable(Entries);
+
+		// Live history feed: subscribe for the section's whole lifetime, not just while it is the active
+		// content, so a transcription recorded while another section is open still lands in the list and
+		// reopening History shows it without a re-query (which would disturb the browsed page / scroll). The
+		// shared WeakReferenceMessenger holds the recipient weakly, so a persistent registration neither
+		// roots nor leaks this cached view-model.
+		_messenger.Register<HistoryViewModel, TranscriptionRecordedMessage>(
+			this, static (recipient, message) => recipient.OnTranscriptionRecorded(message.Entry));
 	}
-
-	// Live history feed: subscribe to the "transcription recorded" message only while this
-	// section is active, so an inactive cached instance holds no subscription. The shared
-	// WeakReferenceMessenger means even a missed deactivation could not root this cached view-model.
-	protected override void OnActivated() =>
-		_messenger.Register<HistoryViewModel, TranscriptionRecordedMessage>(this, (recipient, message) => recipient.OnTranscriptionRecorded(message.Entry));
-
-	protected override void OnDeactivated() => _messenger.UnregisterAll(this);
 
 	// Prepend a newly recorded entry so it shows newest-first without a Refresh, leaving the already-loaded
 	// pages and scroll position untouched. The collection-sync seam makes this safe off the UI thread (the

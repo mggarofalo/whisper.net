@@ -5,8 +5,10 @@
 // its own), reflects new activity on refresh, and shows zeroes for an empty history. The thin WPF view
 // that binds to the ViewModel is Presentation glue verified by smoke.
 
+using Application.History;
 using Application.Ports;
 using AwesomeAssertions;
+using CommunityToolkit.Mvvm.Messaging;
 using Domain.History;
 using Logic.AppManagement.Shell;
 using Mediator;
@@ -18,13 +20,15 @@ public sealed class StatsDashboardDriver
 {
 	private readonly StatsViewModel _viewModel;
 	private readonly IHistoryStore _store;
+	private readonly IMessenger _messenger;
 
 	private readonly DateTimeOffset _day = new(2026, 1, 1, 9, 0, 0, TimeSpan.Zero);
 
-	public StatsDashboardDriver(IMediator mediator, IHistoryStore store)
+	public StatsDashboardDriver(IMediator mediator, IMessenger messenger, IHistoryStore store)
 	{
 		_store = store;
-		_viewModel = new StatsViewModel(mediator);
+		_messenger = messenger;
+		_viewModel = new StatsViewModel(mediator, messenger);
 	}
 
 	// Two sessions totalling five words: "one two three" (3) + "four five" (2).
@@ -43,6 +47,16 @@ public sealed class StatsDashboardDriver
 	public Task OpenDashboard() => _viewModel.RefreshCommand.ExecuteAsync(null);
 
 	public Task RefreshDashboard() => _viewModel.RefreshCommand.ExecuteAsync(null);
+
+	// Grow the recorded usage and fire the live "transcription recorded" message exactly as the record path
+	// does, WITHOUT calling Refresh, so the test proves the dashboard re-queries on the event itself.
+	public async Task MoreUsageRecordedLive()
+	{
+		MoreUsageIsRecorded();
+		_messenger.Send(new TranscriptionRecordedMessage(
+			new TranscriptEntryDto(Guid.NewGuid(), "six seven eight", _day.AddMinutes(10), WordCount: 3)));
+		await (_viewModel.RefreshCommand.ExecutionTask ?? Task.CompletedTask);
+	}
 
 	public void AssertTotals(int transcriptions, int words)
 	{
