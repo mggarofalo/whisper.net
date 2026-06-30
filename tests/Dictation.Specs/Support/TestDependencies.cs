@@ -368,6 +368,11 @@ public static class TestDependencies
 		services.AddScoped<IStartupRegistration>(sp => sp.GetRequiredService<FakeStartupRegistration>());
 		services.AddScoped<RunOnLoginDriver>();
 
+		// Start-at-login toggle: the real GeneralViewModel entered through the navigation activation over
+		// the Mediator pipeline and the same scoped startup registration, so opening the section reads the
+		// registration and flipping the toggle applies it — the run-on-login backend exercised through the UI.
+		services.AddScoped<GeneralSettingsDriver>();
+
 		// Tray icon + menu: drive the real TrayController over the real recording state
 		// machine, with the shell-presenter and host-lifetime seams faked. The driver builds the
 		// controller itself, so only the fakes need registering.
