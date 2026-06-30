@@ -1,19 +1,33 @@
-// The real capture client: wraps NAudio's WasapiCapture (shared mode, default capture device) behind
-// the IAudioCaptureClient seam. Its only job is device glue — negotiate the mix format, convert each
-// device byte buffer to float samples, and translate NAudio's events to the seam's. All the capture
-// *behavior* lives in WasapiAudioSource; this class is therefore validated by manual real-device
-// smoke, not by the headless specs (which use a fake client instead).
+// The real capture client: wraps NAudio's WasapiCapture behind the IAudioCaptureClient seam. Its only
+// job is device glue — pick the device to open from the user's saved selection (resolving a changed
+// endpoint id by friendly name via DeviceSelectionPolicy, and following the OS default otherwise),
+// negotiate the mix format, convert each device byte buffer to float samples, and translate NAudio's
+// events to the seam's. All the capture *behavior* lives in WasapiAudioSource; this class is therefore
+// validated by manual real-device smoke, not by the headless specs (which use a fake client instead).
+// Opening the selected device can never break dictation: any failure to resolve or open it falls back
+// to the OS default, exactly as before this class honored the selection.
 
 using System.Runtime.InteropServices;
+using Application.Ports;
 using Domain.Audio;
+using Domain.Settings;
+using Logic.AppManagement.Settings;
+using Logic.AudioManagement;
+using Microsoft.Extensions.Logging;
 using NAudio.CoreAudioApi;
 using NAudio.Wave;
 
 namespace Infrastructure.Audio;
 
-internal sealed class NAudioCaptureClient : IAudioCaptureClient
+internal sealed class NAudioCaptureClient(
+	IAudioDeviceEnumerator deviceEnumerator,
+	DeviceSelectionPolicy selectionPolicy,
+	SettingsHolder settings,
+	ILogger<NAudioCaptureClient> logger) : IAudioCaptureClient
 {
 	private WasapiCapture? _capture;
+	private MMDeviceEnumerator? _mmEnumerator;
+	private MMDevice? _device;
 
 	// A safe placeholder until Start negotiates the real device format.
 	public CaptureFormat Format { get; private set; } = new(16_000, 1, 16, AudioSampleFormat.Pcm);
@@ -23,7 +37,7 @@ internal sealed class NAudioCaptureClient : IAudioCaptureClient
 
 	public void Start()
 	{
-		WasapiCapture capture = new();
+		WasapiCapture capture = OpenSelectedDevice();
 		Format = ToCaptureFormat(capture.WaveFormat);
 
 		capture.DataAvailable += OnDeviceData;
@@ -31,6 +45,42 @@ internal sealed class NAudioCaptureClient : IAudioCaptureClient
 
 		_capture = capture;
 		capture.StartRecording();
+	}
+
+	// Open the device the user selected. The default-ctor WasapiCapture follows the OS default; a pinned
+	// device is opened explicitly so the user's choice is actually honored (before this, capture always
+	// used the OS default and ignored the selection). Resolution and opening are wrapped so any failure —
+	// a stale id, a device that won't open — degrades to the OS default rather than failing the recording.
+	private WasapiCapture OpenSelectedDevice()
+	{
+		try
+		{
+			AppSettings current = settings.Current;
+			DeviceResolution resolution = selectionPolicy.Resolve(
+				current.CaptureDeviceId,
+				current.CaptureDeviceName,
+				deviceEnumerator.GetCaptureDevices(),
+				deviceEnumerator.GetSystemDefaultId());
+
+			// Follow the OS default (sentinel selection) or a substituted/absent pin: the default-ctor
+			// WasapiCapture tracks the current default, which is the desired behavior in all three cases.
+			if (resolution.FollowsDefault || resolution.Substituted || resolution.DeviceId is null)
+			{
+				return new WasapiCapture();
+			}
+
+			_mmEnumerator = new MMDeviceEnumerator();
+			_device = _mmEnumerator.GetDevice(resolution.DeviceId);
+			logger.LogInformation("Capturing from the selected microphone \"{DeviceName}\".", _device.FriendlyName);
+			return new WasapiCapture(_device);
+		}
+		catch (Exception exception)
+		{
+			logger.LogWarning(
+				exception, "Could not open the selected microphone; falling back to the system default device.");
+			DisposeDevice();
+			return new WasapiCapture();
+		}
 	}
 
 	public void Stop() => _capture?.StopRecording();
@@ -45,6 +95,17 @@ internal sealed class NAudioCaptureClient : IAudioCaptureClient
 
 		_capture?.Dispose();
 		_capture = null;
+		DisposeDevice();
+	}
+
+	// Release the explicitly-opened device (and the enumerator that produced it). A no-op when following
+	// the OS default, where WasapiCapture owns its own device.
+	private void DisposeDevice()
+	{
+		_device?.Dispose();
+		_device = null;
+		_mmEnumerator?.Dispose();
+		_mmEnumerator = null;
 	}
 
 	// Map NAudio's WaveFormat to the port's CaptureFormat value object.
@@ -97,5 +158,6 @@ internal sealed class NAudioCaptureClient : IAudioCaptureClient
 	{
 		_capture?.Dispose();
 		_capture = null;
+		DisposeDevice();
 	}
 }

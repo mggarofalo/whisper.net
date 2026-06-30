@@ -68,7 +68,7 @@ public sealed class AudioDeviceDriver
 	public void Restart() => _selected = _persisted ?? AudioDevice.SystemDefault;
 
 	public void Resolve() => _resolution =
-		_policy.Resolve(_selected, _enumerator.GetCaptureDevices(), _enumerator.GetSystemDefaultId());
+		_policy.Resolve(_selected, selectedName: null, _enumerator.GetCaptureDevices(), _enumerator.GetSystemDefaultId());
 
 	public void AssertUsesDevice(string id)
 	{

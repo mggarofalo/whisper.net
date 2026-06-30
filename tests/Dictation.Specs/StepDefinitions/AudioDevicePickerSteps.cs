@@ -32,4 +32,17 @@ public sealed class AudioDevicePickerSteps(AudioDevicePickerDriver driver)
 
 	[Then(@"a clear unavailable-device warning is shown")]
 	public void ThenAWarningIsShown() => driver.AssertUnavailableWarningShown();
+
+	[Given(@"the saved capture device ""(.*)"" now appears under the name ""(.*)""")]
+	public void GivenTheSavedDeviceIdChanged(string staleId, string name) =>
+		driver.SavedDeviceIdChangedButNameMatches(staleId, name);
+
+	[Then(@"the picker selects the device ""(.*)""")]
+	public void ThenThePickerSelects(string deviceId) => driver.AssertSelectedDevice(deviceId);
+
+	[Then(@"no unavailable-device warning is shown")]
+	public void ThenNoWarningIsShown() => driver.AssertNoUnavailableWarning();
+
+	[Then(@"the saved device id is healed to ""(.*)""")]
+	public void ThenTheSavedIdIsHealed(string deviceId) => driver.AssertHealedTo(deviceId);
 }
