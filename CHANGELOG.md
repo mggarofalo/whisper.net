@@ -6,6 +6,32 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-06-30
+
+### Added
+
+- **Start Whisper at login, from the app.** A new **General** settings section adds a "Start Whisper when
+  I sign in to Windows" toggle that registers (or removes) the current-user run-key entry. The toggle
+  reflects the real registration state on open. This is what makes the app come back after a reboot
+  instead of having to be launched by hand — the run-on-login backend shipped in 0.1.0 but had no UI until
+  now. (WHISPER-134)
+- **Home, History, and Stats update live as you dictate.** The dashboard sections now refresh the moment a
+  transcription is recorded — even when they are not the visible tab — instead of going stale until you
+  navigate back or click Refresh. (WHISPER-136)
+
+### Fixed
+
+- **Your selected microphone is actually used — and survives a changed device id.** Capture previously
+  always opened the OS default device and ignored the saved selection (dictation "worked" only because it
+  fell back to the default). The selection is now honored, and because some endpoints (USB / Bluetooth /
+  docked mics) get a new device id across reboots, the saved device is recovered by its friendly name when
+  the id no longer matches — so the "selected microphone is no longer available" warning stops firing
+  spuriously and you do not have to re-pick. The warning now names the device and appears only when it is
+  genuinely gone. (WHISPER-135)
+- **Model warm-up no longer throws on a shutdown race.** A warm-up that was mid-load when the app shut down
+  could release a disposed semaphore, logging an `ObjectDisposedException`. Disposal now cancels and drains
+  in-flight work first, and the warm-up unwinds as a clean cancellation. (WHISPER-137)
+
 ## [0.2.1] - 2026-06-24
 
 ### Security
@@ -211,7 +237,8 @@ that shipped in 0.1.0, organized by category.
 - **The persisted active model is shown in the picker** before it loads. (WHISPER-118)
 - **The Home dashboard refreshes** on every activation. (WHISPER-119)
 
-[Unreleased]: https://github.com/mggarofalo/whisper.net/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/mggarofalo/whisper.net/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/mggarofalo/whisper.net/releases/tag/v0.3.0
 [0.2.1]: https://github.com/mggarofalo/whisper.net/releases/tag/v0.2.1
 [0.2.0]: https://github.com/mggarofalo/whisper.net/releases/tag/v0.2.0
 [0.1.0]: https://github.com/mggarofalo/whisper.net/releases/tag/v0.1.0
