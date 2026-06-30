@@ -7,6 +7,9 @@
 #  AC3 device-list logic is testable behind an interface (no WPF in Logic.AppManagement)
 #         -> this whole feature drives the WPF-free AudioDeviceViewModel over IMediator +
 #            Logic.AppManagement.Tests/Shell/AudioDeviceViewModelTests
+#  WHISPER-135 a pinned mic whose endpoint id changed across a reboot is recovered by friendly name,
+#         and the stored id is healed, so the user never re-picks and no spurious warning appears
+#         -> "A microphone whose id changed is recovered by name without a warning"
 
 @WHISPER-80
 Feature: Choosing the capture device from an enumerated picker
@@ -27,3 +30,12 @@ Feature: Choosing the capture device from an enumerated picker
     When the device list is loaded
     Then the picker falls back to the system default
     And a clear unavailable-device warning is shown
+
+  @WHISPER-135
+  Scenario: A microphone whose id changed is recovered by name without a warning
+    Given two capture devices are available
+    And the saved capture device "mic-b-old-id" now appears under the name "Microphone B"
+    When the device list is loaded
+    Then the picker selects the device "mic-b"
+    And no unavailable-device warning is shown
+    And the saved device id is healed to "mic-b"

@@ -16,6 +16,7 @@ using Application.Ports;
 using Domain.Settings;
 using Logic.AppManagement.DependencyInjection;
 using Logic.AppManagement.Shell;
+using Logic.AudioManagement;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using Presentation.Threading;
@@ -64,6 +65,11 @@ internal sealed class SmokeScope : IDisposable
 				.Returns(Array.Empty<Domain.History.TranscriptEntry>());
 			return store;
 		});
+
+		// The device-selection policy the audio section resolves its saved selection through. Registered by
+		// AddAudioManagement in production/specs; the smoke scope composes only Application + AppManagement,
+		// so add it explicitly so the AudioDeviceViewModel resolves exactly as the shell would.
+		services.AddSingleton<DeviceSelectionPolicy>();
 
 		// The startup-registration port the General section reads when it activates (GetRunOnLoginQuery).
 		// The view smoke harness renders each section's view without driving the navigation lifecycle, so

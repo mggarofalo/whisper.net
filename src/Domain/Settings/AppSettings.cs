@@ -19,6 +19,12 @@ public sealed record AppSettings
 	// follow the OS default. Defaulted so existing construction sites need not change.
 	public string CaptureDeviceId { get; }
 
+	// The friendly name of the pinned capture device, captured when the user chose it. Some endpoints
+	// (USB / Bluetooth / docked mics) get a new device id across reboots, which would orphan a
+	// by-id-only selection; the name lets the selection self-heal by matching the same device under a new
+	// id. Null when following the system default, or for selections saved before the name was recorded.
+	public string? CaptureDeviceName { get; }
+
 	// Opt-in verbose audit logging. Privacy-sensitive, so it is OFF by default; nothing is
 	// written to the audit log unless the user explicitly enables it. Defaulted so existing sites need not change.
 	public bool AuditLogEnabled { get; }
@@ -39,7 +45,8 @@ public sealed record AppSettings
 		string captureDeviceId = AudioDevice.SystemDefault,
 		bool auditLogEnabled = false,
 		bool setupCompleted = false,
-		ThemePreference themePreference = ThemePreference.System)
+		ThemePreference themePreference = ThemePreference.System,
+		string? captureDeviceName = null)
 	{
 		if (string.IsNullOrWhiteSpace(modelId))
 		{
@@ -69,6 +76,7 @@ public sealed record AppSettings
 		AuditLogEnabled = auditLogEnabled;
 		SetupCompleted = setupCompleted;
 		ThemePreference = themePreference;
+		CaptureDeviceName = captureDeviceName;
 	}
 
 	// The settings a fresh install starts from.

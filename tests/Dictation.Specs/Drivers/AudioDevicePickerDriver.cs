@@ -11,6 +11,7 @@ using Dictation.Specs.Support;
 using Domain.Audio;
 using Domain.Settings;
 using Logic.AppManagement.Shell;
+using Logic.AudioManagement;
 using Mediator;
 using NSubstitute;
 
@@ -29,7 +30,7 @@ public sealed class AudioDevicePickerDriver
 	{
 		_enumerator = enumerator;
 		_store = store;
-		_viewModel = new AudioDeviceViewModel(mediator);
+		_viewModel = new AudioDeviceViewModel(mediator, new DeviceSelectionPolicy());
 
 		_store.LoadAsync(Arg.Any<CancellationToken>()).Returns(_ => _persisted);
 		_store.When(s => s.SaveAsync(Arg.Any<AppSettings>(), Arg.Any<CancellationToken>()))
@@ -52,6 +53,18 @@ public sealed class AudioDevicePickerDriver
 		deviceId,
 		_persisted.AuditLogEnabled,
 		_persisted.SetupCompleted);
+
+	// Pre-persist a selection whose endpoint id has changed but whose friendly name still matches a present
+	// device, modelling a USB/Bluetooth/dock mic re-enumerated under a new id across a reboot.
+	public void SavedDeviceIdChangedButNameMatches(string staleId, string name) => _persisted = new AppSettings(
+		_persisted.ModelId,
+		_persisted.Hotkey,
+		_persisted.SilenceThresholdMs,
+		_persisted.FillerWordRemovalEnabled,
+		staleId,
+		_persisted.AuditLogEnabled,
+		_persisted.SetupCompleted,
+		captureDeviceName: name);
 
 	public Task LoadDevices() => _viewModel.LoadCommand.ExecuteAsync(null);
 
@@ -90,4 +103,14 @@ public sealed class AudioDevicePickerDriver
 
 	public void AssertUnavailableWarningShown() =>
 		_viewModel.UnavailableDeviceWarning.Should().NotBeNullOrEmpty();
+
+	public void AssertSelectedDevice(string deviceId) =>
+		_viewModel.SelectedDeviceId.Should().Be(deviceId);
+
+	public void AssertNoUnavailableWarning() =>
+		_viewModel.UnavailableDeviceWarning.Should().BeNullOrEmpty();
+
+	// The stored id was healed to the device's current id, so the next launch matches by id with no warning.
+	public void AssertHealedTo(string deviceId) =>
+		_persisted.CaptureDeviceId.Should().Be(deviceId);
 }

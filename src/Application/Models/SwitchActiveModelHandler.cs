@@ -40,7 +40,9 @@ public sealed class SwitchActiveModelHandler(
 				current.FillerWordRemovalEnabled,
 				current.CaptureDeviceId,
 				current.AuditLogEnabled,
-				setupCompleted: true);
+				setupCompleted: true,
+					themePreference: current.ThemePreference,
+					captureDeviceName: current.CaptureDeviceName);
 
 			await settingsStore.SaveAsync(updated, cancellationToken);
 

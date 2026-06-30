@@ -33,7 +33,7 @@ public sealed class AudioHotkeyConfigDriver
 	{
 		_enumerator = enumerator;
 		_store = store;
-		_audio = new AudioDeviceViewModel(mediator);
+		_audio = new AudioDeviceViewModel(mediator, new Logic.AudioManagement.DeviceSelectionPolicy());
 		_hotkey = new HotkeyViewModel(mediator, messenger);
 
 		// The store starts holding the persisted settings, and a save round-trips into the next load so a

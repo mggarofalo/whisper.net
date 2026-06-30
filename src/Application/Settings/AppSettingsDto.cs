@@ -16,4 +16,5 @@ public sealed record AppSettingsDto(
 	string CaptureDeviceId = AudioDevice.SystemDefault,
 	bool AuditLogEnabled = false,
 	bool SetupCompleted = false,
-	ThemePreference ThemePreference = ThemePreference.System);
+	ThemePreference ThemePreference = ThemePreference.System,
+	string? CaptureDeviceName = null);

@@ -1,15 +1,17 @@
 // Inner TDD loop for the audio-device picker, WPF-free. These pin the device-list behavior
 // behind IMediator: the list is loaded and the persisted selection reflected; a persisted device that is no
-// longer present does not crash or blank the picker but falls back to the system default and surfaces a
-// clear warning (leaving the persisted id intact so it is restored if the device returns); and choosing a
-// device commits it (live-applying via the settings pipeline) and clears the warning. The ComboBox view is
-// Presentation glue verified by smoke.
+// longer present (by id or friendly name) does not crash or blank the picker but falls back to the system
+// default and surfaces a clear warning (leaving the persisted id intact so it is restored if the device
+// returns); a device whose id changed but whose name is still present is recovered and the stored id healed;
+// and choosing a device commits it (live-applying via the settings pipeline) and clears the warning. The
+// ComboBox view is Presentation glue verified by smoke.
 
 using Application.Audio;
 using Application.Settings;
 using AwesomeAssertions;
 using Domain.Audio;
 using Logic.AppManagement.Shell;
+using Logic.AudioManagement;
 using Mediator;
 using NSubstitute;
 using Xunit;
@@ -24,19 +26,21 @@ public sealed class AudioDeviceViewModelTests
 		new("mic-b", "Microphone B", IsSystemDefault: false),
 	];
 
-	private static AppSettingsDto SettingsWithDevice(string deviceId) => new(
+	private static AppSettingsDto SettingsWithDevice(string deviceId, string? deviceName = null) => new(
 		ModelId: "base.en",
 		Hotkey: "Ctrl+Shift+D",
 		SilenceThresholdMs: 700,
 		FillerWordRemovalEnabled: false,
-		CaptureDeviceId: deviceId);
+		CaptureDeviceId: deviceId,
+		CaptureDeviceName: deviceName);
 
-	private static AudioDeviceViewModel ViewModelFor(string persistedDeviceId)
+	private static AudioDeviceViewModel ViewModelFor(string persistedDeviceId, string? persistedDeviceName = null)
 	{
 		IMediator mediator = Substitute.For<IMediator>();
 		mediator.Send(Arg.Any<ListCaptureDevicesQuery>(), Arg.Any<CancellationToken>()).Returns(Devices);
-		mediator.Send(Arg.Any<GetSettingsQuery>(), Arg.Any<CancellationToken>()).Returns(SettingsWithDevice(persistedDeviceId));
-		return new AudioDeviceViewModel(mediator);
+		mediator.Send(Arg.Any<GetSettingsQuery>(), Arg.Any<CancellationToken>())
+			.Returns(SettingsWithDevice(persistedDeviceId, persistedDeviceName));
+		return new AudioDeviceViewModel(mediator, new DeviceSelectionPolicy());
 	}
 
 	[Fact]
@@ -64,18 +68,40 @@ public sealed class AudioDeviceViewModelTests
 	}
 
 	[Fact]
-	public async Task Selecting_a_device_commits_it_and_clears_the_warning()
+	public async Task A_changed_device_id_is_recovered_by_name_and_the_stored_id_is_healed()
+	{
+		// The endpoint id changed across a reboot, but the same friendly name ("Microphone B") is present.
+		IMediator mediator = Substitute.For<IMediator>();
+		mediator.Send(Arg.Any<ListCaptureDevicesQuery>(), Arg.Any<CancellationToken>()).Returns(Devices);
+		mediator.Send(Arg.Any<GetSettingsQuery>(), Arg.Any<CancellationToken>())
+			.Returns(SettingsWithDevice("mic-b-old-id", "Microphone B"));
+		AudioDeviceViewModel viewModel = new(mediator, new DeviceSelectionPolicy());
+
+		await viewModel.LoadCommand.ExecuteAsync(null);
+
+		viewModel.SelectedDeviceId.Should().Be("mic-b", "the device is recovered under its current id by name");
+		viewModel.UnavailableDeviceWarning.Should().BeNull("a recovered device is not a problem to warn about");
+		await mediator.Received().Send(
+			Arg.Is<UpdateSettingsCommand>(command =>
+				command.Settings.CaptureDeviceId == "mic-b" && command.Settings.CaptureDeviceName == "Microphone B"),
+			Arg.Any<CancellationToken>());
+		viewModel.CommittedDeviceId.Should().Be("mic-b", "the stored id is healed so the warning never returns");
+	}
+
+	[Fact]
+	public async Task Selecting_a_device_commits_it_with_its_name_and_clears_the_warning()
 	{
 		IMediator mediator = Substitute.For<IMediator>();
 		mediator.Send(Arg.Any<ListCaptureDevicesQuery>(), Arg.Any<CancellationToken>()).Returns(Devices);
 		mediator.Send(Arg.Any<GetSettingsQuery>(), Arg.Any<CancellationToken>()).Returns(SettingsWithDevice("ghost-mic"));
-		AudioDeviceViewModel viewModel = new(mediator);
+		AudioDeviceViewModel viewModel = new(mediator, new DeviceSelectionPolicy());
 		await viewModel.LoadCommand.ExecuteAsync(null);
 
 		await viewModel.SelectCommand.ExecuteAsync("mic-b");
 
 		await mediator.Received().Send(
-			Arg.Is<UpdateSettingsCommand>(command => command.Settings.CaptureDeviceId == "mic-b"),
+			Arg.Is<UpdateSettingsCommand>(command =>
+				command.Settings.CaptureDeviceId == "mic-b" && command.Settings.CaptureDeviceName == "Microphone B"),
 			Arg.Any<CancellationToken>());
 		viewModel.SelectedDeviceId.Should().Be("mic-b");
 		viewModel.CommittedDeviceId.Should().Be("mic-b");

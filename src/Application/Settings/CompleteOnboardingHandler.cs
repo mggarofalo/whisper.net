@@ -23,7 +23,9 @@ public sealed class CompleteOnboardingHandler(ISettingsStore store)
 			current.FillerWordRemovalEnabled,
 			current.CaptureDeviceId,
 			current.AuditLogEnabled,
-			setupCompleted: true);
+			setupCompleted: true,
+			themePreference: current.ThemePreference,
+			captureDeviceName: current.CaptureDeviceName);
 
 		await store.SaveAsync(completed, cancellationToken);
 		return Mediator.Unit.Value;
