@@ -86,12 +86,14 @@ public static class AppManagementServiceCollectionExtensions
 		services.AddSingleton(new Shell.NavigationSection("Model", typeof(Shell.ModelViewModel)));
 		services.AddSingleton(new Shell.NavigationSection("Audio", typeof(Shell.AudioDeviceViewModel)));
 		services.AddSingleton(new Shell.NavigationSection("Hotkey", typeof(Shell.HotkeyViewModel)));
+		services.AddSingleton(new Shell.NavigationSection("General", typeof(Shell.GeneralViewModel)));
 		services.AddSingleton(new Shell.NavigationSection("History", typeof(Shell.HistoryViewModel)));
 		services.AddSingleton(new Shell.NavigationSection("Stats", typeof(Shell.StatsViewModel)));
 		services.AddScoped<Shell.HomeViewModel>();
 		services.AddScoped<Shell.ModelViewModel>();
 		services.AddScoped<Shell.AudioDeviceViewModel>();
 		services.AddScoped<Shell.HotkeyViewModel>();
+		services.AddScoped<Shell.GeneralViewModel>();
 		services.AddScoped<Shell.HistoryViewModel>();
 		services.AddScoped<Shell.StatsViewModel>();
 

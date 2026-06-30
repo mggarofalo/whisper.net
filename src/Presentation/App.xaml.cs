@@ -119,6 +119,13 @@ public partial class App
 		IHostApplicationLifetime lifetime = _host.Services.GetRequiredService<IHostApplicationLifetime>();
 		lifetime.ApplicationStopping.Register(() => Dispatcher.Invoke(ShutdownApplication));
 
+		// Diagnostics: record when Windows itself ends the session (sign-out, restart, or shutdown), so that
+		// a later "Whisper wasn't running" is distinguishable in the log from a user tray Quit or a crash —
+		// the question that motivated WHISPER-134. WPF raises this on the UI thread before the OS tears the
+		// process down; we only log and never cancel the session end.
+		SessionEnding += (_, args) =>
+			logger.LogInformation("Windows is ending the session (reason: {Reason}); Whisper will shut down.", args.ReasonSessionEnding);
+
 		// Subscribe the overlay controller to the app-wide signals BEFORE the host starts. It is
 		// a lazily-resolved singleton, and the model warm-up hosted service broadcasts ModelWarmupChangedMessage
 		// during _host.Start() below. Resolved (as it was) only when the overlay window is created after Start,

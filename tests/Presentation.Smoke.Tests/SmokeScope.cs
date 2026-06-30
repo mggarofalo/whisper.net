@@ -65,6 +65,13 @@ internal sealed class SmokeScope : IDisposable
 			return store;
 		});
 
+		// The startup-registration port the General section reads when it activates (GetRunOnLoginQuery).
+		// The view smoke harness renders each section's view without driving the navigation lifecycle, so
+		// this is not exercised today — but registering a contract-honoring substitute (disabled by default,
+		// like a fresh install) keeps a future all-sections activation from leaking a background failure into
+		// the run, the same defensive posture the read ports above take.
+		services.AddScoped(_ => Substitute.For<IStartupRegistration>());
+
 		return new SmokeScope(services.BuildServiceProvider());
 	}
 

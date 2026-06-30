@@ -29,6 +29,9 @@
             <DataTemplate DataType="{x:Type vm:HotkeyViewModel}">
                 <views:HotkeyView />
             </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:GeneralViewModel}">
+                <views:GeneralView />
+            </DataTemplate>
             <DataTemplate DataType="{x:Type vm:HistoryViewModel}">
                 <views:HistoryView />
             </DataTemplate>
