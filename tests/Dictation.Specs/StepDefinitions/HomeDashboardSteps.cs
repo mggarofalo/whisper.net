@@ -31,6 +31,9 @@ public sealed class HomeDashboardSteps(HomeDashboardDriver driver)
 		await driver.ReopenDashboard();
 	}
 
+	[When(@"a transcription ""(.*)"" is recorded while Home is open")]
+	public async Task WhenRecordedLiveWhileOpen(string text) => await driver.ATranscriptionIsRecordedLive(text);
+
 	[Then(@"the most recent dashboard transcription is ""(.*)""")]
 	public void ThenMostRecent(string text) => driver.AssertMostRecentIs(text);
 

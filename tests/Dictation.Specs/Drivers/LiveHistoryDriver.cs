@@ -46,14 +46,22 @@ public sealed class LiveHistoryDriver
 		await (_viewModel.LoadCommand.ExecutionTask ?? Task.CompletedTask);
 	}
 
-	// Switch away (deactivate -> unregister the feed) then back (re-activate; the cached section does not
-	// re-query), so a live entry added while active must still be present.
+	// Switch away (deactivate) then back (re-activate; the cached section does not re-query), so a live
+	// entry added while active must still be present.
 	public async Task SwitchAwayAndBack()
 	{
 		_viewModel.OnNavigatedFrom();
 		_viewModel.OnNavigatedTo();
 		await (_viewModel.LoadCommand.ExecutionTask ?? Task.CompletedTask);
 	}
+
+	// Navigate away from History (deactivate) without coming back, so a transcription recorded next is
+	// recorded while the section is the inactive cached instance.
+	public void SwitchAway() => _viewModel.OnNavigatedFrom();
+
+	// Return to History without a re-query (first-activation load already ran): the live feed, which is now
+	// persistent, must have kept the list current with anything recorded while the section was inactive.
+	public void ReturnToHistory() => _viewModel.OnNavigatedTo();
 
 	// Record through the real Mediator pipeline; the handler persists and publishes the live message.
 	public Task RecordDictation(string text)

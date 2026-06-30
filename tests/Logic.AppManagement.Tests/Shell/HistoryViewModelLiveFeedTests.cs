@@ -1,7 +1,8 @@
 // Unit depth for the live history feed, beyond the acceptance scenarios. Pins that a
-// recorded-transcription message prepends the new entry newest-first and clears the empty state
-// while the section is active; that the feed is only live while active (no prepend after
-// deactivation); and that a redelivered message never doubles an entry already shown.
+// recorded-transcription message prepends the new entry newest-first and clears the empty state; that
+// the feed stays live for the section's whole lifetime — including while it is the inactive cached
+// instance (WHISPER-136), so an entry recorded on another tab is not missed; and that a redelivered
+// message never doubles an entry already shown.
 
 using Application.History;
 using Application.Ports;
@@ -62,14 +63,16 @@ public sealed class HistoryViewModelLiveFeedTests
 	}
 
 	[Fact]
-	public void The_feed_is_not_live_after_the_section_is_deactivated()
+	public void The_feed_stays_live_after_the_section_is_deactivated()
 	{
 		Open();
 		_viewModel.OnNavigatedFrom();
 
-		_messenger.Send(new TranscriptionRecordedMessage(Dto("ignored while inactive")));
+		// WHISPER-136: the live feed is persistent, so a transcription recorded while History is the inactive
+		// cached instance still lands in the list and is there when the user returns — no re-query needed.
+		_messenger.Send(new TranscriptionRecordedMessage(Dto("recorded while inactive")));
 
-		_viewModel.Entries.Should().BeEmpty("an inactive cached section holds no live subscription");
+		_viewModel.Entries.Should().ContainSingle().Which.Text.Should().Be("recorded while inactive");
 	}
 
 	[Fact]

@@ -34,3 +34,14 @@ Feature: The history list updates live when a transcription is recorded
     And the user switches away from History and back
     Then the new transcription appears at the top of the history list
     And the history list has 1 entry
+
+  # WHISPER-136: the live feed is persistent, so an entry recorded while History is NOT the visible tab
+  # still appears when the user returns — without a re-query that would disturb the browsed page.
+  @WHISPER-136
+  Scenario: A transcription recorded while History is inactive still appears on return
+    Given the History section is open with no history yet
+    And the user navigates away from History
+    When a transcription "away note" is recorded
+    And the user returns to History
+    Then the new transcription appears at the top of the history list
+    And the history list has 1 entry

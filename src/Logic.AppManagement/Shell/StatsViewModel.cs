@@ -5,9 +5,11 @@
 // history yields zeroed totals rather than an error. Built on CommunityToolkit.Mvvm and WPF-free so the
 // behavior is driven for real in specs; the thin view binds to it.
 
+using Application.History;
 using Application.Statistics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using Mediator;
 
 namespace Logic.AppManagement.Shell;
@@ -15,8 +17,21 @@ namespace Logic.AppManagement.Shell;
 public sealed partial class StatsViewModel : FeatureViewModel
 {
 	private readonly IMediator _mediator;
+	private readonly IMessenger _messenger;
 
-	public StatsViewModel(IMediator mediator) => _mediator = mediator;
+	public StatsViewModel(IMediator mediator, IMessenger messenger)
+	{
+		_mediator = mediator;
+		_messenger = messenger;
+
+		// Live totals: re-run the aggregate query whenever a transcription is recorded, for the section's
+		// whole lifetime (not just while visible), so the dashboard reflects new activity the moment it
+		// happens instead of going stale until a manual Refresh or a re-open. RefreshCommand disallows
+		// concurrent runs, so a burst of recordings collapses to the latest re-query. The shared
+		// WeakReferenceMessenger holds the recipient weakly, so this persistent registration cannot leak it.
+		_messenger.Register<StatsViewModel, TranscriptionRecordedMessage>(
+			this, static (recipient, _) => recipient.RefreshCommand.Execute(null));
+	}
 
 	/// <summary>Total number of dictation sessions recorded.</summary>
 	[ObservableProperty]

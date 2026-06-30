@@ -27,12 +27,14 @@ public sealed class HomeDashboardDriver
 	private readonly ISettingsStore _settings;
 	private readonly IHistoryStore _history;
 	private readonly FakeAudioDeviceEnumerator _devices;
+	private readonly IMessenger _messenger;
 
 	public HomeDashboardDriver(IMediator mediator, IMessenger messenger, ISettingsStore settings, IHistoryStore history, FakeAudioDeviceEnumerator devices, IUiCollectionSynchronizer synchronizer)
 	{
 		_settings = settings;
 		_history = history;
 		_devices = devices;
+		_messenger = messenger;
 		_viewModel = new HomeViewModel(mediator, messenger, synchronizer);
 	}
 
@@ -76,6 +78,17 @@ public sealed class HomeDashboardDriver
 		_viewModel.OnNavigatedFrom();
 		_viewModel.OnNavigatedTo();
 		await _viewModel.RefreshCommand.ExecutionTask!;
+	}
+
+	// Record activity and fire the live "transcription recorded" message exactly as the record path does,
+	// WITHOUT reopening, so the test proves the dashboard re-queries on the event itself while it stays open.
+	public async Task ATranscriptionIsRecordedLive(string text)
+	{
+		ANewTranscriptionIsRecorded(text);
+		_messenger.Send(new Application.History.TranscriptionRecordedMessage(
+			new Application.History.TranscriptEntryDto(
+				Guid.NewGuid(), text, new DateTimeOffset(2026, 6, 11, 21, 0, 0, TimeSpan.Zero), WordCount: 2)));
+		await (_viewModel.RefreshCommand.ExecutionTask ?? Task.CompletedTask);
 	}
 
 	public void AssertMostRecentIs(string text)

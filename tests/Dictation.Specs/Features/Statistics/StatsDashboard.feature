@@ -25,3 +25,12 @@ Feature: Stats dashboard
     Given no usage metrics have been recorded
     When the user opens the stats dashboard
     Then the stats display zeroed values without error
+
+  # WHISPER-136: the dashboard is event-driven — a recorded transcription updates the totals live,
+  # with no manual Refresh and no re-open, even when Stats is not the visible tab.
+  @WHISPER-136
+  Scenario: The stats update live when a transcription is recorded
+    Given usage metrics have been recorded
+    When the user opens the stats dashboard
+    And a transcription is recorded while the dashboard is open
+    Then the displayed totals include the new activity

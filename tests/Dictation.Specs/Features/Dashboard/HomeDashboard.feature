@@ -38,3 +38,15 @@ Feature: The Home section is a live status dashboard
     When a transcription "brand new note" is recorded and the Home section is reopened
     Then the dashboard lists 1 recent transcriptions
     And the most recent dashboard transcription is "brand new note"
+
+  # WHISPER-136: the dashboard is event-driven — a transcription recorded while Home is already open
+  # updates the recent list and totals live, with no re-open.
+  @WHISPER-136
+  Scenario: The dashboard updates live when a transcription is recorded while Home is open
+    Given the dashboard's settings select model "small.en" and the system default input device
+    And the dashboard has no recorded transcriptions
+    When the Home section is opened
+    Then the dashboard shows its empty recent state
+    When a transcription "live note" is recorded while Home is open
+    Then the dashboard lists 1 recent transcriptions
+    And the most recent dashboard transcription is "live note"

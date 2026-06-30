@@ -33,4 +33,7 @@ public sealed class StatsDashboardSteps(StatsDashboardDriver driver)
 
 	[Then(@"the stats display zeroed values without error")]
 	public void ThenStatsAreZeroed() => driver.AssertZeroed();
+
+	[When(@"a transcription is recorded while the dashboard is open")]
+	public async Task WhenATranscriptionIsRecordedLive() => await driver.MoreUsageRecordedLive();
 }

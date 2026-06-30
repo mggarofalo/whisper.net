@@ -25,6 +25,12 @@ public sealed class LiveHistorySteps(LiveHistoryDriver driver)
 	[When(@"the user switches away from History and back")]
 	public Task WhenSwitchAwayAndBack() => driver.SwitchAwayAndBack();
 
+	[Given(@"the user navigates away from History")]
+	public void GivenNavigatesAwayFromHistory() => driver.SwitchAway();
+
+	[When(@"the user returns to History")]
+	public void WhenReturnsToHistory() => driver.ReturnToHistory();
+
 	[Then(@"the new transcription appears at the top of the history list")]
 	public void ThenTopEntry() => driver.AssertTopIsLastRecorded();
 

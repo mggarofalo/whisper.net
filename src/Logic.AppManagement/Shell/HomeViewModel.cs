@@ -34,6 +34,15 @@ public sealed partial class HomeViewModel : FeatureViewModel
 		_mediator = mediator;
 		_messenger = messenger;
 		synchronizer.Enable(Recent);
+
+		// Live overview: re-query the dashboard whenever a transcription is recorded, for the section's whole
+		// lifetime (not just while visible), so the recent list and totals reflect new activity immediately
+		// rather than only on the next re-open. This subscription is persistent (set up here, not in
+		// OnActivated) so it survives navigating away; the warm-up status below stays active-only because it
+		// is a transient, only-while-visible cue. RefreshCommand disallows concurrent runs, so a burst of
+		// recordings collapses to the latest refresh, and the WeakReferenceMessenger cannot root this VM.
+		_messenger.Register<HomeViewModel, TranscriptionRecordedMessage>(
+			this, static (recipient, _) => recipient.RefreshCommand.Execute(null));
 	}
 
 	/// <summary>The id of the model dictation will load, from settings.</summary>
@@ -85,7 +94,9 @@ public sealed partial class HomeViewModel : FeatureViewModel
 		RefreshCommand.Execute(null);
 	}
 
-	protected override void OnDeactivated() => _messenger.UnregisterAll(this);
+	// Drop only the active-only warm-up subscription on navigate-away; the persistent transcription feed
+	// registered in the constructor must survive so the dashboard keeps updating while another tab is open.
+	protected override void OnDeactivated() => _messenger.Unregister<ModelWarmupChangedMessage>(this);
 
 	// Compose the overview from existing read queries; Refresh re-runs it so the dashboard reflects new
 	// activity. Awaiting each query keeps the UI thread free.
