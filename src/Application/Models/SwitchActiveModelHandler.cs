@@ -42,7 +42,8 @@ public sealed class SwitchActiveModelHandler(
 				current.AuditLogEnabled,
 				setupCompleted: true,
 					themePreference: current.ThemePreference,
-					captureDeviceName: current.CaptureDeviceName);
+					captureDeviceName: current.CaptureDeviceName,
+					overlayMonitorDeviceName: current.OverlayMonitorDeviceName);
 
 			await settingsStore.SaveAsync(updated, cancellationToken);
 

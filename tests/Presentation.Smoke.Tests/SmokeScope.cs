@@ -78,6 +78,18 @@ internal sealed class SmokeScope : IDisposable
 		// the run, the same defensive posture the read ports above take.
 		services.AddScoped(_ => Substitute.For<IStartupRegistration>());
 
+		// The monitor-catalog port the General section reads when it activates (ListMonitorsQuery). Registered
+		// in the Presentation composition root in production; the smoke scope composes only Application +
+		// AppManagement, so add a contract-honoring substitute (a single primary display) for the same
+		// defensive reason as the ports above.
+		services.AddScoped(_ =>
+		{
+			IMonitorCatalog catalog = Substitute.For<IMonitorCatalog>();
+			catalog.GetMonitors().Returns([
+				new Application.Display.MonitorInfo("\\\\.\\DISPLAY1", "Primary display (1920 × 1080)", true, 0, 0, 1920, 1040)]);
+			return catalog;
+		});
+
 		return new SmokeScope(services.BuildServiceProvider());
 	}
 

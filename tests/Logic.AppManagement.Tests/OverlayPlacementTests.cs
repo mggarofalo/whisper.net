@@ -3,6 +3,7 @@
 // work-area origin offset (a secondary monitor). The WPF window that resolves the work area and applies
 // this is the manual-verification remainder (multi-monitor, DPI scales, taskbar positions).
 
+using Application.Display;
 using AwesomeAssertions;
 using Logic.AppManagement;
 using Xunit;
@@ -13,6 +14,9 @@ public sealed class OverlayPlacementTests
 {
 	private const double OverlayWidth = 208;
 	private const double OverlayHeight = 44;
+
+	private static readonly MonitorInfo Primary = new("\\\\.\\DISPLAY1", "Primary display", true, 0, 0, 1920, 1040);
+	private static readonly MonitorInfo Secondary = new("\\\\.\\DISPLAY2", "Display 2", false, 1920, 0, 2560, 1400);
 
 	[Fact]
 	public void Centers_horizontally_in_the_work_area()
@@ -67,5 +71,49 @@ public sealed class OverlayPlacementTests
 		(_, double large) = OverlayPlacement.BottomCenter(workArea, OverlayWidth, OverlayHeight, bottomMargin: 64);
 
 		large.Should().BeLessThan(small, "a larger bottom margin moves the overlay up");
+	}
+
+	[Fact]
+	public void Chooses_the_monitor_whose_device_name_matches_the_preference()
+	{
+		MonitorInfo? chosen = OverlayPlacement.ChooseMonitor([Primary, Secondary], Secondary.DeviceName);
+
+		chosen.Should().Be(Secondary, "the persisted display is honored when it is still attached");
+	}
+
+	[Fact]
+	public void Falls_back_to_the_primary_when_no_preference_is_set()
+	{
+		MonitorInfo? chosen = OverlayPlacement.ChooseMonitor([Secondary, Primary], preferredDeviceName: null);
+
+		chosen.Should().Be(Primary, "a null preference (the default) follows the primary display");
+	}
+
+	[Fact]
+	public void Falls_back_to_the_primary_when_the_preferred_display_is_gone()
+	{
+		// The saved display has been unplugged: only the primary remains.
+		MonitorInfo? chosen = OverlayPlacement.ChooseMonitor([Primary], Secondary.DeviceName);
+
+		chosen.Should().Be(Primary, "a removed display self-heals to the primary rather than stranding the overlay");
+	}
+
+	[Fact]
+	public void Falls_back_to_the_first_monitor_when_none_is_flagged_primary()
+	{
+		MonitorInfo first = Secondary with { IsPrimary = false };
+		MonitorInfo second = Primary with { IsPrimary = false };
+
+		MonitorInfo? chosen = OverlayPlacement.ChooseMonitor([first, second], preferredDeviceName: null);
+
+		chosen.Should().Be(first, "with no primary flagged, the first available monitor is used");
+	}
+
+	[Fact]
+	public void Returns_null_when_no_monitors_are_available()
+	{
+		MonitorInfo? chosen = OverlayPlacement.ChooseMonitor([], preferredDeviceName: null);
+
+		chosen.Should().BeNull("an empty catalog leaves the caller to fall back to the primary work area");
 	}
 }

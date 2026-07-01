@@ -80,6 +80,11 @@ public partial class App
 		// collections (with the gate their mutations take) so a background-thread update binds safely.
 		builder.Services.AddSingleton<IUiCollectionSynchronizer, WpfCollectionSynchronizer>();
 
+		// Display topology: the monitor catalog is a Win32/WPF concern, so it is composed here in the
+		// Presentation root (like the dispatcher). The overlay resolves its target display through it, and the
+		// General settings picker lists the choices via ListMonitorsQuery.
+		builder.Services.AddSingleton<IMonitorCatalog, Win32MonitorCatalog>();
+
 		// Tray UI: the shell presenter (settings window), the tray coordination, and its
 		// view-model. Registered here in the composition root because they are Presentation concerns; the
 		// controller resolves the host-provided IHostApplicationLifetime for graceful Quit.
@@ -152,12 +157,13 @@ public partial class App
 		// after the host has started. The logger records the whole show/position path for diagnostics.
 		_levelOverlay = new LevelOverlay(
 			_host.Services.GetRequiredService<LevelOverlayViewModel>(),
+			_host.Services.GetRequiredService<IMonitorCatalog>(),
 			_host.Services.GetRequiredService<ILogger<LevelOverlay>>());
 
-		// Theme: apply the persisted Light/Dark/System preference, and re-apply it live when
-		// the user changes it in the sidebar switcher (a settings change is broadcast on the instant-apply
-		// channel). The System default set in OnStartup stands until the async settings read completes.
-		WatchThemePreference();
+		// Presentation settings: apply the persisted theme AND the overlay's target display, and re-apply both
+		// live when the user changes them (a settings change is broadcast on the instant-apply channel). The
+		// System theme default and the primary-monitor overlay default stand until the async read completes.
+		WatchPresentationSettings();
 
 		logger.LogInformation("Whisper host started; running tray-resident with no startup window.");
 
@@ -220,32 +226,42 @@ public partial class App
 		_host!.Services.GetRequiredService<IShellPresenter>().ShowSettings();
 	}
 
-	// Apply the persisted theme preference and re-apply it whenever settings change. The
-	// switcher persists via UpdateSettings, which broadcasts SettingsChangedMessage; ThemeMode must be set
-	// on the UI thread, and the message can arrive on a background thread, so both paths marshal.
-	private void WatchThemePreference()
+	// Apply the persisted presentation settings and re-apply them whenever settings change. The switcher /
+	// picker persist via UpdateSettings, which broadcasts SettingsChangedMessage; ThemeMode and the overlay
+	// window must be touched on the UI thread, and the message can arrive on a background thread, so both
+	// paths marshal. A single SettingsChangedMessage registration carries both — CommunityToolkit forbids a
+	// second registration for the same recipient + message type.
+	private void WatchPresentationSettings()
 	{
 		IMessenger messenger = _host!.Services.GetRequiredService<IMessenger>();
 		messenger.Register<App, SettingsChangedMessage>(this, static (app, message) =>
-			app.Dispatcher.Invoke(() => app.ApplyTheme(message.Value.ThemePreference)));
+			app.Dispatcher.Invoke(() =>
+			{
+				app.ApplyTheme(message.Value.ThemePreference);
+				app._levelOverlay?.SetTargetMonitor(message.Value.OverlayMonitorDeviceName);
+			}));
 
-		_ = ApplyPersistedThemeAsync();
+		_ = ApplyPersistedPresentationSettingsAsync();
 	}
 
-	private async Task ApplyPersistedThemeAsync()
+	private async Task ApplyPersistedPresentationSettingsAsync()
 	{
 		try
 		{
 			using IServiceScope scope = _host!.Services.CreateScope();
 			IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 			AppSettingsDto settings = await mediator.Send(new GetSettingsQuery());
-			Dispatcher.Invoke(() => ApplyTheme(settings.ThemePreference));
+			Dispatcher.Invoke(() =>
+			{
+				ApplyTheme(settings.ThemePreference);
+				_levelOverlay?.SetTargetMonitor(settings.OverlayMonitorDeviceName);
+			});
 		}
 		catch (Exception ex)
 		{
-			// A failed read must not strand the app; the System default applied in OnStartup stands.
+			// A failed read must not strand the app; the OnStartup System theme and primary-monitor defaults stand.
 			_host!.Services.GetRequiredService<ILogger<App>>()
-				.LogWarning(ex, "Could not read the persisted theme preference; staying on the system theme.");
+				.LogWarning(ex, "Could not read persisted presentation settings; staying on the system theme and primary display.");
 		}
 	}
 

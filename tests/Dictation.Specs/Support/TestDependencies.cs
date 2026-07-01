@@ -368,10 +368,27 @@ public static class TestDependencies
 		services.AddScoped<IStartupRegistration>(sp => sp.GetRequiredService<FakeStartupRegistration>());
 		services.AddScoped<RunOnLoginDriver>();
 
-		// Start-at-login toggle: the real GeneralViewModel entered through the navigation activation over
-		// the Mediator pipeline and the same scoped startup registration, so opening the section reads the
-		// registration and flipping the toggle applies it — the run-on-login backend exercised through the UI.
+		// Monitor catalog: the display-enumeration port is implemented in the Presentation composition root
+		// (Win32), so specs substitute it with a single primary display — enough for the General section's
+		// overlay-display picker (list + persist) and any overlay placement resolution.
+		services.AddScoped(_ =>
+		{
+			IMonitorCatalog catalog = Substitute.For<IMonitorCatalog>();
+			catalog.GetMonitors().Returns([
+				new Application.Display.MonitorInfo("\\\\.\\DISPLAY1", "Primary display (1920 × 1080)", true, 0, 0, 1920, 1040)]);
+			return catalog;
+		});
+
+		// Start-at-login toggle + overlay-display picker: the real GeneralViewModel entered through the
+		// navigation activation over the Mediator pipeline, the same scoped startup registration, and the
+		// substituted monitor catalog, so opening the section reads the registration and the monitors and a
+		// user change to either applies through the UI.
 		services.AddScoped<GeneralSettingsDriver>();
+
+		// Overlay-display picker persistence: the real GeneralViewModel over the Mediator pipeline
+		// (GetSettings / ListMonitors / UpdateSettings) with a round-tripping store and the substituted
+		// catalog reconfigured per scenario, so a chosen display persists and survives a reload.
+		services.AddScoped<OverlayDisplayDriver>();
 
 		// Tray icon + menu: drive the real TrayController over the real recording state
 		// machine, with the shell-presenter and host-lifetime seams faked. The driver builds the

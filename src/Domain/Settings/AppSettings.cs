@@ -37,6 +37,11 @@ public sealed record AppSettings
 	// existing sites need not change and a fresh install follows the OS preference.
 	public ThemePreference ThemePreference { get; }
 
+	// The display the recording overlay is placed on, as a stable device name (e.g. \\.\DISPLAY2). Null
+	// means "follow the primary monitor" — the default a fresh install starts from, and the self-healing
+	// fallback if the chosen display is no longer attached. Defaulted so existing sites need not change.
+	public string? OverlayMonitorDeviceName { get; }
+
 	public AppSettings(
 		string modelId,
 		HotkeyBinding hotkey,
@@ -46,7 +51,8 @@ public sealed record AppSettings
 		bool auditLogEnabled = false,
 		bool setupCompleted = false,
 		ThemePreference themePreference = ThemePreference.System,
-		string? captureDeviceName = null)
+		string? captureDeviceName = null,
+		string? overlayMonitorDeviceName = null)
 	{
 		if (string.IsNullOrWhiteSpace(modelId))
 		{
@@ -77,6 +83,7 @@ public sealed record AppSettings
 		SetupCompleted = setupCompleted;
 		ThemePreference = themePreference;
 		CaptureDeviceName = captureDeviceName;
+		OverlayMonitorDeviceName = overlayMonitorDeviceName;
 	}
 
 	// The settings a fresh install starts from.

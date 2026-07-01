@@ -8,6 +8,7 @@ using System;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
+using Application.Display;
 using Application.Models;
 using Application.Ports;
 using AwesomeAssertions;
@@ -15,6 +16,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using Domain.Audio;
 using Logic.AppManagement;
 using Microsoft.Extensions.Logging.Abstractions;
+using NSubstitute;
 using Presentation.Overlay;
 using Xunit;
 
@@ -62,7 +64,9 @@ public sealed class OverlayViewSmokeTests
 		using LevelOverlayViewModel viewModel = new(controller, new InlineDispatcher());
 
 		// Realizes the window off-screen (HWND + first layout) and applies its overlay styles. Must not throw.
-		using LevelOverlay overlay = new(viewModel, NullLogger<LevelOverlay>.Instance);
+		IMonitorCatalog monitors = Substitute.For<IMonitorCatalog>();
+		monitors.GetMonitors().Returns([new MonitorInfo("\\\\.\\DISPLAY1", "Primary display (1920 × 1080)", true, 0, 0, 1920, 1040)]);
+		using LevelOverlay overlay = new(viewModel, monitors, NullLogger<LevelOverlay>.Instance);
 		FlushDispatcherQueue();
 
 		viewModel.IsOverlayVisible.Should().BeFalse("the overlay is hidden at rest");
