@@ -6,6 +6,26 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-07-01
+
+### Added
+
+- **Choose which display the recording overlay appears on.** The **General** settings section gains a
+  display picker, defaulting to the primary monitor. The choice persists, applies immediately (no restart),
+  and self-heals to the primary if the chosen display is later disconnected. (WHISPER-139)
+
+### Fixed
+
+- **The recording overlay reliably appears again.** The mini-recorder pill (recording level, elapsed time,
+  warm-up status) had begun failing to show at all. The overlay window was rebuilt for reliability: it is
+  now created and laid out up front and forced above other top-most windows on each show, fixing the two
+  WPF conditions that left it invisible — a fragile lazy first-show, and a `ShowInTaskbar=false` window
+  whose hidden owner could render it behind the focused app. It is also genuinely click-through now, and
+  the whole show/position path is logged so a single dictation surfaces exactly what happened. (WHISPER-139)
+- **Live Home/Stats refresh no longer errors when the settings window is open.** The live dashboard refresh
+  added in 0.3.0 could raise a cross-thread exception (logged as a history/stats failure) when a
+  transcription completed while settings was open; the refresh is now marshaled to the UI thread. (WHISPER-138)
+
 ## [0.3.0] - 2026-06-30
 
 ### Added
@@ -237,7 +257,8 @@ that shipped in 0.1.0, organized by category.
 - **The persisted active model is shown in the picker** before it loads. (WHISPER-118)
 - **The Home dashboard refreshes** on every activation. (WHISPER-119)
 
-[Unreleased]: https://github.com/mggarofalo/whisper.net/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/mggarofalo/whisper.net/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/mggarofalo/whisper.net/releases/tag/v0.3.1
 [0.3.0]: https://github.com/mggarofalo/whisper.net/releases/tag/v0.3.0
 [0.2.1]: https://github.com/mggarofalo/whisper.net/releases/tag/v0.2.1
 [0.2.0]: https://github.com/mggarofalo/whisper.net/releases/tag/v0.2.0
