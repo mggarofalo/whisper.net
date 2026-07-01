@@ -1,30 +1,44 @@
-// The mini-recorder overlay window: a small, frameless, top-most,
-// click-through-tolerant WPF window that appears while recording/transcribing and shows recording state, a
-// live microphone-level meter, the elapsed time, and a near-cap warning. It is pure view glue over the
-// LevelOverlayViewModel: everything is DATA-BOUND — no PropertyChanged subscription, no
-// property-name switch — so a renamed view-model property refactors the nameof-based paths or fails loudly
-// instead of silently freezing the overlay. Built in code (no XAML) so it stays a thin, self-contained
-// view; its compact content is built by the shared BuildContent factory so the smoke harness can construct
-// and measure the exact same layout. The window is positioned bottom-center of the
-// work area.
+// The mini-recorder overlay window: a small, frameless, top-most, genuinely click-through WPF window that
+// appears while recording/transcribing/warming and shows recording state, a live microphone-level meter,
+// the elapsed time, and a near-cap warning. It is pure view glue over the LevelOverlayViewModel: the
+// content is DATA-BOUND (no PropertyChanged subscription) so a renamed view-model property refactors the
+// nameof paths or fails loudly instead of silently freezing the overlay.
+//
+// The window is rebuilt for reliability (WHISPER-139). Two WPF failure modes made the old overlay
+// intermittently never appear: (1) it was created hidden and never Show()n, so the FIRST flip to Visible
+// was a fragile lazy first-time show (transparent + SizeToContent + ShowActivated=false), and (2) with
+// ShowInTaskbar=false WPF gives the window a hidden owner that may lack WS_EX_TOPMOST, so Topmost=true
+// alone could leave it rendering BEHIND the focused app. The durable fix: realize the HWND and run a full
+// layout pass ONCE off-screen at construction (so ActualWidth/Height are final and every later show is a
+// plain Hidden->Visible toggle on a live window), apply explicit overlay extended styles once the HWND
+// exists, and on every show reposition against the target monitor and force the window to the top of the
+// Z-order via an explicit HWND_TOPMOST SetWindowPos. The whole path is logged so a single dictation on a
+// user's machine reveals exactly what happened (visibility, thread, computed position, size, work area).
 
 using System;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using Logic.AppManagement;
+using Microsoft.Extensions.Logging;
 
 namespace Presentation.Overlay;
 
 public sealed class LevelOverlay : IDisposable
 {
 	private readonly Window _window;
+	private readonly ILogger<LevelOverlay> _logger;
+	private bool _realizing;
+	private bool _disposed;
 
-	public LevelOverlay(LevelOverlayViewModel viewModel)
+	public LevelOverlay(LevelOverlayViewModel viewModel, ILogger<LevelOverlay> logger)
 	{
+		_logger = logger;
+
 		_window = new Window
 		{
 			// Frameless, transparent, top-most, and out of the taskbar so it reads as an overlay, not a window.
@@ -36,32 +50,67 @@ public sealed class LevelOverlay : IDisposable
 			ShowActivated = false,
 			ResizeMode = ResizeMode.NoResize,
 			SizeToContent = SizeToContent.WidthAndHeight,
-			// Positioned manually, bottom-center of the work area; see Reposition.
+			// Positioned manually (see Reposition); parked off every screen until the first real show so the
+			// one-time realize pass below never flashes on screen.
 			WindowStartupLocation = WindowStartupLocation.Manual,
-			// Click-through tolerant: the overlay never steals focus or absorbs clicks from the app below.
+			Left = OffScreen,
+			Top = OffScreen,
+			// Click-through tolerant within WPF; OverlayWindowInterop adds OS-level click-through on top.
 			Focusable = false,
 			IsHitTestVisible = false,
 			DataContext = viewModel,
 			Content = BuildContent(),
 		};
 
-		// Setting a Window's Visibility shows/hides it exactly like Show()/Hide(), so the overlay's whole
-		// lifecycle is one binding.
-		_window.SetBinding(UIElement.VisibilityProperty,
-			new Binding(nameof(LevelOverlayViewModel.IsOverlayVisible)) { Converter = new BooleanToVisibilityConverter() });
-
-		// Place the overlay bottom-center of the work area each time it is shown and once its
-		// size settles. The overlay is transient — shown only while a dictation runs — so resolving the work
-		// area on every show keeps it correct after the work area changes (taskbar moved/resized) between
-		// recordings; a change DURING an active recording is the manual remainder. The placement math is the
-		// WPF-free OverlayPlacement in Logic; this resolves the work area and applies the result.
+		// Apply the overlay's native extended styles the moment the HWND exists (genuine click-through,
+		// no-activate, no Alt-Tab). SourceInitialized fires during the realize Show() below.
+		_window.SourceInitialized += OnSourceInitialized;
 		_window.IsVisibleChanged += OnVisibleChanged;
 		_window.SizeChanged += OnSizeChanged;
+
+		Realize();
+
+		// Only now bind Visibility to the view-model. Starting hidden (IsOverlayVisible=false) it stays hidden;
+		// each later flip to true is a robust Hidden->Visible toggle on an already-realized window, not a lazy
+		// first-time show. Setting Visibility shows/hides the window exactly like Show()/Hide().
+		_window.SetBinding(UIElement.VisibilityProperty,
+			new Binding(nameof(LevelOverlayViewModel.IsOverlayVisible)) { Converter = new BooleanToVisibilityConverter() });
 	}
 
-	// The overlay's compact content: a single pill — a state-coloured dot, the level meter,
-	// and the elapsed time — kept within the original footprint. Public + static so the smoke harness builds
-	// and measures the very same layout against a bound view-model.
+	// Far outside any physical or virtual screen, so the one-time realize show is never visible.
+	private const double OffScreen = -32000;
+
+	// Realize the window once, off-screen: create the HWND and run a full layout pass so ActualWidth/Height
+	// are final before the first real show. ShowActivated=false + the off-screen park keep this invisible and
+	// non-focus-stealing. Defensive: a failure here must not strand startup — the Visibility binding set by the
+	// caller still drives the overlay (falling back to the old lazy first-show), and it is logged.
+	private void Realize()
+	{
+		try
+		{
+			// Guard the visibility/size events this pass raises: they must not reposition the parked window
+			// on-screen or log a misleading "shown" — this show is purely to build the HWND and measure.
+			_realizing = true;
+			_window.Show();
+			_window.UpdateLayout();
+			_window.Hide();
+
+			_logger.LogInformation(
+				"Overlay window realized off-screen: size {Width}x{Height}, hwnd {Hwnd}.",
+				_window.ActualWidth, _window.ActualHeight, Handle());
+		}
+		catch (Exception ex)
+		{
+			_logger.LogWarning(ex, "Overlay window could not be realized up front; falling back to lazy first-show.");
+		}
+		finally
+		{
+			_realizing = false;
+		}
+	}
+
+	// The overlay's compact content: a single pill — a state-coloured dot, the level meter, and the elapsed
+	// time. Public + static so the smoke harness builds and measures the very same layout against a bound VM.
 	public static FrameworkElement BuildContent()
 	{
 		Ellipse stateDot = new()
@@ -146,25 +195,68 @@ public sealed class LevelOverlay : IDisposable
 		};
 	}
 
+	private void OnSourceInitialized(object? sender, EventArgs e)
+	{
+		nint hwnd = Handle();
+		if (hwnd == nint.Zero)
+		{
+			return;
+		}
+
+		OverlayWindowInterop.MakeOverlayStyled(hwnd);
+		_logger.LogInformation("Overlay window native styles applied (click-through, no-activate, tool-window).");
+	}
+
 	private void OnVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
 	{
-		if (_window.IsVisible)
+		// The off-screen realize pass toggles visibility to build the HWND; ignore it entirely so the parked
+		// window is never moved on-screen or reported as shown.
+		if (_realizing)
+		{
+			return;
+		}
+
+		if (!_window.IsVisible)
+		{
+			_logger.LogDebug("Overlay hidden.");
+			return;
+		}
+
+		Reposition();
+
+		// Re-assert top-most on every show: this is the durable defence against the ShowInTaskbar hidden-owner
+		// case where the overlay is visible but rendered behind the focused app.
+		nint hwnd = Handle();
+		if (hwnd != nint.Zero)
+		{
+			OverlayWindowInterop.BringToTopmost(hwnd);
+		}
+
+		_logger.LogInformation(
+			"Overlay shown: placed at ({Left},{Top}), size {Width}x{Height}, work area {WorkArea}, hwnd {Hwnd}.",
+			_window.Left, _window.Top, _window.ActualWidth, _window.ActualHeight, SystemParameters.WorkArea, hwnd);
+	}
+
+	private void OnSizeChanged(object sender, SizeChangedEventArgs e)
+	{
+		// The size settling (e.g. a DPI change while shown) can move the anchor point; keep it correct. Never
+		// during the off-screen realize pass — that would drag the parked window on-screen.
+		if (!_realizing && _window.IsVisible)
 		{
 			Reposition();
 		}
 	}
 
-	private void OnSizeChanged(object sender, SizeChangedEventArgs e) => Reposition();
-
-	// Apply the bottom-center placement against the primary work area. SystemParameters.WorkArea
-	// is already in DIPs, so the window lands on-screen regardless of the display scale — unlike the earlier
-	// physical-pixel monitor probe, which mis-scaled on a non-100% display and pushed the
-	// overlay off-screen. Sizes are read after layout, so ActualWidth/Height are final. (Placing on the
-	// focused window's monitor on multi-monitor setups is a future enhancement that needs per-monitor DPI.)
+	// Apply the bottom-center placement against the primary work area. SystemParameters.WorkArea is already
+	// in DIPs, so the window lands on-screen regardless of the display scale. Sizes are read after the realize
+	// layout pass, so ActualWidth/Height are final on the very first show. (Targeting a configured, possibly
+	// non-primary monitor is the follow-up WHISPER-139 part 2.)
 	private void Reposition()
 	{
 		if (_window.ActualWidth <= 0 || _window.ActualHeight <= 0)
 		{
+			_logger.LogWarning("Overlay reposition skipped: layout not settled (size {Width}x{Height}).",
+				_window.ActualWidth, _window.ActualHeight);
 			return;
 		}
 
@@ -175,8 +267,17 @@ public sealed class LevelOverlay : IDisposable
 		_window.Top = top;
 	}
 
+	private nint Handle() => new WindowInteropHelper(_window).Handle;
+
 	public void Dispose()
 	{
+		if (_disposed)
+		{
+			return;
+		}
+
+		_disposed = true;
+		_window.SourceInitialized -= OnSourceInitialized;
 		_window.IsVisibleChanged -= OnVisibleChanged;
 		_window.SizeChanged -= OnSizeChanged;
 		_window.Close();

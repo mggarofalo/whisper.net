@@ -8,11 +8,13 @@ using System;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
+using Application.Models;
 using Application.Ports;
 using AwesomeAssertions;
 using CommunityToolkit.Mvvm.Messaging;
 using Domain.Audio;
 using Logic.AppManagement;
+using Microsoft.Extensions.Logging.Abstractions;
 using Presentation.Overlay;
 using Xunit;
 
@@ -43,6 +45,41 @@ public sealed class OverlayViewSmokeTests
 		// clip the right edge; still a compact pill, not a panel.
 		content.DesiredSize.Width.Should().BeInRange(160, 240, "the overlay keeps its compact width");
 		content.DesiredSize.Height.Should().BeInRange(20, 48, "the overlay stays a compact pill, not a panel");
+	});
+
+	// The durable-fix reproduction (WHISPER-139): construct the REAL overlay window and drive it through a
+	// full realize -> show -> hide cycle. Constructing it realizes the HWND and first layout off-screen and
+	// applies the native overlay styles; a warm-up signal then lights the pill and the bound view-model
+	// (inline dispatcher) pushes it through to the window's Visibility. This guards the whole show path that
+	// used to fail silently — a throw in the realize/interop path or a broken visibility binding fails here.
+	// The on-screen coordinates stay the manual remainder, as with the content smoke above.
+	[Fact]
+	public void Overlay_window_realizes_and_toggles_visibility_through_a_real_show_cycle() => StaThread.Run(() =>
+	{
+		using BindingErrorCollector bindingErrors = new();
+		WeakReferenceMessenger messenger = new();
+		using LevelOverlayController controller = new(new RecordingStateMachine(), new StubAudioSource(), messenger, TimeProvider.System);
+		using LevelOverlayViewModel viewModel = new(controller, new InlineDispatcher());
+
+		// Realizes the window off-screen (HWND + first layout) and applies its overlay styles. Must not throw.
+		using LevelOverlay overlay = new(viewModel, NullLogger<LevelOverlay>.Instance);
+		FlushDispatcherQueue();
+
+		viewModel.IsOverlayVisible.Should().BeFalse("the overlay is hidden at rest");
+
+		// A show signal (the app-wide warm-up, exactly as the warm-up service publishes it) must make the
+		// overlay visible through the real Visibility binding on the realized window.
+		messenger.Send(new ModelWarmupChangedMessage(true));
+		FlushDispatcherQueue();
+		viewModel.IsOverlayVisible.Should().BeTrue("a show signal makes the overlay visible");
+
+		// Clearing the signal hides it again — a clean Visible -> Hidden toggle on the same live window.
+		messenger.Send(new ModelWarmupChangedMessage(false));
+		FlushDispatcherQueue();
+		viewModel.IsOverlayVisible.Should().BeFalse("clearing the signal hides the overlay again");
+
+		bindingErrors.Errors.Should().BeEmpty(
+			"the overlay window must bind cleanly through a real realize/show/hide cycle");
 	});
 
 	private static void FlushDispatcherQueue()

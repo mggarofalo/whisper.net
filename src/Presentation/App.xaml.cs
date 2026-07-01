@@ -147,8 +147,12 @@ public partial class App
 		// backend failures become visible tray notifications instead of log-only events.
 		_host.Services.GetRequiredService<TrayUserNotifier>().AttachPresenter(_trayIcon.ShowNotification);
 
-		// The level overlay lives for the app's lifetime, hidden until recording starts.
-		_levelOverlay = new LevelOverlay(_host.Services.GetRequiredService<LevelOverlayViewModel>());
+		// The level overlay lives for the app's lifetime, hidden until recording starts. It is realized
+		// (HWND + first layout) off-screen in its constructor, so it must be created on the UI thread here,
+		// after the host has started. The logger records the whole show/position path for diagnostics.
+		_levelOverlay = new LevelOverlay(
+			_host.Services.GetRequiredService<LevelOverlayViewModel>(),
+			_host.Services.GetRequiredService<ILogger<LevelOverlay>>());
 
 		// Theme: apply the persisted Light/Dark/System preference, and re-apply it live when
 		// the user changes it in the sidebar switcher (a settings change is broadcast on the instant-apply
