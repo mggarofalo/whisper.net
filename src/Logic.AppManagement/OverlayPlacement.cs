@@ -5,6 +5,8 @@
 // the focused window, in DIPs) and applies this result; the on-screen placement across monitors and DPI
 // scales is the manual-verification remainder.
 
+using Application.Display;
+
 namespace Logic.AppManagement;
 
 /// <summary>A rectangle in device-independent pixels — a work area or screen bounds — kept WPF-free so the
@@ -36,5 +38,41 @@ public static class OverlayPlacement
 		double left = workArea.Left + ((workArea.Width - overlayWidth) / 2);
 		double top = workArea.Bottom - overlayHeight - bottomMargin;
 		return (left, top);
+	}
+
+	/// <summary>
+	/// Choose the monitor the overlay should sit on. Prefers the monitor whose device name matches
+	/// <paramref name="preferredDeviceName"/> (the persisted selection); falls back to the primary — and
+	/// then to the first available — when the preference is null (the default "follow primary") or the chosen
+	/// display is no longer attached, so a removed monitor self-heals to the primary rather than stranding the
+	/// overlay off-screen. Returns null only when no monitors are available.
+	/// </summary>
+	public static MonitorInfo? ChooseMonitor(IReadOnlyList<MonitorInfo> monitors, string? preferredDeviceName)
+	{
+		if (monitors.Count == 0)
+		{
+			return null;
+		}
+
+		if (!string.IsNullOrEmpty(preferredDeviceName))
+		{
+			foreach (MonitorInfo monitor in monitors)
+			{
+				if (string.Equals(monitor.DeviceName, preferredDeviceName, StringComparison.OrdinalIgnoreCase))
+				{
+					return monitor;
+				}
+			}
+		}
+
+		foreach (MonitorInfo monitor in monitors)
+		{
+			if (monitor.IsPrimary)
+			{
+				return monitor;
+			}
+		}
+
+		return monitors[0];
 	}
 }

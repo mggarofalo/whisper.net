@@ -23,6 +23,8 @@ using System.Windows.Data;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using Application.Display;
+using Application.Ports;
 using Logic.AppManagement;
 using Microsoft.Extensions.Logging;
 
@@ -31,12 +33,15 @@ namespace Presentation.Overlay;
 public sealed class LevelOverlay : IDisposable
 {
 	private readonly Window _window;
+	private readonly IMonitorCatalog _monitors;
 	private readonly ILogger<LevelOverlay> _logger;
+	private string? _targetDeviceName;
 	private bool _realizing;
 	private bool _disposed;
 
-	public LevelOverlay(LevelOverlayViewModel viewModel, ILogger<LevelOverlay> logger)
+	public LevelOverlay(LevelOverlayViewModel viewModel, IMonitorCatalog monitors, ILogger<LevelOverlay> logger)
 	{
+		_monitors = monitors;
 		_logger = logger;
 
 		_window = new Window
@@ -222,7 +227,7 @@ public sealed class LevelOverlay : IDisposable
 			return;
 		}
 
-		Reposition();
+		string target = Reposition();
 
 		// Re-assert top-most on every show: this is the durable defence against the ShowInTaskbar hidden-owner
 		// case where the overlay is visible but rendered behind the focused app.
@@ -233,8 +238,36 @@ public sealed class LevelOverlay : IDisposable
 		}
 
 		_logger.LogInformation(
-			"Overlay shown: placed at ({Left},{Top}), size {Width}x{Height}, work area {WorkArea}, hwnd {Hwnd}.",
-			_window.Left, _window.Top, _window.ActualWidth, _window.ActualHeight, SystemParameters.WorkArea, hwnd);
+			"Overlay shown: placed at ({Left},{Top}), size {Width}x{Height}, target {Target}, hwnd {Hwnd}.",
+			_window.Left, _window.Top, _window.ActualWidth, _window.ActualHeight, target, hwnd);
+	}
+
+	/// <summary>
+	/// Point the overlay at a configured display (by device name; null = follow the primary). Called from the
+	/// composition root on startup and whenever the setting changes. Re-places immediately if the overlay is
+	/// currently visible so a change is reflected without waiting for the next dictation.
+	/// </summary>
+	public void SetTargetMonitor(string? deviceName)
+	{
+		if (string.Equals(_targetDeviceName, deviceName, StringComparison.OrdinalIgnoreCase))
+		{
+			return;
+		}
+
+		_targetDeviceName = deviceName;
+		_logger.LogInformation("Overlay target monitor set to {Target}.", deviceName ?? "primary (default)");
+
+		if (_realizing || !_window.IsVisible)
+		{
+			return;
+		}
+
+		_ = Reposition();
+		nint hwnd = Handle();
+		if (hwnd != nint.Zero)
+		{
+			OverlayWindowInterop.BringToTopmost(hwnd);
+		}
 	}
 
 	private void OnSizeChanged(object sender, SizeChangedEventArgs e)
@@ -243,28 +276,45 @@ public sealed class LevelOverlay : IDisposable
 		// during the off-screen realize pass — that would drag the parked window on-screen.
 		if (!_realizing && _window.IsVisible)
 		{
-			Reposition();
+			_ = Reposition();
 		}
 	}
 
-	// Apply the bottom-center placement against the primary work area. SystemParameters.WorkArea is already
-	// in DIPs, so the window lands on-screen regardless of the display scale. Sizes are read after the realize
-	// layout pass, so ActualWidth/Height are final on the very first show. (Targeting a configured, possibly
-	// non-primary monitor is the follow-up WHISPER-139 part 2.)
-	private void Reposition()
+	// Place the pill bottom-center of the configured monitor's work area. The monitor is resolved through the
+	// catalog (device name from settings; null = primary), self-healing to the primary if the chosen display
+	// is gone. The catalog's work areas are already in WPF's DIP coordinate space, so Window.Left/Top land the
+	// window on-screen on any monitor. If the catalog is unavailable, fall back to the primary work area from
+	// SystemParameters (also DIPs). Sizes are read after the realize layout pass, so ActualWidth/Height are
+	// final even on the very first show. Returns a short description of the chosen target for the caller's log.
+	private string Reposition()
 	{
 		if (_window.ActualWidth <= 0 || _window.ActualHeight <= 0)
 		{
 			_logger.LogWarning("Overlay reposition skipped: layout not settled (size {Width}x{Height}).",
 				_window.ActualWidth, _window.ActualHeight);
-			return;
+			return "unsettled";
 		}
 
-		Rect area = SystemParameters.WorkArea;
-		OverlayRect workArea = new(area.Left, area.Top, area.Width, area.Height);
+		OverlayRect workArea;
+		string target;
+
+		MonitorInfo? chosen = OverlayPlacement.ChooseMonitor(_monitors.GetMonitors(), _targetDeviceName);
+		if (chosen is not null)
+		{
+			workArea = new OverlayRect(chosen.WorkAreaLeft, chosen.WorkAreaTop, chosen.WorkAreaWidth, chosen.WorkAreaHeight);
+			target = chosen.FriendlyName;
+		}
+		else
+		{
+			Rect area = SystemParameters.WorkArea;
+			workArea = new OverlayRect(area.Left, area.Top, area.Width, area.Height);
+			target = "primary work area (catalog unavailable)";
+		}
+
 		(double left, double top) = OverlayPlacement.BottomCenter(workArea, _window.ActualWidth, _window.ActualHeight);
 		_window.Left = left;
 		_window.Top = top;
+		return target;
 	}
 
 	private nint Handle() => new WindowInteropHelper(_window).Handle;

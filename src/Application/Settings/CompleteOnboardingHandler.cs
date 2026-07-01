@@ -25,7 +25,8 @@ public sealed class CompleteOnboardingHandler(ISettingsStore store)
 			current.AuditLogEnabled,
 			setupCompleted: true,
 			themePreference: current.ThemePreference,
-			captureDeviceName: current.CaptureDeviceName);
+			captureDeviceName: current.CaptureDeviceName,
+			overlayMonitorDeviceName: current.OverlayMonitorDeviceName);
 
 		await store.SaveAsync(completed, cancellationToken);
 		return Mediator.Unit.Value;

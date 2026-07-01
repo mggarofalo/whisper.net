@@ -17,5 +17,31 @@
                    FontSize="12"
                    TextWrapping="Wrap"
                    Margin="24,4,0,0" />
+
+        <TextBlock x:Name="OverlayDisplayLabel"
+                   Text="Recording overlay display"
+                   FontWeight="SemiBold"
+                   Margin="0,24,0,0" />
+
+        <!-- Which monitor the recording pill appears on. "Primary display (default)" persists as null, so a
+             fresh install and a removed display both fall back to the primary. The two-way SelectedValue
+             binding is the whole contract: the view-model commits a genuine user pick and ignores the
+             programmatic selection a reload performs; the stored value is the stable device name. -->
+        <ComboBox x:Name="OverlayMonitorBox"
+                  Width="320"
+                  HorizontalAlignment="Left"
+                  Margin="0,8,0,0"
+                  AutomationProperties.Name="Recording overlay display"
+                  AutomationProperties.LabeledBy="{Binding ElementName=OverlayDisplayLabel}"
+                  ItemsSource="{Binding OverlayMonitors}"
+                  DisplayMemberPath="Label"
+                  SelectedValuePath="DeviceName"
+                  SelectedValue="{Binding SelectedOverlayMonitor, Mode=TwoWay}" />
+
+        <TextBlock Text="The small recording overlay appears at the bottom-center of the display you choose here."
+                   Opacity="0.7"
+                   FontSize="12"
+                   TextWrapping="Wrap"
+                   Margin="0,4,0,0" />
     </StackPanel>
 </UserControl>
