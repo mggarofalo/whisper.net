@@ -68,12 +68,12 @@ public sealed class SettingsViewModelObservabilityTests
 	// notification and base type, neither of which needs a real Mediator round-trip.
 	private static object Create(string viewModelName) => viewModelName switch
 	{
-		nameof(HomeViewModel) => new HomeViewModel(Substitute.For<IMediator>(), new CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger(), Substitute.For<IUiCollectionSynchronizer>()),
+		nameof(HomeViewModel) => new HomeViewModel(Substitute.For<IMediator>(), new CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger(), Substitute.For<IUiCollectionSynchronizer>(), new Logic.AppManagement.Threading.InlineUiDispatcher()),
 		nameof(ModelViewModel) => new ModelViewModel(Substitute.For<IMediator>()),
 		nameof(AudioDeviceViewModel) => new AudioDeviceViewModel(Substitute.For<IMediator>(), new Logic.AudioManagement.DeviceSelectionPolicy()),
 		nameof(HotkeyViewModel) => new HotkeyViewModel(Substitute.For<IMediator>(), new CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger()),
 		nameof(HistoryViewModel) => new HistoryViewModel(Substitute.For<IMediator>(), new CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger(), Substitute.For<IUiCollectionSynchronizer>()),
-		nameof(StatsViewModel) => new StatsViewModel(Substitute.For<IMediator>(), new CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger()),
+		nameof(StatsViewModel) => new StatsViewModel(Substitute.For<IMediator>(), new CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger(), new Logic.AppManagement.Threading.InlineUiDispatcher()),
 		_ => throw new ArgumentOutOfRangeException(nameof(viewModelName), viewModelName, "unknown view-model"),
 	};
 

@@ -32,7 +32,7 @@ public sealed class ModelWarmupStatusDriver : IDisposable
 		// the Given opens it. A faked audio source / fresh state machine keep the overlay self-contained — this
 		// scenario is about warm-up, not recording.
 		_overlay = new LevelOverlayController(new RecordingStateMachine(), Substitute.For<IAudioSource>(), messenger, time);
-		_home = new HomeViewModel(mediator, messenger, synchronizer);
+		_home = new HomeViewModel(mediator, messenger, synchronizer, new Logic.AppManagement.Threading.InlineUiDispatcher());
 	}
 
 	// Enter the dashboard through the real activation lifecycle so it subscribes to the warm-up signal and

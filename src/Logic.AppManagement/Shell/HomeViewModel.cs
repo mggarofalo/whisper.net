@@ -28,11 +28,13 @@ public sealed partial class HomeViewModel : FeatureViewModel
 
 	private readonly IMediator _mediator;
 	private readonly IMessenger _messenger;
+	private readonly IUiDispatcher _uiDispatcher;
 
-	public HomeViewModel(IMediator mediator, IMessenger messenger, IUiCollectionSynchronizer synchronizer)
+	public HomeViewModel(IMediator mediator, IMessenger messenger, IUiCollectionSynchronizer synchronizer, IUiDispatcher uiDispatcher)
 	{
 		_mediator = mediator;
 		_messenger = messenger;
+		_uiDispatcher = uiDispatcher;
 		synchronizer.Enable(Recent);
 
 		// Live overview: re-query the dashboard whenever a transcription is recorded, for the section's whole
@@ -41,8 +43,25 @@ public sealed partial class HomeViewModel : FeatureViewModel
 		// OnActivated) so it survives navigating away; the warm-up status below stays active-only because it
 		// is a transient, only-while-visible cue. RefreshCommand disallows concurrent runs, so a burst of
 		// recordings collapses to the latest refresh, and the WeakReferenceMessenger cannot root this VM.
+		// The message is published on the record/background thread, so the refresh is marshalled to the UI
+		// thread: RefreshCommand (an AsyncRelayCommand) raises CanExecuteChanged, and a bound Refresh button
+		// firing that off the UI thread throws a cross-thread exception (WHISPER-138).
 		_messenger.Register<HomeViewModel, TranscriptionRecordedMessage>(
-			this, static (recipient, _) => recipient.RefreshCommand.Execute(null));
+			this, static (recipient, _) => recipient.RefreshOnUiThread());
+	}
+
+	// Run the refresh on the UI thread. The transcription-recorded message arrives on the background record
+	// thread; executing RefreshCommand there raises CanExecuteChanged on the wrong thread (WHISPER-138), so
+	// marshal through the dispatcher with the CheckAccess fast-path (mirrors LevelOverlayViewModel).
+	private void RefreshOnUiThread()
+	{
+		if (_uiDispatcher.CheckAccess())
+		{
+			RefreshCommand.Execute(null);
+			return;
+		}
+
+		_uiDispatcher.Post(() => RefreshCommand.Execute(null));
 	}
 
 	/// <summary>The id of the model dictation will load, from settings.</summary>

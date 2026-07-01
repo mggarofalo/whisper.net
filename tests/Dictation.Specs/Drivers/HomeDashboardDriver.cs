@@ -35,7 +35,7 @@ public sealed class HomeDashboardDriver
 		_history = history;
 		_devices = devices;
 		_messenger = messenger;
-		_viewModel = new HomeViewModel(mediator, messenger, synchronizer);
+		_viewModel = new HomeViewModel(mediator, messenger, synchronizer, new Logic.AppManagement.Threading.InlineUiDispatcher());
 	}
 
 	public void GivenSettings(string modelId, string deviceName)
