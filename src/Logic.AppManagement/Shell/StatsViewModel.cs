@@ -6,6 +6,7 @@
 // behavior is driven for real in specs; the thin view binds to it.
 
 using Application.History;
+using Application.Ports;
 using Application.Statistics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -18,19 +19,37 @@ public sealed partial class StatsViewModel : FeatureViewModel
 {
 	private readonly IMediator _mediator;
 	private readonly IMessenger _messenger;
+	private readonly IUiDispatcher _uiDispatcher;
 
-	public StatsViewModel(IMediator mediator, IMessenger messenger)
+	public StatsViewModel(IMediator mediator, IMessenger messenger, IUiDispatcher uiDispatcher)
 	{
 		_mediator = mediator;
 		_messenger = messenger;
+		_uiDispatcher = uiDispatcher;
 
 		// Live totals: re-run the aggregate query whenever a transcription is recorded, for the section's
 		// whole lifetime (not just while visible), so the dashboard reflects new activity the moment it
 		// happens instead of going stale until a manual Refresh or a re-open. RefreshCommand disallows
 		// concurrent runs, so a burst of recordings collapses to the latest re-query. The shared
 		// WeakReferenceMessenger holds the recipient weakly, so this persistent registration cannot leak it.
+		// The message is published on the record/background thread, so the refresh is marshalled to the UI
+		// thread: RefreshCommand (an AsyncRelayCommand) raises CanExecuteChanged, and a bound Refresh button
+		// firing that off the UI thread throws a cross-thread exception (WHISPER-138).
 		_messenger.Register<StatsViewModel, TranscriptionRecordedMessage>(
-			this, static (recipient, _) => recipient.RefreshCommand.Execute(null));
+			this, static (recipient, _) => recipient.RefreshOnUiThread());
+	}
+
+	// Run the refresh on the UI thread; the transcription-recorded message arrives on the background record
+	// thread and executing RefreshCommand there raises CanExecuteChanged on the wrong thread (WHISPER-138).
+	private void RefreshOnUiThread()
+	{
+		if (_uiDispatcher.CheckAccess())
+		{
+			RefreshCommand.Execute(null);
+			return;
+		}
+
+		_uiDispatcher.Post(() => RefreshCommand.Execute(null));
 	}
 
 	/// <summary>Total number of dictation sessions recorded.</summary>

@@ -28,7 +28,7 @@ public sealed class StatsDashboardDriver
 	{
 		_store = store;
 		_messenger = messenger;
-		_viewModel = new StatsViewModel(mediator, messenger);
+		_viewModel = new StatsViewModel(mediator, messenger, new Logic.AppManagement.Threading.InlineUiDispatcher());
 	}
 
 	// Two sessions totalling five words: "one two three" (3) + "four five" (2).
