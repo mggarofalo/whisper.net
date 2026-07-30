@@ -21,6 +21,16 @@ public sealed class WhisperModelCatalogTests
 		ids.Should().Contain(["tiny", "base", "small", "medium", "large-v3"]);
 	}
 
+	// The turbo builds are what a dictation user most often wants — near-large accuracy at a fraction of the
+	// decode cost — and they were missing from the catalog entirely, so they could not be downloaded at all.
+	[Fact]
+	public void Offers_the_large_v3_turbo_builds()
+	{
+		IEnumerable<string> ids = _catalog.Entries.Select(entry => entry.Id);
+
+		ids.Should().Contain(["large-v3-turbo", "large-v3-turbo-q5_0"]);
+	}
+
 	[Fact]
 	public void Every_entry_has_a_ggml_file_name_and_a_positive_size()
 	{

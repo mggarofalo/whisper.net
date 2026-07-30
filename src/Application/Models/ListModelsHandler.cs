@@ -33,7 +33,7 @@ public sealed class ListModelsHandler(IModelCatalog catalog, IModelCache cache, 
 
 	private ModelListItemDto ToDto(WhisperModelCatalogEntry entry, string? activeId)
 	{
-		ModelRatings ratings = ModelRatingScale.From(entry.SizeBytes);
+		ModelRatings ratings = ModelRatingScale.From(entry.SizeBytes, entry.Id);
 		return new ModelListItemDto(
 			entry.Id,
 			entry.DisplayName,

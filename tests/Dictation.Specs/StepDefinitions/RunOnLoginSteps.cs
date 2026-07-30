@@ -17,4 +17,14 @@ public sealed class RunOnLoginSteps(RunOnLoginDriver driver)
 
 	[Then(@"the startup registration is (.*)")]
 	public Task ThenTheStartupRegistrationIs(string expected) => driver.AssertRegistration(expected == "present");
+
+	[Given(@"run-on-login was registered by an install whose executable is (.*)")]
+	public void GivenRegisteredByAnotherInstall(string state) =>
+		driver.GivenRegisteredByAnotherInstall(state == "still present");
+
+	[When(@"the app starts")]
+	public Task WhenTheAppStarts() => driver.AppStarts();
+
+	[Then(@"the startup registration points at this installation")]
+	public void ThenTheRegistrationPointsAtThisInstallation() => driver.AssertRegistrationPointsAtThisInstall();
 }

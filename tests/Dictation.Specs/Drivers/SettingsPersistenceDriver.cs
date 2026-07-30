@@ -52,7 +52,23 @@ public sealed class SettingsPersistenceDriver : IDisposable
 		// First launch: load (defaults, creating the store), change a setting, then graceful shutdown saves.
 		SettingsLifecycleService lifecycle = NewLifecycle();
 		await lifecycle.StartAsync(CancellationToken.None);
-		_holder.Current = Changed;
+
+		// Announce the change on the instant-apply channel, which is how a real settings edit reaches the
+		// lifecycle service. Assigning the holder directly would skip that channel — and so would not model a
+		// user change at all, since the shutdown save is deliberately gated on an observed change.
+		_messenger.Send(new SettingsChangedMessage(Changed));
+
+		await lifecycle.StopAsync(CancellationToken.None);
+	}
+
+	// A launch that reads the store and changes nothing. The stored document must come through untouched:
+	// when a load has fallen back to defaults (a locked or corrupt store), writing the loaded snapshot back
+	// on shutdown would silently reset the user's model, hotkey, and capture device.
+	public async Task LaunchAndShutDownWithoutChangingAnything()
+	{
+		_holder = new SettingsHolder();
+		SettingsLifecycleService lifecycle = NewLifecycle();
+		await lifecycle.StartAsync(CancellationToken.None);
 		await lifecycle.StopAsync(CancellationToken.None);
 	}
 

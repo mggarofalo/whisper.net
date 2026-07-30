@@ -46,6 +46,21 @@ public sealed class SettingsLifecycleServiceTests
 		await _store.Received(1).SaveAsync(Changed, Arg.Any<CancellationToken>());
 	}
 
+	// The destructive path this guards: when the startup load fails, the port recovers with
+	// AppSettings.Default, and an unconditional shutdown save wrote those defaults over the user's real
+	// settings — one unlucky launch silently reset the model, hotkey, and capture device.
+	[Fact]
+	public async Task A_session_that_changed_nothing_does_not_write_to_the_store()
+	{
+		_store.LoadAsync(Arg.Any<CancellationToken>()).Returns(AppSettings.Default); // as if recovered from a failed read
+		SettingsLifecycleService service = NewService();
+
+		await service.StartAsync(CancellationToken.None);
+		await service.StopAsync(CancellationToken.None);
+
+		await _store.DidNotReceive().SaveAsync(Arg.Any<AppSettings>(), Arg.Any<CancellationToken>());
+	}
+
 	[Fact]
 	public async Task Stops_tracking_changes_once_shut_down()
 	{

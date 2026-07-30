@@ -23,6 +23,10 @@ public sealed class SettingsPersistenceSteps(SettingsPersistenceDriver driver)
 	[When(@"the application is started again")]
 	public Task WhenTheApplicationStarts() => driver.StartApplication();
 
+	[When(@"the application starts and shuts down without changing anything")]
+	public Task WhenTheApplicationStartsAndShutsDownWithoutChanges() =>
+		driver.LaunchAndShutDownWithoutChangingAnything();
+
 	[Then(@"the previously saved setting is loaded")]
 	public void ThenThePreviouslySavedSettingIsLoaded() => driver.AssertChangedSettingLoaded();
 
