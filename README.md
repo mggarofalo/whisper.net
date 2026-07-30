@@ -38,7 +38,9 @@ A short **setup walkthrough** opens the first time you launch the app. It helps 
 
 1. **Pick your microphone** (capture device).
 2. **Choose a speech model** and download it. Smaller models are faster; larger models are more
-   accurate. The default, **`base.en`**, is a good balance for English on most machines.
+   accurate. The default, **`base.en`**, is a good balance for English on most machines. If you want
+   noticeably better accuracy without giving up speed, pick a **Large v3 Turbo** build — same encoder as
+   `large-v3` with a much cheaper decoder.
 3. **Confirm your dictation hotkey** (default: **`Ctrl + Win`**).
 
 You can change any of these later in **Settings**.
@@ -62,7 +64,7 @@ To open settings or quit, **right-click the tray icon** → **Open Settings** / 
 - **Type into any app** via simulated keystrokes, with an automatic **clipboard-paste fallback** when
   direct typing isn't possible.
 - **Multiple Whisper models** to choose from (`tiny` → `large-v3`, English-only and multilingual
-  variants), downloaded on demand and cached locally.
+  variants, plus the fast **`large-v3-turbo`** builds), downloaded on demand and cached locally.
 - **Rebindable global hotkey**, with push-to-talk, toggle, and continuous dictation.
 - **Live level overlay** while recording.
 - **History** of your transcriptions, with search, paging, and one-click re-copy.

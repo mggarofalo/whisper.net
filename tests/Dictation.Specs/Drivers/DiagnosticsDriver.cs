@@ -21,7 +21,7 @@ public sealed class DiagnosticsDriver
 {
 	// The subsystems the doctor reports on, in report order. Used to assert every check still produced a
 	// result even when one is unavailable.
-	private static readonly string[] ExpectedChecks = ["Audio", "Model", "Whisper", "Hotkey", "GPU"];
+	private static readonly string[] ExpectedChecks = ["Audio", "Model", "Whisper", "Hotkey", "GPU", "Startup"];
 
 	private readonly IMediator _mediator;
 	private readonly FakeAudioDeviceEnumerator _audioDevices;

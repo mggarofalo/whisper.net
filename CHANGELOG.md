@@ -6,6 +6,33 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+### Added
+
+- **The Large v3 Turbo models are now available to download.** The model library gains
+  `large-v3-turbo` (~1.5 GB) and `large-v3-turbo-q5_0` (~547 MB): `large-v3`'s encoder with a pruned
+  4-layer decoder, so they transcribe several times faster at close to large-v3 accuracy. They were absent
+  from the catalog entirely, so there was no way to select them. Because their speed comes from
+  architecture rather than size, the picker rates the turbo family explicitly instead of inferring speed
+  from the download size — otherwise the app's best dictation model would have advertised itself as slow.
+- **Diagnostics report on launch at login.** A new **Startup** check confirms the app will actually start
+  at login, and fails when the registration points at an executable that no longer exists. Choosing not to
+  start at login passes, so the report stays quiet for users who prefer to launch the app themselves.
+
+### Fixed
+
+- **Start at login keeps working after a reinstall or a move.** The startup entry was written once, when the
+  toggle was flipped, and nothing revisited it — so reinstalling to a different location left it pointing at
+  an executable that was gone. Windows then silently launched nothing at login while the toggle still read
+  as enabled. Every launch now re-asserts an enabled registration against the install that is running (it
+  never opts a user in), and the entry prefers the stable Velopack stub launcher over the versioned payload
+  path, so an update can no longer invalidate it. The registration state is logged on startup.
+- **A settings load that falls back to defaults can no longer erase your settings.** Settings were written
+  back to the store on every graceful shutdown. When a startup read failed for any transient reason — the
+  store held open by another process at login, say — the app recovered with defaults and then persisted
+  *those* over the user's real configuration, silently resetting the model, hotkey, and capture device. The
+  shutdown write now happens only when a setting actually changed during the session, and a failed read is
+  retried before falling back.
+
 ## [0.3.1] - 2026-07-01
 
 ### Added

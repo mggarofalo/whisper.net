@@ -67,6 +67,11 @@ public sealed class AppLifecycleDriver : IDisposable
 		// host composes without any network. This driver asserts the hosted-service lifecycle, not updates.
 		builder.Services.AddSingleton(Substitute.For<IUpdateSource>());
 
+		// The launch-at-login upkeep hosted service reads the startup registration on start; a substitute
+		// keeps this host away from the machine's real Run key. A substitute reports "not registered", so
+		// the service logs and does nothing.
+		builder.Services.AddSingleton(Substitute.For<IStartupRegistration>());
+
 		// The host-owned background components under test.
 		builder.Services.AddAppManagementHostedServices();
 

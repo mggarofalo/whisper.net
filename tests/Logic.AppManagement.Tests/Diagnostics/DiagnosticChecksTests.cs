@@ -152,4 +152,60 @@ public sealed class DiagnosticChecksTests
 		result.Status.Should().Be(DiagnosticStatus.Warn);
 		result.Detail.Should().Contain("CPU");
 	}
+
+	// --- Startup (launch at login) ---
+
+	private const string ThisInstall = "\"C:\\Users\\u\\AppData\\Local\\Whisper.Net\\Presentation.exe\"";
+	private const string OtherInstall = "\"D:\\Old\\Whisper.Net\\current\\Presentation.exe\"";
+
+	private static IStartupRegistration Registration(string? registered, bool targetExists)
+	{
+		IStartupRegistration registration = Substitute.For<IStartupRegistration>();
+		registration.ExpectedCommand.Returns(ThisInstall);
+		registration.RegisteredCommand.Returns(registered);
+		registration.IsEnabled().Returns(registered is not null);
+		registration.RegisteredTargetExists.Returns(targetExists);
+		return registration;
+	}
+
+	[Fact]
+	public async Task Startup_passes_and_names_the_command_when_registered_for_this_install()
+	{
+		DiagnosticResult result = await new StartupRegistrationCheck(Registration(ThisInstall, targetExists: true))
+			.RunAsync(CancellationToken.None);
+
+		result.Status.Should().Be(DiagnosticStatus.Pass);
+		result.Detail.Should().Contain("Presentation.exe");
+	}
+
+	// The exact failure a user hits after reinstalling elsewhere: the toggle still reads as on, and nothing
+	// launches at login. The report must say so rather than call the system healthy.
+	[Fact]
+	public async Task Startup_fails_when_the_registration_points_at_a_removed_install()
+	{
+		DiagnosticResult result = await new StartupRegistrationCheck(Registration(OtherInstall, targetExists: false))
+			.RunAsync(CancellationToken.None);
+
+		result.Status.Should().Be(DiagnosticStatus.Fail);
+		result.Detail.Should().Contain("no longer exists");
+	}
+
+	[Fact]
+	public async Task Startup_warns_when_the_registration_points_at_another_install()
+	{
+		DiagnosticResult result = await new StartupRegistrationCheck(Registration(OtherInstall, targetExists: true))
+			.RunAsync(CancellationToken.None);
+
+		result.Status.Should().Be(DiagnosticStatus.Warn);
+	}
+
+	// Choosing not to start at login is not a defect, so it must not put a standing warning in the report.
+	[Fact]
+	public async Task Startup_passes_when_launch_at_login_is_switched_off()
+	{
+		DiagnosticResult result = await new StartupRegistrationCheck(Registration(registered: null, targetExists: false))
+			.RunAsync(CancellationToken.None);
+
+		result.Status.Should().Be(DiagnosticStatus.Pass);
+	}
 }

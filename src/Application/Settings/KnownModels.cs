@@ -13,6 +13,7 @@ public static class KnownModels
 		"small", "small.en",
 		"medium", "medium.en",
 		"large-v1", "large-v2", "large-v3",
+		"large-v3-turbo", "large-v3-turbo-q5_0",
 	};
 
 	public static bool IsKnown(string modelId) => !string.IsNullOrWhiteSpace(modelId) && Ids.Contains(modelId);

@@ -112,6 +112,10 @@ public static class AppManagementServiceCollectionExtensions
 		services.AddScoped<Application.Diagnostics.IDiagnosticCheck, Diagnostics.WhisperRuntimeCheck>();
 		services.AddScoped<Application.Diagnostics.IDiagnosticCheck, Diagnostics.HotkeyCheck>();
 		services.AddScoped<Application.Diagnostics.IDiagnosticCheck, Diagnostics.GpuCheck>();
+		// Launch at login: last, because it is about the app's own lifecycle rather than a dictation
+		// subsystem. It reports a registration left pointing at a removed install — the reason a user sees
+		// "start at login" enabled and an app that never starts.
+		services.AddScoped<Application.Diagnostics.IDiagnosticCheck, Diagnostics.StartupRegistrationCheck>();
 
 		// Auto-update policy: decides check/download/apply and degrades gracefully on failure.
 		// Pure policy over the IUpdateSource port; the startup hosted service below drives it.
@@ -145,6 +149,10 @@ public static class AppManagementServiceCollectionExtensions
 		// Settings persistence: load the persisted settings into the holder on startup and
 		// write them back on graceful shutdown, around the host lifetime.
 		services.AddHostedService<SettingsLifecycleService>();
+
+		// Launch-at-login upkeep: re-assert the Run entry when it is enabled but points at an install
+		// that has moved or been removed, and log its state so a login that never launches is diagnosable.
+		services.AddHostedService<StartupRegistrationHealingService>();
 
 		// Dictation orchestration: activate the end-to-end pipeline for the app lifetime —
 		// open one long-lived scope, resolve the scoped orchestrator, and bridge the hotkey listener into
