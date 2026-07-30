@@ -6,6 +6,8 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-07-30
+
 ### Added
 
 - **The Large v3 Turbo models are now available to download.** The model library gains
@@ -284,7 +286,8 @@ that shipped in 0.1.0, organized by category.
 - **The persisted active model is shown in the picker** before it loads. (WHISPER-118)
 - **The Home dashboard refreshes** on every activation. (WHISPER-119)
 
-[Unreleased]: https://github.com/mggarofalo/whisper.net/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/mggarofalo/whisper.net/compare/v0.3.2...HEAD
+[0.3.2]: https://github.com/mggarofalo/whisper.net/releases/tag/v0.3.2
 [0.3.1]: https://github.com/mggarofalo/whisper.net/releases/tag/v0.3.1
 [0.3.0]: https://github.com/mggarofalo/whisper.net/releases/tag/v0.3.0
 [0.2.1]: https://github.com/mggarofalo/whisper.net/releases/tag/v0.2.1
