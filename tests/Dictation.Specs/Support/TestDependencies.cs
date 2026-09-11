@@ -443,7 +443,7 @@ public static class TestDependencies
 		services.AddScoped<TranscriptionNormalizationDriver>();
 
 		// Custom vocabulary: the real VocabularyConditioner behind the assembly driver, and
-		// the real WhisperTranscriber over a capturing fake engine behind the transcription driver.
+		// the real WorkerTranscriber over a capturing fake worker behind the transcription driver.
 		services.AddScoped<VocabularyConditioningDriver>();
 		services.AddScoped<VocabularyTranscriptionDriver>();
 
@@ -469,6 +469,7 @@ public static class TestDependencies
 
 		// GPU contact point: the real backend selector over a faked raw probe.
 		services.AddScoped<GpuBackendDriver>();
+		services.AddScoped<InferenceWorkerRecoveryDriver>();
 
 		// Re-scope the real backend selector: AddGpuContactPoint registers it as a singleton,
 		// which would capture a root-scope IGpuProbe and ignore the per-scenario substitute. Scoped here so

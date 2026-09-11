@@ -7,6 +7,7 @@
     <Project Path="src/Logic.ModelManagement/Logic.ModelManagement.csproj" />
     <Project Path="src/Logic.GpuContactPoint/Logic.GpuContactPoint.csproj" />
     <Project Path="src/Infrastructure/Infrastructure.csproj" />
+    <Project Path="src/Inference.Worker/Inference.Worker.csproj" />
     <Project Path="src/Presentation/Presentation.csproj" />
   </Folder>
   <Folder Name="/tests/">

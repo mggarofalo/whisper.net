@@ -1,6 +1,6 @@
 // Handles SwitchActiveModelCommand: switches the model lifecycle to the requested model
 // (releasing the currently loaded model and loading the new one) AND persists the choice as
-// settings.ModelId. The persistence is essential: WhisperTranscriber resolves the model to
+// settings.ModelId. The persistence is essential: WorkerTranscriber resolves the model to
 // load from settings.ModelId, so without saving it the user's selection would never reach transcription
 // — dictation would keep loading the default model. The change is broadcast (like UpdateSettings) so the
 // in-memory settings holder stays in sync and a graceful shutdown does not clobber the new value. The id
@@ -25,7 +25,7 @@ public sealed class SwitchActiveModelHandler(
 		// the load fails we never persist a model the transcriber could not load.
 		await lifecycle.SwitchAsync(command.ModelId, cancellationToken);
 
-		// Persist the selection so WhisperTranscriber (which loads settings.ModelId) and the next launch use
+		// Persist the selection so WorkerTranscriber (which loads settings.ModelId) and the next launch use
 		// it. AppSettings is an immutable record with get-only members, so the updated copy is rebuilt
 		// through its constructor (mirroring CompleteOnboardingHandler).
 		AppSettings current = await settingsStore.LoadAsync(cancellationToken);

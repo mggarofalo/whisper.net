@@ -77,9 +77,27 @@ verified by manual real-device smoke. Because of this, the BDD specs *do* refere
 they drive the real adapter over a fake low-level seam at the port boundary. Only the
 device glue is excluded from automated tests, never the behavior.
 
+### Isolated inference worker
+
+Whisper.net and whisper.cpp execute in `Inference.Worker.exe`, never in the WPF tray process. The
+worker is a second composition root: it references Infrastructure for the versioned IPC contract,
+and it alone references the Whisper.net managed/native packages. A persistent worker owns one loaded
+model and one Vulkan or CPU context, preserving warm-up across dictations.
+
+The Infrastructure-side `InferenceWorkerSupervisor` owns the hidden child process and communicates
+through an unguessable, current-user-only named pipe. Requests use length-prefixed metadata plus raw
+float PCM with strict size limits; there is no listener or network transport. If the worker exits,
+disconnects, or reports a native-runtime failure, the supervisor discards that entire process and
+retries once using a newly selected backend. A second Vulkan failure causes one CPU-only attempt.
+Recovery is bounded, CPU fallback remains sticky for the app lifetime, and exhaustion becomes a typed
+`InferenceUnavailableException` while the tray host remains alive. Cancellation discards an in-flight
+worker so a late response cannot desynchronize the next request; graceful host disposal shuts the
+worker down and kills it if it does not exit promptly.
+
 ### Presentation
-WPF + MVVM (the tray app, settings, overlays). It is the **only** layer permitted to reference
-Infrastructure, where it composes the object graph at startup. The WPF project targets
+WPF + MVVM (the tray app, settings, overlays). It is the primary composition root permitted to
+reference Infrastructure; `Inference.Worker` is the second, isolated composition root described
+above. Presentation composes the tray object graph at startup. The WPF project targets
 `net10.0-windows`, which is why CI runs on `windows-latest`.
 
 The **view-models are WPF-free and live in `Logic.AppManagement`** (e.g. the dashboard `ShellViewModel`
@@ -263,6 +281,7 @@ composed behind an `OperatingSystem.IsWindows()` guard, like the run-on-login re
 ## Where the rules are enforced
 
 `tests/Architecture.Tests` asserts the dependency rule (Domain depends on nothing; Application does
-not reference Infrastructure or Presentation; only Presentation references Infrastructure; etc.).
+not reference Infrastructure or Presentation; only the Presentation and inference-worker composition
+roots reference Infrastructure; etc.).
 Adding a forbidden reference turns those tests red — the architecture is executable, not just
 documented.

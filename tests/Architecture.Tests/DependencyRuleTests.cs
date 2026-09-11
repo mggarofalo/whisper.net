@@ -72,7 +72,7 @@ public sealed class DependencyRuleTests
 	public void Infrastructure_does_not_depend_on_presentation() =>
 		AssertNoDependency(Load(InfrastructureNs), PresentationNs);
 
-	// "Infrastructure is reachable only from Presentation" — proven by showing no core project reaches it.
+	// Infrastructure is reachable only from composition roots — proven by showing no core project reaches it.
 	[Fact]
 	public void No_core_project_depends_on_infrastructure()
 	{

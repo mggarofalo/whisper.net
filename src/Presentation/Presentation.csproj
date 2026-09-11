@@ -26,12 +26,9 @@
     runtime bundled, so an end user installs without a separate .NET install. A normal dev build supplies
     no RID, so this group is inert and `dotnet build` / the specs are unaffected.
 
-    Native libraries are deliberately NOT embedded for self-extract: Whisper.net's
-    NativeLibraryLoader resolves whisper.dll/ggml relative to AppContext.BaseDirectory and cannot find them
-    when they are packed into the single file and self-extracted to a temp dir — which silently broke ALL
-    transcription in the installed app. With IncludeNativeLibrariesForSelfExtract=false the managed code
-    still bundles into the single exe, but the native libraries stay as loose files in runtimes/win-x64/
-    native next to the exe, where the loader finds them. Velopack packages the whole folder anyway.
+    Native libraries are deliberately NOT embedded for self-extract. The tray no longer carries Whisper
+    native assets; this setting remains appropriate for its other native dependencies. The separately
+    published worker owns Whisper.net and its loose native runtime files under worker/.
   -->
   <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
     <SelfContained>true</SelfContained>
@@ -78,5 +75,26 @@
     <ProjectReference Include="..\Logic.ModelManagement\Logic.ModelManagement.csproj" />
     <ProjectReference Include="..\Logic.GpuContactPoint\Logic.GpuContactPoint.csproj" />
   </ItemGroup>
+
+  <!-- Framework-dependent dev builds place the worker beside the tray app in the same layout used by
+       packaging. Release packaging replaces this folder with the self-contained worker publish. -->
+  <Target Name="BuildInferenceWorker" BeforeTargets="CopyInferenceWorker"
+          Condition="'$(DesignTimeBuild)' != 'true' and '$(RuntimeIdentifier)' == ''">
+    <MSBuild Projects="$(MSBuildProjectDirectory)\..\Inference.Worker\Inference.Worker.csproj"
+             Targets="Build"
+             Properties="Configuration=$(Configuration)" />
+  </Target>
+  <Target Name="CopyInferenceWorker" AfterTargets="Build"
+          Condition="'$(DesignTimeBuild)' != 'true' and '$(RuntimeIdentifier)' == ''">
+    <ItemGroup>
+      <_InferenceWorkerFiles Include="$(MSBuildProjectDirectory)\..\Inference.Worker\bin\$(Configuration)\net10.0\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_InferenceWorkerFiles)"
+          DestinationFiles="@(_InferenceWorkerFiles->'$(OutDir)worker\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="CleanInferenceWorker" AfterTargets="Clean">
+    <RemoveDir Directories="$(OutDir)worker" />
+  </Target>
 
 </Project>

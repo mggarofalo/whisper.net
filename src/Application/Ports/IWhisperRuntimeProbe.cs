@@ -3,7 +3,7 @@
 // read any model, and a packaging defect (e.g. embedding the natives for single-file self-extract, where
 // the loader can't find them) silently breaks ALL transcription in the installed app. The doctor uses this
 // to surface that as a hard failure instead of a runtime crash no one sees. Implemented in Infrastructure
-// (the only layer that references Whisper.net); a higher-layer diagnostic check consumes the verdict.
+// (the only process that loads Whisper.net); a higher-layer diagnostic check consumes the verdict.
 
 namespace Application.Ports;
 
