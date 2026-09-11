@@ -1,8 +1,5 @@
-// The Driver owns HOW on-device transcription is exercised: it builds the REAL WhisperTranscriber over
-// a fake engine seam and a stubbed backend selector, runs a clip through it, and captures either the
-// result or a typed error. Like VadDriver constructs the real SileroVad over a fake session, this
-// exercises the real adapter logic (model-file guard, segment folding) with no model and no native
-// library.
+// The Driver owns HOW on-device transcription is exercised: it builds the real tray-side
+// WorkerTranscriber over a fake isolated-worker seam and captures either the result or typed error.
 
 using Application.Ports;
 using AwesomeAssertions;
@@ -19,7 +16,7 @@ namespace Dictation.Specs.Drivers;
 public sealed class WhisperTranscriptionDriver
 {
 	private string _modelPath = string.Empty;
-	private FakeTranscriptionEngineFactory _factory = new(string.Empty);
+	private FakeTranscriptionWorker _worker = new(string.Empty);
 	private TranscriptionResult? _result;
 	private Exception? _error;
 
@@ -27,26 +24,21 @@ public sealed class WhisperTranscriptionDriver
 	{
 		// A real (empty) local file so the adapter's existence guard passes; the fake never reads it.
 		_modelPath = Path.GetTempFileName();
-		_factory = new FakeTranscriptionEngineFactory(text);
+		_worker = new FakeTranscriptionWorker(text);
 	}
 
 	public void GivenModelPathThatDoesNotExist()
 	{
 		_modelPath = Path.Combine(Path.GetTempPath(), $"missing-{Guid.NewGuid():N}.bin");
-		_factory = new FakeTranscriptionEngineFactory(string.Empty);
+		_worker = new FakeTranscriptionWorker(string.Empty);
 	}
 
 	public async Task Transcribe()
 	{
-		IBackendSelector backendSelector = Substitute.For<IBackendSelector>();
-		backendSelector.SelectBackendAsync(Arg.Any<CancellationToken>())
-			.Returns(new BackendSelection(ComputeBackend.Cpu, "test"));
-
 		WhisperOptions options = new() { ModelPath = _modelPath, Language = "en" };
-		await using WhisperTranscriber transcriber =
-			new(_factory, backendSelector, new VocabularyConditioner(),
-				Substitute.For<ISettingsStore>(), Substitute.For<IModelCatalog>(), Substitute.For<IModelCache>(),
-				Options.Create(options));
+		WorkerTranscriber transcriber =
+			new(_worker, new VocabularyConditioner(), Substitute.For<ISettingsStore>(),
+				Substitute.For<IModelCatalog>(), Substitute.For<IModelCache>(), Options.Create(options));
 
 		try
 		{
@@ -71,7 +63,7 @@ public sealed class WhisperTranscriptionDriver
 		_result!.Text.Should().Be(expected);
 	}
 
-	public void AssertNoNetworkEgress() => _factory.NetworkAccessed.Should().BeFalse();
+	public void AssertNoNetworkEgress() => _worker.NetworkAccessed.Should().BeFalse();
 
 	public void AssertModelNotFoundError() => _error.Should().BeOfType<ModelNotFoundException>();
 

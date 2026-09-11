@@ -61,6 +61,8 @@ To open settings or quit, **right-click the tray icon** → **Open Settings** / 
 
 - **Local, on-device transcription** — fast, private, works offline.
 - **Automatic GPU acceleration** (Vulkan) with seamless **CPU fallback** — no CUDA toolkit needed.
+  Native inference runs in a supervised local worker, so a graphics-driver reset or native crash can
+  restart inference without taking down the tray app.
 - **Type into any app** via simulated keystrokes, with an automatic **clipboard-paste fallback** when
   direct typing isn't possible.
 - **Multiple Whisper models** to choose from (`tiny` → `large-v3`, English-only and multilingual
@@ -138,6 +140,9 @@ remove your personal data, delete the two folders listed under
   your microphone, model cache, hotkey registration, and GPU, and print a clear pass/fail report — the
   best thing to attach to a bug report.
 - **Check the logs** in `%LOCALAPPDATA%\whisper-net\`.
+- **Dictation stopped after a graphics-driver update.** The app normally replaces its isolated
+  inference worker and retries, falling back to CPU if Vulkan remains unavailable. Check the log for
+  the worker generation/recovery outcome if it does not recover.
 
 Found a bug or have an idea? Please [open an issue](https://github.com/mggarofalo/whisper.net/issues).
 

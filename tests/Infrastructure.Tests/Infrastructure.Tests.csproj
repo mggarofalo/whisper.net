@@ -23,6 +23,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Infrastructure\Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Inference.Worker\Inference.Worker.csproj"
+                      ReferenceOutputAssembly="false" />
   </ItemGroup>
 
 </Project>

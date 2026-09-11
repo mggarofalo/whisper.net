@@ -35,7 +35,7 @@ npm install        # wires the commitlint commit-msg hook via husky
 Clean Architecture + CQRS. Dependencies point inward only:
 
 ```
-Domain ← Application ← Logic.* ← Infrastructure ← Presentation (WPF)
+Domain ← Application ← Logic.* ← Infrastructure ← Presentation (WPF) / Inference.Worker
 ```
 
 - **Domain** — entities, value objects; no dependencies.
@@ -44,9 +44,11 @@ Domain ← Application ← Logic.* ← Infrastructure ← Presentation (WPF)
 - **Logic.\*** — `Logic.AppManagement`, `Logic.AudioManagement`, `Logic.ModelManagement`,
   `Logic.GpuContactPoint` (the single GPU touch point). Real, deterministic behavior — never faked
   in tests.
-- **Infrastructure** — implements the Application ports (Whisper.net, NAudio, ONNX VAD, SendInput,
-  persistence). The only project that does real I/O.
-- **Presentation** — WPF + MVVM. The only project that references Infrastructure.
+- **Infrastructure** — implements the Application ports (supervised inference IPC, NAudio, ONNX VAD,
+  SendInput, persistence). The only project that does tray-side real I/O.
+- **Inference.Worker** — the isolated composition root that exclusively loads Whisper.net/whisper.cpp
+  and owns the GPU/CPU model context. A crash cannot terminate Presentation.
+- **Presentation** — WPF + MVVM. The tray-app composition root; it never loads Whisper native code.
 
 CQRS flows through the source-generated **Mediator** (martinothamar) — **not** MediatR — using custom
 `ICommand<T>` / `IQuery<T>` markers. Architectural rules are enforced as tests in

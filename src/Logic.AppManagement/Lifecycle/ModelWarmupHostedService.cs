@@ -1,5 +1,5 @@
 // Warms the dictation model as soon as the app starts so the FIRST dictation isn't slowed
-// by the cold model load + native init. Dictation runs through the ITranscriber port (WhisperTranscriber),
+// by the cold model load + native init. Dictation runs through the ITranscriber port (WorkerTranscriber),
 // which otherwise loads the model lazily on the first real transcription — the "long pause on first use".
 // On startup this service kicks off ITranscriber.PreloadAsync in the BACKGROUND (load + a throwaway
 // warm-up inference); it never blocks host startup or the UI thread, and it swallows failures (a fresh

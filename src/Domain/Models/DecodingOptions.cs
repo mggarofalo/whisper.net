@@ -3,7 +3,7 @@
 // present the first-token log-probability threshold must be disabled: the injected prompt can push the
 // genuine first sampled token below that threshold and drop it. With no vocabulary, both are left at
 // their defaults so decoding is unchanged. A value object passed from the assembler (Logic) down to the
-// native engine (Infrastructure).
+// native engine (Inference.Worker).
 
 namespace Domain.Models;
 

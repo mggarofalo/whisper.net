@@ -31,8 +31,9 @@ run those with `--filter "Category=slow"`.
 pwsh ./build/pack.ps1     # -> ./releases/Whisper.Net-win-Setup.exe (+ update package & feed)
 ```
 
-This produces an **unsigned** self-contained, single-file installer. The version comes from git tags via
-MinVer (never hand-edited). See [docs/packaging.md](packaging.md) for what `pack.ps1` does step by step.
+This produces an **unsigned** self-contained installer containing the single-file tray app and its
+separately restartable inference worker under `worker/`. The version comes from git tags via MinVer
+(never hand-edited). See [docs/packaging.md](packaging.md) for what `pack.ps1` does step by step.
 
 ## 3. (Optional) Sign with a self-signed certificate
 

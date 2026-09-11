@@ -50,7 +50,7 @@
   </ItemGroup>
 
   <!--
-    On-device transcription (Whisper.net) with Vulkan GPU acceleration + CPU fallback. Infrastructure-
+    On-device transcription (Whisper.net) with Vulkan GPU acceleration + CPU fallback. Inference.Worker-
     only; transcription is fully local (no network egress). The Runtime packages ship the native
     whisper.cpp binaries (CPU + Vulkan); the GPU contact point picks the order at load time.
   -->

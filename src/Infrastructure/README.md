@@ -1,10 +1,19 @@
 # Infrastructure
 
-Implements the Application **ports** against real systems — Whisper.net transcription, NAudio
+Implements the Application **ports** against real systems — supervised local inference, NAudio
 (WASAPI) capture, ONNX/Silero VAD, SendInput text injection, model file I/O, persistence. The only
 layer that talks to the outside world.
 
-**Depends on:** Application, Domain, and all `Logic.*`. **Referenced only by:** Presentation.
+**Depends on:** Application, Domain, and all `Logic.*`. **Referenced by:** the Presentation
+composition root and the isolated inference-worker composition root.
+
+## Inference isolation
+
+The tray-side `WorkerTranscriber` never calls Whisper.net. It sends local requests to
+`Inference.Worker.exe` through a current-user-only named pipe. The worker owns the model and native
+Vulkan/CPU context; `InferenceWorkerSupervisor` replaces the entire process after a crash or broken
+native context, retries on a fresh GPU worker, and then falls back once to a CPU-only worker. Attempts
+are bounded, cancellation tears down an in-flight channel, and graceful shutdown leaves no orphan.
 
 ## Text delivery & UIPI
 

@@ -5,8 +5,8 @@
 
 .DESCRIPTION
     The one-command local packaging path: from a clean clone, `pwsh ./build/pack.ps1` produces a
-    self-contained, single-file Windows build of the WPF tray app (the .NET 10 runtime and the native
-    assets — Whisper.net + Vulkan, ONNX Runtime, SharpHook — bundled) and runs `vpk pack` to emit a
+    self-contained, single-file Windows build of the WPF tray app plus an isolated inference worker
+    (with Whisper.net + Vulkan), and runs `vpk pack` to emit a
     Velopack release: an installer (`*-Setup.exe`), the update package, and the release feed.
 
     The version is derived from git tags by MinVer (never hand-edited): an exact `vX.Y.Z` tag produces
@@ -30,6 +30,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $repo = (Resolve-Path "$PSScriptRoot/..").Path
 $project = Join-Path $repo 'src/Presentation/Presentation.csproj'
+$workerProject = Join-Path $repo 'src/Inference.Worker/Inference.Worker.csproj'
 $icon = Join-Path $repo 'assets/whisper.ico'
 if (-not $OutputDir) { $OutputDir = Join-Path $repo 'releases' }
 if (-not $PublishDir) { $PublishDir = Join-Path $repo 'artifacts/publish' }
@@ -52,11 +53,18 @@ try {
     $packVersion = ($version -split '\+')[0]
     Write-Host "Packaging $PackId $packVersion ($Runtime)" -ForegroundColor Cyan
 
-    # 2. Self-contained, single-file publish with the runtime + native assets bundled. The csproj turns
-    #    on SelfContained / PublishSingleFile / native self-extract whenever a RID is supplied.
+    # 2. Self-contained, single-file tray publish. The csproj turns on SelfContained /
+    #    PublishSingleFile whenever a RID is supplied.
     if (Test-Path $PublishDir) { Remove-Item -Recurse -Force $PublishDir }
     dotnet publish $project -c $Configuration -r $Runtime -o $PublishDir --nologo
     if ($LASTEXITCODE -ne 0) { throw 'dotnet publish failed.' }
+
+    # The tray process deliberately carries no Whisper native runtime. Publish the supervised worker
+    # into a child folder so it owns whisper.cpp/Vulkan and can be replaced independently after a crash.
+    $workerPublishDir = Join-Path $PublishDir 'worker'
+    if (Test-Path $workerPublishDir) { Remove-Item -Recurse -Force $workerPublishDir }
+    dotnet publish $workerProject -c $Configuration -r $Runtime -o $workerPublishDir --nologo
+    if ($LASTEXITCODE -ne 0) { throw 'inference worker publish failed.' }
 
     # 3. Code signing: when a signing certificate is supplied via the environment — a
     #    base64-encoded PFX in VELOPACK_SIGN_CERTIFICATE plus VELOPACK_SIGN_PASSWORD, injected by CI from

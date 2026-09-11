@@ -1,5 +1,5 @@
 // Unit tests for SwitchActiveModelHandler. Switching the active model must do two things:
-// switch the runtime lifecycle AND persist settings.ModelId — the value WhisperTranscriber loads. The
+// switch the runtime lifecycle AND persist settings.ModelId — the value WorkerTranscriber loads. The
 // pre-fix handler only switched the lifecycle, so dictation kept loading the default model. These pin
 // the persistence (preserving the other settings) and the change broadcast, and the no-op guard.
 

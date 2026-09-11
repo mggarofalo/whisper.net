@@ -1,4 +1,4 @@
-// Drives the scenario: the REAL WhisperTranscriber over a capturing fake engine seam.
+// Drives the scenario: the real WorkerTranscriber over a capturing fake worker seam.
 // It transcribes, mutates the custom vocabulary, transcribes again, and lets the steps assert that the
 // second transcription was conditioned with the new term while the engine was loaded only once — i.e.
 // the change took effect without restarting the engine. No model file content, no native library.
@@ -7,7 +7,6 @@ using Application.Ports;
 using AwesomeAssertions;
 using Dictation.Specs.Support;
 using Domain.Audio;
-using Domain.Models;
 using Infrastructure.Transcription;
 using Logic.ModelManagement;
 using Microsoft.Extensions.Options;
@@ -17,9 +16,9 @@ namespace Dictation.Specs.Drivers;
 
 public sealed class VocabularyTranscriptionDriver : IDisposable
 {
-	private readonly CapturingTranscriptionEngineFactory _factory = new();
+	private readonly CapturingTranscriptionWorker _worker = new();
 	private readonly WhisperOptions _options;
-	private readonly WhisperTranscriber _transcriber;
+	private readonly WorkerTranscriber _transcriber;
 	private readonly string _modelPath;
 
 	public VocabularyTranscriptionDriver()
@@ -28,11 +27,7 @@ public sealed class VocabularyTranscriptionDriver : IDisposable
 		_modelPath = Path.GetTempFileName();
 		_options = new WhisperOptions { ModelPath = _modelPath, Language = "en" };
 
-		IBackendSelector backendSelector = Substitute.For<IBackendSelector>();
-		backendSelector.SelectBackendAsync(Arg.Any<CancellationToken>())
-			.Returns(new BackendSelection(ComputeBackend.Cpu, "test"));
-
-		_transcriber = new WhisperTranscriber(_factory, backendSelector, new VocabularyConditioner(),
+		_transcriber = new WorkerTranscriber(_worker, new VocabularyConditioner(),
 			Substitute.For<ISettingsStore>(), Substitute.For<IModelCatalog>(), Substitute.For<IModelCache>(),
 			Options.Create(_options));
 	}
@@ -46,11 +41,15 @@ public sealed class VocabularyTranscriptionDriver : IDisposable
 
 	public void AssertLastPromptContains(string term)
 	{
-		_factory.LastDecodingOptions.Should().NotBeNull();
-		_factory.LastDecodingOptions!.InitialPrompt.Should().Contain(term);
+		_worker.LastRequest.Should().NotBeNull();
+		_worker.LastRequest!.DecodingOptions.InitialPrompt.Should().Contain(term);
 	}
 
-	public void AssertEngineLoadedOnce() => _factory.CreateCount.Should().Be(1);
+	public void AssertEngineLoadedOnce()
+	{
+		_worker.CurrentGeneration.Should().Be(1);
+		_worker.CallCount.Should().Be(2);
+	}
 
 	public void Dispose()
 	{

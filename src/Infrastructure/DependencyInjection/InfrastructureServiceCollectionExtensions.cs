@@ -1,5 +1,6 @@
 // Per-layer DI registration for Infrastructure — the adapters that implement Application ports
-// (Whisper.net, NAudio, ONNX VAD, SendInput, persistence). This is the composition seam the Generic
+// (the inference-worker supervisor, NAudio, ONNX VAD, SendInput, persistence). This is the composition
+// seam the Generic
 // Host calls; the BDD specs deliberately do NOT call it, substituting the ports with fakes instead.
 // Concrete adapters are registered here as later modules add them.
 
@@ -49,25 +50,29 @@ public static class InfrastructureServiceCollectionExtensions
 		// It resolves the loader without initializing a device, so it returns promptly and never hangs.
 		services.AddSingleton<IGpuProbe, VulkanGpuProbe>();
 
-		// Transcription: the Whisper.net adapter over an internal engine seam. The model is
-		// loaded lazily on first transcription, so resolving the port touches no model file or native
-		// library; the model path/language come from the bound WhisperOptions.
+		// Transcription: a tray-side adapter over the supervised worker boundary. The child process
+		// loads the model lazily, so resolving the port touches no model file or native library;
+		// the model path/language come from the bound WhisperOptions.
 		services.AddOptions<WhisperOptions>();
+		services.AddOptions<InferenceWorkerOptions>();
 		if (configuration is not null)
 		{
 			services.Configure<WhisperOptions>(configuration.GetSection(WhisperOptions.SectionName));
+			services.Configure<InferenceWorkerOptions>(configuration.GetSection(InferenceWorkerOptions.SectionName));
 		}
 
-		services.AddSingleton<IWhisperEngineFactory, WhisperNetEngineFactory>();
-		services.AddSingleton<ITranscriber, WhisperTranscriber>();
+		services.AddSingleton<IInferenceWorkerProcessFactory, NamedPipeInferenceWorkerProcessFactory>();
+		services.AddSingleton<InferenceWorkerSupervisor>();
+		services.AddSingleton<IInferenceWorkerSupervisor>(provider => provider.GetRequiredService<InferenceWorkerSupervisor>());
+		services.AddSingleton<ITranscriber, WorkerTranscriber>();
 
-		// Whisper native-runtime probe: lets the doctor verify the native library actually
-		// loads, catching the packaging defect that silently broke transcription in the installed app.
-		services.AddSingleton<IWhisperRuntimeProbe, WhisperRuntimeProbe>();
+		// Whisper native-runtime probe: lets the doctor verify that the worker executable can load
+		// its native library, catching packaging defects without loading Whisper into the tray process.
+		services.AddSingleton<IWhisperRuntimeProbe, WorkerProcessRuntimeProbe>();
 
-		// Model lifecycle runtime: the native load/warmup/transcribe/release operations the
-		// lifecycle policy (Logic.ModelManagement) drives, built on the Whisper.net engine seam above.
-		services.AddSingleton<IModelRuntime, WhisperModelRuntime>();
+		// Model lifecycle runtime: load/warmup/transcribe/release operations the lifecycle policy
+		// (Logic.ModelManagement) drives across the same supervised worker boundary.
+		services.AddSingleton<IModelRuntime, WorkerModelRuntime>();
 
 		// Model registry cache + download. Cache detection is filesystem-only (no network).
 		// The downloader fetches a missing model from Hugging Face — the one model-related egress — and

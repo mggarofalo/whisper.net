@@ -18,9 +18,11 @@ This:
    produces exactly `X.Y.Z`; an untagged commit produces a pre-release floored at `0.1.0` (see
    `MinVerMinimumMajorMinor` in [`Directory.Build.props`](../Directory.Build.props)).
 3. Publishes `src/Presentation` self-contained and single-file for `win-x64`, bundling the .NET 10
-   runtime and the **native assets** (Whisper.net + `Whisper.net.Runtime.Vulkan`, ONNX Runtime,
-   SharpHook, SQLite). Native libraries are self-extracted next to the single file at first run.
-4. Runs `vpk pack` to emit a Velopack release into `./releases/`:
+   runtime and the tray-side native assets (ONNX Runtime, SharpHook, SQLite).
+4. Publishes `src/Inference.Worker` into `worker/` as its own self-contained executable. Only this
+   child folder carries Whisper.net, whisper.cpp, and the Vulkan/CPU native runtimes. Keeping them out
+   of the tray process lets the supervisor replace all native inference state after a driver reset.
+5. Runs `vpk pack` to emit a Velopack release into `./releases/`:
    - `Whisper.Net-win-Setup.exe` — the installer
    - `Whisper.Net-<version>-full.nupkg` — the update package
    - `RELEASES` / `releases.win.json` — the update feed
@@ -30,6 +32,11 @@ The publish settings live in [`src/Presentation/Presentation.csproj`](../src/Pre
 under a `'$(RuntimeIdentifier)' != ''` group, so they apply only when publishing with `-r win-x64`; a
 normal `dotnet build` is unaffected. The app id, title, and icon (`assets/whisper.ico`) are passed to
 `vpk pack`.
+
+Normal development builds use the same layout: the Presentation project builds the worker without
+referencing its assembly and copies its output to `bin/<Configuration>/net10.0-windows/worker/`.
+The release script replaces that folder with the self-contained `win-x64` worker publish before
+Velopack packages the directory.
 
 ## Bundled model assets
 

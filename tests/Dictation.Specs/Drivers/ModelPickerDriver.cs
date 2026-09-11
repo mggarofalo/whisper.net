@@ -115,7 +115,7 @@ public sealed class ModelPickerDriver
 		Item(id).IsActive.Should().BeTrue();
 	}
 
-	// The selected model was persisted as settings.ModelId — the value WhisperTranscriber loads — so the
+	// The selected model was persisted as settings.ModelId — the value WorkerTranscriber loads — so the
 	// choice actually drives transcription and survives a restart, not just the in-memory lifecycle status.
 	public void AssertActiveModelPersisted(string id) =>
 		_persisted.ModelId.Should().Be(id, "switching the active model must persist settings.ModelId");
