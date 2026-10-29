@@ -1,7 +1,7 @@
 # AGENTS.md — canonical guidance for whisper.net
 
 > **This file is the single source of truth** for how humans and AI agents work in this
-> repository. `CLAUDE.md` is a one-line redirect here; everything authoritative lives in this
+> repository. `CLAUDE.md` only imports this file; everything authoritative lives in this
 > file and the linked documents under `docs/`. If guidance ever conflicts, this file wins.
 
 `whisper.net` is a local, GPU-accelerated speech-to-text dictation utility for Windows — a
