@@ -6,6 +6,32 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-31
+
+### Added
+
+- **The overlay tells you when the microphone isn't picking anything up.** If a recording hears
+  nothing for 3 seconds, the recording pill adds a line: "No audio — is your mic muted?" It clears the
+  moment the mic picks you up, so a quiet room followed by talking just makes it go away. The cutoff for
+  "nothing" is the same one the transcriber uses, so the hint agrees with the outcome. (WHISPER-144)
+
+### Changed
+
+- **"No audio detected" now appears on the overlay, not as a tray notification.** Windows could
+  suppress the 0.4.0 tray notice (Focus Assist, notification settings), so a muted-mic recording still
+  looked like nothing happened. The pill now shows "No audio detected — is your mic muted?" for a few
+  seconds instead. (WHISPER-144)
+
+### Fixed
+
+- **The recording overlay reliably appears.** A dictation started while the "Warming up…" pill was
+  showing never re-ran the overlay's show path, so it wasn't repositioned or brought to the front. Every
+  dictation now re-presents the pill explicitly. Each present also moves it to the virtual desktop you're
+  on (Windows otherwise shows it only on the desktop where it first appeared) and forces it on top, and it
+  stays on top while recording. The overlay then reads back whether it's really on screen (visible, not
+  hidden by Windows, on top, on this desktop, not covered), logs the result, and retries once if the check
+  fails, so any future miss is explained in the log. (WHISPER-143)
+
 ## [0.4.0] - 2026-10-31
 
 ### Added
@@ -322,7 +348,8 @@ that shipped in 0.1.0, organized by category.
 - **The persisted active model is shown in the picker** before it loads. (WHISPER-118)
 - **The Home dashboard refreshes** on every activation. (WHISPER-119)
 
-[Unreleased]: https://github.com/mggarofalo/whisper.net/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/mggarofalo/whisper.net/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/mggarofalo/whisper.net/releases/tag/v0.5.0
 [0.4.0]: https://github.com/mggarofalo/whisper.net/releases/tag/v0.4.0
 [0.3.2]: https://github.com/mggarofalo/whisper.net/releases/tag/v0.3.2
 [0.3.1]: https://github.com/mggarofalo/whisper.net/releases/tag/v0.3.1
