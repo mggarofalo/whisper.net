@@ -174,6 +174,48 @@ public sealed partial class SettingsDesignSystemDriver(IEnumerable<NavigationSec
 		}
 	}
 
+	// WHISPER-147: the row actions carry no text label — each is an icon-only button whose Content is its glyph.
+	public void AssertRowActionsAreIconOnly()
+	{
+		(string View, string Glyph)[] actions =
+		[
+			("ModelView", "GlyphDownload"), ("ModelView", "GlyphCancel"), ("ModelView", "GlyphSelect"), ("HistoryView", "GlyphCopy"),
+		];
+		foreach ((string view, string glyph) in actions)
+		{
+			IconOnlyButton().Matches(Views[view]).Select(m => m.Value)
+				.Should().Contain(b => b.Contains($"Content=\"{{DynamicResource {glyph}}}\"", StringComparison.Ordinal),
+					$"{view}'s {glyph} action is an icon-only button");
+		}
+
+		foreach (string view in new[] { "ModelView", "HistoryView" })
+		{
+			// Only inside a Button: the search box's leading icon legitimately reuses the ButtonGlyph style.
+			Regex.IsMatch(Views[view], @"<Button\b[^>]*(?<!/)>(?:(?!</Button>).)*ButtonGlyph", RegexOptions.Singleline)
+				.Should().BeFalse($"{view}'s row actions no longer pair an icon with a text label");
+		}
+	}
+
+	// WHISPER-147: "click to select this" and "this is selected" are two different glyphs in the same slot —
+	// the select button only on a row you can switch to, a non-interactive mark only on the active row.
+	public void AssertSelectAndSelectedAreDistinct()
+	{
+		string select = GlyphValue().Match(Resources[Resources.IndexOf("x:Key=\"GlyphSelect\"", StringComparison.Ordinal)..]).Groups[1].Value;
+		string selected = GlyphValue().Match(Resources[Resources.IndexOf("x:Key=\"GlyphSelected\"", StringComparison.Ordinal)..]).Groups[1].Value;
+		select.Should().NotBeEmpty();
+		selected.Should().NotBeEmpty().And.NotBe(select, "selectable and selected must look different");
+
+		Views["ModelView"].Should().MatchRegex(
+			"<Button\\b[^>]*Content=\"\\{DynamicResource GlyphSelect\\}\"[^>]*Visibility=\"\\{Binding CanSelect\\b",
+			"the select button appears only on a row that can be selected");
+		Views["ModelView"].Should().MatchRegex(
+			"<TextBlock\\b[^>]*Text=\"\\{DynamicResource GlyphSelected\\}\"[^>]*ToolTip=[^>]*AutomationProperties\\.Name=[^>]*Visibility=\"\\{Binding IsActive\\b",
+			"the active row shows the selected mark, explained on hover and to screen readers");
+	}
+
+	[GeneratedRegex(">(&#x[0-9A-Fa-f]+;)<")]
+	private static partial Regex GlyphValue();
+
 	[GeneratedRegex("<Button\\b[^>]*Content=\"\\{DynamicResource Glyph\\w+\\}\"[^>]*>")]
 	private static partial Regex IconOnlyButton();
 

@@ -136,43 +136,49 @@
                                         <StackPanel Grid.Column="1"
                                                     Orientation="Horizontal"
                                                     VerticalAlignment="Center">
-                                            <!-- Download: only when not downloaded and not downloading. -->
-                                            <Button AutomationProperties.Name="{Binding DisplayName, StringFormat='Download {0}'}"
+                                            <!-- Icon-only actions, one 32x32 slot. Download: only when not
+                                                 downloaded and not downloading. -->
+                                            <Button Content="{DynamicResource GlyphDownload}"
+                                                    FontFamily="{DynamicResource IconFont}"
+                                                    Width="{DynamicResource RowIconSize}"
+                                                    Height="{DynamicResource RowIconSize}"
+                                                    Padding="0"
+                                                    VerticalAlignment="Center"
+                                                    ToolTip="Download"
+                                                    AutomationProperties.Name="{Binding DisplayName, StringFormat='Download {0}'}"
                                                     Command="{Binding DownloadCommand}"
-                                                    Padding="12,4"
-                                                    Visibility="{Binding CanDownload, Converter={StaticResource BoolToVisibility}}">
-                                                <StackPanel Orientation="Horizontal">
-                                                    <TextBlock Text="{DynamicResource GlyphDownload}"
-                                                               Style="{DynamicResource ButtonGlyph}" />
-                                                    <TextBlock Text="Download"
-                                                               VerticalAlignment="Center" />
-                                                </StackPanel>
-                                            </Button>
+                                                    Visibility="{Binding CanDownload, Converter={StaticResource BoolToVisibility}}" />
                                             <!-- Cancel: only this row's in-flight download, only while running. -->
-                                            <Button AutomationProperties.Name="{Binding DisplayName, StringFormat='Cancel download for {0}'}"
+                                            <Button Content="{DynamicResource GlyphCancel}"
+                                                    FontFamily="{DynamicResource IconFont}"
+                                                    Width="{DynamicResource RowIconSize}"
+                                                    Height="{DynamicResource RowIconSize}"
+                                                    Padding="0"
+                                                    VerticalAlignment="Center"
+                                                    ToolTip="Cancel download"
+                                                    AutomationProperties.Name="{Binding DisplayName, StringFormat='Cancel download for {0}'}"
                                                     Command="{Binding DownloadCancelCommand}"
-                                                    Padding="12,4"
-                                                    Visibility="{Binding IsDownloading, Converter={StaticResource BoolToVisibility}}">
-                                                <StackPanel Orientation="Horizontal">
-                                                    <TextBlock Text="{DynamicResource GlyphCancel}"
-                                                               Style="{DynamicResource ButtonGlyph}" />
-                                                    <TextBlock Text="Cancel"
-                                                               VerticalAlignment="Center" />
-                                                </StackPanel>
-                                            </Button>
-                                            <!-- Select: only when downloaded and not already active. -->
-                                            <Button AutomationProperties.Name="{Binding DisplayName, StringFormat='Select {0}'}"
+                                                    Visibility="{Binding IsDownloading, Converter={StaticResource BoolToVisibility}}" />
+                                            <!-- Select ("click to select this"): an empty radio, only when
+                                                 downloaded and not already active. -->
+                                            <Button Content="{DynamicResource GlyphSelect}"
+                                                    FontFamily="{DynamicResource IconFont}"
+                                                    Width="{DynamicResource RowIconSize}"
+                                                    Height="{DynamicResource RowIconSize}"
+                                                    Padding="0"
+                                                    VerticalAlignment="Center"
+                                                    ToolTip="Use this model"
+                                                    AutomationProperties.Name="{Binding DisplayName, StringFormat='Select {0}'}"
                                                     Command="{Binding DataContext.SelectCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                     CommandParameter="{Binding}"
-                                                    Padding="12,4"
-                                                    Visibility="{Binding CanSelect, Converter={StaticResource BoolToVisibility}}">
-                                                <StackPanel Orientation="Horizontal">
-                                                    <TextBlock Text="{DynamicResource GlyphSelect}"
-                                                               Style="{DynamicResource ButtonGlyph}" />
-                                                    <TextBlock Text="Select"
-                                                               VerticalAlignment="Center" />
-                                                </StackPanel>
-                                            </Button>
+                                                    Visibility="{Binding CanSelect, Converter={StaticResource BoolToVisibility}}" />
+                                            <!-- Selected ("this is selected"): a filled accent radio in the same
+                                                 slot, not clickable — the active model is already in use. -->
+                                            <TextBlock Text="{DynamicResource GlyphSelected}"
+                                                       Style="{DynamicResource RowIconIndicator}"
+                                                       ToolTip="Active model"
+                                                       AutomationProperties.Name="{Binding DisplayName, StringFormat='{}{0} is selected'}"
+                                                       Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}" />
                                         </StackPanel>
                                     </Grid>
                                     <!-- A failed download surfaces per row natively, not as a crash;

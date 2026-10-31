@@ -258,11 +258,43 @@
     <sys:String x:Key="GlyphRefresh">&#xE72C;</sys:String>
     <sys:String x:Key="GlyphDownload">&#xE896;</sys:String>
     <sys:String x:Key="GlyphCopy">&#xE8C8;</sys:String>
-    <sys:String x:Key="GlyphSelect">&#xE73E;</sys:String>
+    <!-- Choosing the active model is a one-of-many choice, so it reads as a radio: an empty ring on a
+         row you can switch to ("select this"), a filled one on the row that is active ("this is selected"). -->
+    <sys:String x:Key="GlyphSelect">&#xECCA;</sys:String>
+    <sys:String x:Key="GlyphSelected">&#xECCB;</sys:String>
     <sys:String x:Key="GlyphCancel">&#xE711;</sys:String>
     <sys:String x:Key="GlyphSearch">&#xE721;</sys:String>
     <sys:String x:Key="GlyphPrevious">&#xE76B;</sys:String>
     <sys:String x:Key="GlyphNext">&#xE76C;</sys:String>
+
+    <!-- Icon-only row actions (Download / Cancel / Select / Copy) are 32x32 buttons whose Content is the
+         glyph, sized inline rather than through a keyed Style: a keyed Style would replace the implicit
+         Fluent button style (ThemeMode is applied in code), losing native hover/pressed/focus. Every one also
+         sets a ToolTip and an AutomationProperties.Name, because the icon alone says nothing to a screen
+         reader. -->
+    <sys:Double x:Key="RowIconSize">32</sys:Double>
+
+    <!-- The non-interactive "this is selected" mark: the same 32x32 slot as the icon buttons so the row's
+         action column stays aligned, drawn in the system accent like the nav selection. -->
+    <Style x:Key="RowIconIndicator"
+           TargetType="TextBlock">
+        <Setter Property="FontFamily"
+                Value="{DynamicResource IconFont}" />
+        <Setter Property="FontSize"
+                Value="16" />
+        <Setter Property="Width"
+                Value="32" />
+        <Setter Property="Height"
+                Value="32" />
+        <Setter Property="Padding"
+                Value="0,8,0,0" />
+        <Setter Property="TextAlignment"
+                Value="Center" />
+        <Setter Property="VerticalAlignment"
+                Value="Center" />
+        <Setter Property="Foreground"
+                Value="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+    </Style>
 
     <!-- The icon half of an icon + label button. -->
     <Style x:Key="ButtonGlyph"
