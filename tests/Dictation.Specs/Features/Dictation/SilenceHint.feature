@@ -40,7 +40,7 @@ Feature: The overlay tells me when the microphone isn't picking anything up
   Scenario: A recording that ends with no audio says so in the overlay
     Given a dictation recording has started
     When the recording ends with no audio captured
-    Then the overlay says "No audio detected — is your mic muted?"
+    Then the overlay says "No audio detected — mic muted?"
     And the overlay is still visible
     When 4 seconds of recording elapse
     Then the overlay shows no message

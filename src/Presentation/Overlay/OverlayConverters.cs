@@ -43,8 +43,8 @@ public sealed class OverlayStateToBrushConverter : IValueConverter
 	}
 }
 
-// The message line is shown only when there is something to say (the muted-mic hint or the
-// no-audio message), so the pill keeps its compact one-row footprint the rest of the time.
+// The inline message is shown only when there is something to say (the muted-mic hint or the
+// no-audio message); otherwise the meter and elapsed time hold the row.
 public sealed class MessageToVisibilityConverter : IValueConverter
 {
 	public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
@@ -74,16 +74,6 @@ public sealed class NearCapToBrushConverter : IValueConverter
 	}
 }
 
-// Elapsed time is shown only while recording (it is the recording's running duration).
-public sealed class RecordingToVisibilityConverter : IValueConverter
-{
-	public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
-		value is OverlayState.Recording ? Visibility.Visible : Visibility.Collapsed;
-
-	public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
-		throw new NotSupportedException();
-}
-
 // A spoken/automation label for the overlay's current state, so the cue is not colour-only.
 public sealed class OverlayStateToNameConverter : IValueConverter
 {
@@ -109,18 +99,6 @@ public sealed class WarmingToVisibilityConverter : IValueConverter
 {
 	public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
 		value is OverlayState.Warming ? Visibility.Visible : Visibility.Collapsed;
-
-	public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
-		throw new NotSupportedException();
-}
-
-// The level meter is hidden while warming — there is no input level to show before a
-// recording — so the pill collapses to the dot + the "Warming up…" label. It is also hidden for the
-// no-audio outcome, where the message line says what happened; it is shown for every other state.
-public sealed class MeterVisibilityConverter : IValueConverter
-{
-	public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
-		value is OverlayState.Warming or OverlayState.NoAudio ? Visibility.Collapsed : Visibility.Visible;
 
 	public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
 		throw new NotSupportedException();

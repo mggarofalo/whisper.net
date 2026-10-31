@@ -51,29 +51,50 @@ public sealed class OverlayViewSmokeTests
 		content.DesiredSize.Height.Should().BeInRange(20, 48, "the overlay stays a compact pill, not a panel");
 	});
 
-	// WHISPER-144: the message line binds cleanly and, when shown, wraps inside the pill's fixed width —
-	// the pill grows a line taller rather than widening into a panel.
+	// WHISPER-145: the pill is ONE fixed-height row in every state, a message included. 0.5.0 put messages
+	// on a second line, so the pill grew, and a window hidden while tall came back with an empty band below
+	// the row. Drive the REAL window through rest -> warming -> recording -> transcribing -> no-audio ->
+	// the next recording and require the same size at every step, with no binding errors.
 	[Fact]
-	public void Overlay_message_line_binds_and_wraps_within_the_pill() => StaThread.Run(() =>
+	public void Overlay_window_keeps_one_fixed_size_through_every_state() => StaThread.Run(() =>
 	{
 		using BindingErrorCollector bindingErrors = new();
 		WeakReferenceMessenger messenger = new();
-		using LevelOverlayController controller = new(new RecordingStateMachine(), new StubAudioSource(), messenger, TimeProvider.System);
+		RecordingStateMachine stateMachine = new();
+		using LevelOverlayController controller = new(stateMachine, new StubAudioSource(), messenger, TimeProvider.System);
 		using LevelOverlayViewModel viewModel = new(controller, new InlineDispatcher());
+		IMonitorCatalog monitors = Substitute.For<IMonitorCatalog>();
+		monitors.GetMonitors().Returns([new MonitorInfo("\\\\.\\DISPLAY1", "Primary display (1920 × 1080)", true, 0, 0, 1920, 1040)]);
+		using LevelOverlay overlay = new(viewModel, monitors, NullLogger<LevelOverlay>.Instance);
+		List<(string Step, Size Size)> sizes = [];
 
+		void Record(string step)
+		{
+			FlushDispatcherQueue();
+			sizes.Add((step, overlay.CurrentSize));
+		}
+
+		messenger.Send(new ModelWarmupChangedMessage(true));
+		Record("warming");
+		messenger.Send(new ModelWarmupChangedMessage(false));
+		stateMachine.RequestStart();
+		Record("recording");
+		stateMachine.RequestStop();
+		Record("transcribing");
 		messenger.Send(new DictationNoAudioMessage());
+		stateMachine.CompleteTranscription();
+		Record("no audio");
 		viewModel.Message.Should().Be(LevelOverlayController.NoAudioMessage);
-
-		FrameworkElement content = LevelOverlay.BuildContent();
-		content.DataContext = viewModel;
-		content.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
-		content.Arrange(new Rect(content.DesiredSize));
-		content.UpdateLayout();
-		FlushDispatcherQueue();
+		viewModel.ShowsLevel.Should().BeFalse("the message takes the meter's place in the row");
+		stateMachine.RequestStart();
+		Record("next recording");
+		viewModel.Message.Should().BeNull();
 
 		bindingErrors.Errors.Should().BeEmpty();
-		content.DesiredSize.Width.Should().BeInRange(160, 240, "the message wraps instead of widening the pill");
-		content.DesiredSize.Height.Should().BeInRange(48, 96, "the message adds a line or two, not a panel");
+		sizes.Select(s => s.Size).Distinct().Should().ContainSingle(
+			"the pill must not grow, shrink or keep a stale size between states: {0}",
+			string.Join(", ", sizes.Select(s => $"{s.Step}={s.Size.Width}x{s.Size.Height}")));
+		sizes[0].Size.Height.Should().BeInRange(20, 48, "a compact one-row pill");
 	});
 
 	// The durable-fix reproduction (WHISPER-139): construct the REAL overlay window and drive it through a

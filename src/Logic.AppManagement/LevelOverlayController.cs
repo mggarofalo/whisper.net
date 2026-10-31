@@ -46,7 +46,7 @@ public sealed class LevelOverlayController : IDisposable
 	public const string SilenceHintMessage = "No audio — is your mic muted?";
 
 	/// <summary>Shown briefly after a recording ended with no audio at all.</summary>
-	public const string NoAudioMessage = "No audio detected — is your mic muted?";
+	public const string NoAudioMessage = "No audio detected — mic muted?";
 
 	private readonly RecordingStateMachine _stateMachine;
 	private readonly IAudioSource _audioSource;
