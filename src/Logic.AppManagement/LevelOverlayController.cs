@@ -111,6 +111,14 @@ public sealed class LevelOverlayController : IDisposable
 	/// <summary>Raised when <see cref="Elapsed"/> changes, so the view can refresh the timer text.</summary>
 	public event EventHandler? ElapsedChanged;
 
+	/// <summary>
+	/// Raised every time a dictation takes over the pill (recording starts, or a failure is shown), whether
+	/// or not the overlay was already visible. The window re-places itself, forces itself on top and verifies
+	/// it is really on screen. A visibility change alone is not enough: a dictation started while the warming
+	/// pill was up changed nothing visible, so the window never re-ran its show path (WHISPER-143).
+	/// </summary>
+	public event EventHandler? PresentRequested;
+
 	private void OnStateChanged(object? sender, RecordingStateChangedEventArgs e)
 	{
 		switch (e.Current)
@@ -141,6 +149,7 @@ public sealed class LevelOverlayController : IDisposable
 		SetVisible(true);
 		StateChanged?.Invoke(this, EventArgs.Empty);
 		ElapsedChanged?.Invoke(this, EventArgs.Empty);
+		PresentRequested?.Invoke(this, EventArgs.Empty);
 	}
 
 	private void EnterTranscribing()
@@ -219,6 +228,7 @@ public sealed class LevelOverlayController : IDisposable
 
 		SetVisible(true);
 		StateChanged?.Invoke(this, EventArgs.Empty);
+		PresentRequested?.Invoke(this, EventArgs.Empty);
 
 		// Auto-dismiss so the overlay does not linger as a top-most window after the failure.
 		_dismissTimer.Change(ErrorDismissAfter, Timeout.InfiniteTimeSpan);

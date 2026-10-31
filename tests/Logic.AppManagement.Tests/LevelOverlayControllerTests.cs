@@ -42,6 +42,35 @@ public sealed class LevelOverlayControllerTests
 	}
 
 	[Fact]
+	public void Recording_over_the_warming_pill_requests_a_present_even_though_visibility_did_not_change()
+	{
+		int visibilityChanges = 0, presents = 0;
+		_messenger.Send(new ModelWarmupChangedMessage(true));
+		_controller.VisibilityChanged += (_, _) => visibilityChanges++;
+		_controller.PresentRequested += (_, _) => presents++;
+
+		_stateMachine.RequestStart();
+
+		visibilityChanges.Should().Be(0, "the warming pill was already visible");
+		presents.Should().Be(1, "the dictation must still re-present the window (WHISPER-143)");
+	}
+
+	[Fact]
+	public void Transcribing_returning_to_rest_and_warming_never_request_a_present()
+	{
+		int presents = 0;
+		_controller.PresentRequested += (_, _) => presents++;
+
+		_messenger.Send(new ModelWarmupChangedMessage(true));
+		_messenger.Send(new ModelWarmupChangedMessage(false));
+		_stateMachine.RequestStart();
+		_stateMachine.RequestStop();
+		_stateMachine.CompleteTranscription();
+
+		presents.Should().Be(1, "only the recording start takes over the pill");
+	}
+
+	[Fact]
 	public void Becomes_visible_while_recording_stays_visible_transcribing_and_hides_when_idle()
 	{
 		_stateMachine.RequestStart();
