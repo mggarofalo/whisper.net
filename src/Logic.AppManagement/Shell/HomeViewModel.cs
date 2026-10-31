@@ -86,7 +86,11 @@ public sealed partial class HomeViewModel : FeatureViewModel
 
 	/// <summary>Estimated typing time saved, derived by the Application layer.</summary>
 	[ObservableProperty]
+	[NotifyPropertyChangedFor(nameof(EstimatedTimeSavedText))]
 	private TimeSpan _estimatedTimeSaved;
+
+	/// <summary>The time saved for display, e.g. "4h 23m" (WHISPER-142).</summary>
+	public string EstimatedTimeSavedText => TimeSavedFormatter.Format(EstimatedTimeSaved);
 
 	/// <summary>The most recent transcriptions, newest first — a glance, not the full History log.</summary>
 	public UiBoundCollection<TranscriptEntryDto> Recent { get; } = [];

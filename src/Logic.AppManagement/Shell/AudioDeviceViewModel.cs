@@ -160,9 +160,12 @@ public sealed partial class AudioDeviceViewModel : FeatureViewModel
 	// CommittedDeviceId comparison (which gates commit-on-selection) reflects what was just saved.
 	private async Task PersistSelectionAsync(string deviceId, string? deviceName, CancellationToken cancellationToken)
 	{
-		AppSettingsDto updated = _settings! with { CaptureDeviceId = deviceId, CaptureDeviceName = deviceName };
-		await _mediator.Send(new UpdateSettingsCommand(updated), cancellationToken);
-		_settings = updated;
+		// Re-read before writing so a device pick never reverts a field changed elsewhere since this section
+		// loaded (WHISPER-142).
+		_settings = await SettingsWriter.UpdateAsync(
+			_mediator,
+			current => current with { CaptureDeviceId = deviceId, CaptureDeviceName = deviceName },
+			cancellationToken);
 		OnPropertyChanged(nameof(CommittedDeviceId));
 	}
 }

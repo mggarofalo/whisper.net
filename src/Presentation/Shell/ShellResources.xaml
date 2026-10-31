@@ -18,13 +18,13 @@
          to validated TextBoxes so settings errors surface natively next to the field. -->
     <ControlTemplate x:Key="ValidationErrorTemplate">
         <StackPanel Orientation="Horizontal">
-            <Border BorderBrush="#C03030"
+            <Border BorderBrush="{DynamicResource SystemFillColorCriticalBrush}"
                     BorderThickness="1"
                     CornerRadius="2">
                 <AdornedElementPlaceholder />
             </Border>
             <TextBlock Text="{Binding [0].ErrorContent}"
-                       Foreground="#C03030"
+                       Foreground="{DynamicResource SystemFillColorCriticalBrush}"
                        Margin="6,0,0,0"
                        VerticalAlignment="Center" />
         </StackPanel>
@@ -40,6 +40,210 @@
                         Value="{Binding (Validation.Errors)[0].ErrorContent, RelativeSource={RelativeSource Self}}" />
             </Trigger>
         </Style.Triggers>
+    </Style>
+
+    <!-- ============================================================================================
+         Design tokens for the settings shell (WHISPER-142). Every colour the feature views use comes from
+         here, and every colour here is a Fluent SEMANTIC brush bound by DynamicResource, so it tracks
+         light/dark flips live and keeps WCAG AA contrast in both themes (the Fluent palettes are tuned per
+         theme: critical text is a dark red on light and a light red on dark). The views hold no colour
+         literals. Views reference these by DynamicResource: a UserControl's parse-time StaticResource
+         lookup cannot see this dictionary (it sees only its own resources and the Application), while a
+         DynamicResource resolves once the view sits inside the shell window, which merges it.
+
+         Type scale: PageTitle 24 / SectionHeader 16 / Body 14 / Caption 12, plus StatValue for the usage
+         figures. Spacing: a 4px base with three semantic gaps (8 within a group, 16 between groups or a
+         control and its helper, 24 before a section) and a 24px page margin.
+         ============================================================================================ -->
+
+    <Thickness x:Key="PageMargin">24</Thickness>
+    <Thickness x:Key="GapTight">0,8,0,0</Thickness>
+    <Thickness x:Key="GapGroup">0,16,0,0</Thickness>
+    <Thickness x:Key="GapSection">0,24,0,0</Thickness>
+    <!-- Below a page header (title + command bar), before the page body. -->
+    <Thickness x:Key="PageHeaderMargin">0,0,0,16</Thickness>
+
+    <Style x:Key="PageTitle"
+           TargetType="TextBlock">
+        <Setter Property="FontSize"
+                Value="24" />
+        <Setter Property="FontWeight"
+                Value="SemiBold" />
+        <Setter Property="Foreground"
+                Value="{DynamicResource TextFillColorPrimaryBrush}" />
+        <Setter Property="VerticalAlignment"
+                Value="Center" />
+    </Style>
+
+    <Style x:Key="SectionHeader"
+           TargetType="TextBlock">
+        <Setter Property="FontSize"
+                Value="16" />
+        <Setter Property="FontWeight"
+                Value="SemiBold" />
+        <Setter Property="Foreground"
+                Value="{DynamicResource TextFillColorPrimaryBrush}" />
+        <Setter Property="Margin"
+                Value="0,24,0,8" />
+    </Style>
+
+    <Style x:Key="BodyText"
+           TargetType="TextBlock">
+        <Setter Property="FontSize"
+                Value="14" />
+        <Setter Property="Foreground"
+                Value="{DynamicResource TextFillColorPrimaryBrush}" />
+        <Setter Property="TextWrapping"
+                Value="Wrap" />
+    </Style>
+
+    <!-- Secondary text: the Fluent secondary text brush, never Opacity (dimming by opacity drops below
+         4.5:1 on the dark surface and also dims any glyph inside the block). -->
+    <Style x:Key="CaptionText"
+           TargetType="TextBlock">
+        <Setter Property="FontSize"
+                Value="12" />
+        <Setter Property="Foreground"
+                Value="{DynamicResource TextFillColorSecondaryBrush}" />
+        <Setter Property="TextWrapping"
+                Value="Wrap" />
+    </Style>
+
+    <!-- A form field's label above its control. -->
+    <Style x:Key="FieldLabel"
+           TargetType="TextBlock"
+           BasedOn="{StaticResource BodyText}">
+        <Setter Property="FontWeight"
+                Value="SemiBold" />
+    </Style>
+
+    <Style x:Key="StatValue"
+           TargetType="TextBlock">
+        <Setter Property="FontSize"
+                Value="24" />
+        <Setter Property="FontWeight"
+                Value="SemiBold" />
+        <Setter Property="Foreground"
+                Value="{DynamicResource TextFillColorPrimaryBrush}" />
+    </Style>
+
+    <Style x:Key="ErrorText"
+           TargetType="TextBlock"
+           BasedOn="{StaticResource BodyText}">
+        <Setter Property="Foreground"
+                Value="{DynamicResource SystemFillColorCriticalBrush}" />
+        <!-- An empty message takes no space (otherwise an empty line pads every row). -->
+        <Style.Triggers>
+            <Trigger Property="Text"
+                     Value="">
+                <Setter Property="Visibility"
+                        Value="Collapsed" />
+            </Trigger>
+            <Trigger Property="Text"
+                     Value="{x:Null}">
+                <Setter Property="Visibility"
+                        Value="Collapsed" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="WarningText"
+           TargetType="TextBlock"
+           BasedOn="{StaticResource BodyText}">
+        <Setter Property="Foreground"
+                Value="{DynamicResource SystemFillColorCautionBrush}" />
+        <!-- An empty message takes no space (otherwise an empty line pads every row). -->
+        <Style.Triggers>
+            <Trigger Property="Text"
+                     Value="">
+                <Setter Property="Visibility"
+                        Value="Collapsed" />
+            </Trigger>
+            <Trigger Property="Text"
+                     Value="{x:Null}">
+                <Setter Property="Visibility"
+                        Value="Collapsed" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- A transient status strip (the model warm-up notice): the Fluent caution surface and stroke. -->
+    <Style x:Key="CautionBanner"
+           TargetType="Border">
+        <Setter Property="Background"
+                Value="{DynamicResource SystemFillColorCautionBackgroundBrush}" />
+        <Setter Property="BorderBrush"
+                Value="{DynamicResource SystemFillColorCautionBrush}" />
+        <Setter Property="BorderThickness"
+                Value="1" />
+        <Setter Property="CornerRadius"
+                Value="4" />
+        <Setter Property="Padding"
+                Value="12,8" />
+    </Style>
+
+    <!-- One list row for Home, History and Model: a theme divider underneath, uniform vertical padding. -->
+    <Style x:Key="ListRow"
+           TargetType="Border">
+        <Setter Property="BorderBrush"
+                Value="{DynamicResource DividerStrokeColorDefaultBrush}" />
+        <Setter Property="BorderThickness"
+                Value="0,0,0,1" />
+        <Setter Property="Padding"
+                Value="0,8" />
+    </Style>
+
+    <!-- The active model's chip: the system accent with on-accent text, matching the nav rail's selection
+         rather than a fixed blue. -->
+    <Style x:Key="AccentChip"
+           TargetType="Border">
+        <Setter Property="Background"
+                Value="{DynamicResource AccentFillColorDefaultBrush}" />
+        <Setter Property="CornerRadius"
+                Value="4" />
+        <Setter Property="Padding"
+                Value="6,1" />
+        <Setter Property="VerticalAlignment"
+                Value="Center" />
+    </Style>
+
+    <Style x:Key="AccentChipText"
+           TargetType="TextBlock">
+        <Setter Property="FontSize"
+                Value="12" />
+        <Setter Property="FontWeight"
+                Value="SemiBold" />
+        <Setter Property="Foreground"
+                Value="{DynamicResource TextOnAccentFillColorPrimaryBrush}" />
+    </Style>
+
+    <!-- Compact Low/Medium/High rating chip on a model row: a neutral control stroke. -->
+    <Style x:Key="RatingChip"
+           TargetType="Border">
+        <Setter Property="BorderBrush"
+                Value="{DynamicResource ControlStrokeColorDefaultBrush}" />
+        <Setter Property="BorderThickness"
+                Value="1" />
+        <Setter Property="CornerRadius"
+                Value="4" />
+        <Setter Property="Padding"
+                Value="6,1" />
+        <Setter Property="Margin"
+                Value="0,0,6,0" />
+        <Setter Property="VerticalAlignment"
+                Value="Center" />
+    </Style>
+
+    <!-- The scrolling page body: the right padding reserves a gutter for the Fluent overlay scrollbar,
+         which otherwise paints over the row actions (Copy / Download / Select) at the right edge. -->
+    <Style x:Key="ContentScrollViewer"
+           TargetType="ScrollViewer">
+        <Setter Property="VerticalScrollBarVisibility"
+                Value="Auto" />
+        <Setter Property="HorizontalScrollBarVisibility"
+                Value="Disabled" />
+        <Setter Property="Padding"
+                Value="0,0,16,0" />
     </Style>
 
     <!-- ============================================================================================

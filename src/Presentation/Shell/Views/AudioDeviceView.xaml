@@ -9,33 +9,47 @@
              sees the view's own resources and the Application, and the smoke harness composes without one. -->
         <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
     </UserControl.Resources>
-    <StackPanel Margin="24">
-        <StackPanel Orientation="Horizontal"
-                    Margin="0,0,0,12">
-            <TextBlock x:Name="InputDeviceLabel"
-                       Text="Input device"
-                       FontSize="18"
-                       FontWeight="SemiBold"
-                       VerticalAlignment="Center" />
-            <Button Content="Refresh"
-                    AutomationProperties.Name="Refresh device list"
-                    Command="{Binding LoadCommand}"
-                    Margin="16,0,0,0"
-                    Padding="12,4" />
+    <!-- Typography, spacing and colour come from the shared tokens in ShellResources.xaml (WHISPER-142). -->
+    <StackPanel Margin="{DynamicResource PageMargin}">
+        <!-- Page header: the title (matching the nav label) alone on the left, the page command on the right. -->
+        <Grid Margin="{DynamicResource PageHeaderMargin}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="Audio"
+                       Style="{DynamicResource PageTitle}" />
             <!-- Lightweight loading state: visible while the activation-triggered load runs. -->
-            <TextBlock Text="Loading…"
-                       Opacity="0.7"
-                       Margin="16,0,0,0"
+            <TextBlock Grid.Column="1"
+                       Text="Loading…"
+                       Style="{DynamicResource CaptionText}"
+                       Margin="0,0,8,0"
                        VerticalAlignment="Center"
                        Visibility="{Binding LoadCommand.IsRunning, Converter={StaticResource BoolToVisibility}}" />
-        </StackPanel>
+            <Button Grid.Column="2"
+                    Content="&#xE72C;"
+                    FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                    Background="Transparent"
+                    BorderBrush="Transparent"
+                    Padding="8"
+                    ToolTip="Refresh device list"
+                    AutomationProperties.Name="Refresh device list"
+                    Command="{Binding LoadCommand}" />
+        </Grid>
+
+        <TextBlock x:Name="InputDeviceLabel"
+                   Text="Input device"
+                   Style="{DynamicResource FieldLabel}" />
 
         <!-- A ComboBox of capture devices by friendly name. The two-way SelectedValue binding
              is the whole contract: the view-model commits a genuine user pick and ignores the programmatic
              selection a reload performs. The stored value is the stable device id, not an index. -->
         <ComboBox x:Name="DeviceBox"
-                  Width="320"
+                  MinWidth="320"
+                  MaxWidth="420"
                   HorizontalAlignment="Left"
+                  Margin="{DynamicResource GapTight}"
                   AutomationProperties.Name="Capture device"
                   AutomationProperties.LabeledBy="{Binding ElementName=InputDeviceLabel}"
                   ItemsSource="{Binding Devices}"
@@ -48,10 +62,13 @@
             </b:Interaction.Behaviors>
         </ComboBox>
 
+        <TextBlock Text="The microphone Whisper records from when you press the dictation hotkey."
+                   Style="{DynamicResource CaptionText}"
+                   Margin="0,4,0,0" />
+
         <!-- The clear fallback state when a persisted device is no longer present (empty otherwise). -->
         <TextBlock Text="{Binding UnavailableDeviceWarning}"
-                   Foreground="#B06000"
-                   Margin="0,8,0,0"
-                   TextWrapping="Wrap" />
+                   Style="{DynamicResource WarningText}"
+                   Margin="{DynamicResource GapTight}" />
     </StackPanel>
 </UserControl>

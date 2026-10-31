@@ -9,71 +9,106 @@
         <!-- Render stored-UTC timestamps in the user's local time; storage stays UTC. -->
         <shell:UtcToLocalConverter x:Key="UtcToLocal" />
     </UserControl.Resources>
-    <DockPanel Margin="24">
-        <StackPanel DockPanel.Dock="Top"
-                    Orientation="Horizontal"
-                    Margin="0,0,0,12">
+    <!-- Typography, spacing and colour come from the shared tokens in ShellResources.xaml (WHISPER-142). -->
+    <DockPanel Margin="{DynamicResource PageMargin}">
+        <!-- Page header: the title alone on the left, the page command on the right. -->
+        <Grid DockPanel.Dock="Top"
+              Margin="{DynamicResource PageHeaderMargin}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
             <TextBlock Text="History"
-                       FontSize="18"
-                       FontWeight="SemiBold"
-                       VerticalAlignment="Center" />
-            <Button Content="Refresh"
-                    Command="{Binding LoadCommand}"
-                    Margin="16,0,0,0"
-                    Padding="12,4" />
-            <!-- Disabled once the history is exhausted: the view-model tracks whether a
-                 further page may exist, so the button never offers a silent no-op. -->
-            <Button Content="Load more"
-                    Command="{Binding NextPageCommand}"
-                    IsEnabled="{Binding HasMorePages}"
-                    Margin="8,0,0,0"
-                    Padding="12,4" />
+                       Style="{DynamicResource PageTitle}" />
             <!-- Lightweight loading state: visible while the activation-triggered load runs. -->
-            <TextBlock Text="Loading…"
-                       Opacity="0.7"
-                       Margin="16,0,0,0"
+            <TextBlock Grid.Column="1"
+                       Text="Loading…"
+                       Style="{DynamicResource CaptionText}"
+                       Margin="0,0,8,0"
                        VerticalAlignment="Center"
                        Visibility="{Binding LoadCommand.IsRunning, Converter={StaticResource BoolToVisibility}}" />
-        </StackPanel>
+            <Button Grid.Column="2"
+                    Content="&#xE72C;"
+                    FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                    Background="Transparent"
+                    BorderBrush="Transparent"
+                    Padding="8"
+                    ToolTip="Refresh history"
+                    AutomationProperties.Name="Refresh history"
+                    Command="{Binding LoadCommand}" />
+        </Grid>
 
         <!-- Empty state: shown instead of the list when there is no history. -->
-        <TextBlock DockPanel.Dock="Bottom"
+        <TextBlock DockPanel.Dock="Top"
                    Text="No transcriptions yet."
-                   Opacity="0.7"
-                   Margin="0,12,0,0"
+                   Style="{DynamicResource CaptionText}"
                    Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisibility}}" />
 
-        <ScrollViewer VerticalScrollBarVisibility="Auto">
-            <ItemsControl ItemsSource="{Binding Entries}">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <Border BorderBrush="#E0E0E0"
-                                BorderThickness="0,0,0,1"
-                                Padding="0,8">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Grid.Column="0">
-                                    <TextBlock Text="{Binding CreatedAt, Converter={StaticResource UtcToLocal}, StringFormat='{}{0:g}'}"
-                                               Opacity="0.6"
-                                               FontSize="11" />
-                                    <TextBlock Text="{Binding Text}"
-                                               TextWrapping="Wrap"
-                                               Margin="0,2,0,0" />
-                                </StackPanel>
-                                <Button Grid.Column="1"
-                                        Content="Copy"
-                                        Command="{Binding DataContext.CopyCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                        CommandParameter="{Binding}"
-                                        VerticalAlignment="Top"
-                                        Padding="12,4" />
-                            </Grid>
-                        </Border>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+        <ScrollViewer Style="{DynamicResource ContentScrollViewer}">
+            <StackPanel>
+                <ItemsControl ItemsSource="{Binding Entries}">
+                    <!-- Each row's automation name is the transcript itself, so a screen reader reads the
+                         text rather than the entry DTO's ToString (an id GUID and every field). -->
+                    <ItemsControl.ItemContainerStyle>
+                        <Style TargetType="ContentPresenter">
+                            <Setter Property="AutomationProperties.Name"
+                                    Value="{Binding Text}" />
+                        </Style>
+                    </ItemsControl.ItemContainerStyle>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{DynamicResource ListRow}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0"
+                                                Margin="0,0,12,0">
+                                        <TextBlock Text="{Binding CreatedAt, Converter={StaticResource UtcToLocal}, StringFormat='{}{0:g}'}"
+                                                   Style="{DynamicResource CaptionText}" />
+                                        <TextBlock Text="{Binding Text}"
+                                                   Style="{DynamicResource BodyText}"
+                                                   Margin="0,2,0,0" />
+                                    </StackPanel>
+                                    <Button Grid.Column="1"
+                                            Content="Copy"
+                                            AutomationProperties.Name="Copy transcript"
+                                            Command="{Binding DataContext.CopyCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                            CommandParameter="{Binding}"
+                                            VerticalAlignment="Center"
+                                            Padding="12,4" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <!-- Load more sits at the END of the list, where the reader is when they want more. Disabled
+                     once the history is exhausted: the view-model tracks whether a further page may exist, so
+                     the button never offers a silent no-op. Hidden on the empty state; the trigger lives on a
+                     wrapping Border so the button keeps its implicit Fluent style. -->
+                <Border Margin="{DynamicResource GapGroup}">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsEmpty}"
+                                             Value="True">
+                                    <Setter Property="Visibility"
+                                            Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <Button Content="Load more"
+                            AutomationProperties.Name="Load more history"
+                            Command="{Binding NextPageCommand}"
+                            IsEnabled="{Binding HasMorePages}"
+                            HorizontalAlignment="Center"
+                            Padding="12,4" />
+                </Border>
+            </StackPanel>
         </ScrollViewer>
     </DockPanel>
 </UserControl>

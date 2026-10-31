@@ -113,8 +113,10 @@ public sealed partial class HotkeyViewModel : FeatureViewModel
 
 		try
 		{
-			await _mediator.Send(new UpdateSettingsCommand(_settings with { Hotkey = HotkeyInput! }), cancellationToken);
-			_settings = _settings with { Hotkey = HotkeyInput! };
+			// Re-read before writing so assigning a hotkey never reverts a field changed elsewhere since this
+			// section loaded (WHISPER-142).
+			string chordToAssign = HotkeyInput!;
+			_settings = await SettingsWriter.UpdateAsync(_mediator, current => current with { Hotkey = chordToAssign }, cancellationToken);
 			CurrentHotkey = HotkeyInput;
 			Error = null;
 		}

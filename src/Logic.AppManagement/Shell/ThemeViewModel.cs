@@ -1,7 +1,7 @@
 // The theme switcher's view-model: exposes the System / Light / Dark choices and the
 // persisted selection for the sidebar footer to bind. It depends on nothing but IMediator — it loads via
-// GetSettingsQuery and persists a change via UpdateSettingsCommand (carrying the whole settings DTO with
-// the theme swapped, so the rest of the user's settings are preserved). Persisting publishes the change on
+// GetSettingsQuery and persists a change via UpdateSettingsCommand (re-reading the current settings and
+// swapping only the theme, so the rest of the user's settings are preserved). Persisting publishes the change on
 // the instant-apply channel, which the App applies to WPF's ThemeMode live. The
 // programmatic selection a load performs is suppressed (IsLoading) so only a genuine user pick commits —
 // the same commit-on-genuine-change discipline as the audio-device picker. Built on CommunityToolkit.Mvvm
@@ -64,6 +64,11 @@ public sealed partial class ThemeViewModel : ObservableObject
 		}
 
 		_settings = _settings with { ThemePreference = value };
-		_ = _mediator.Send(new UpdateSettingsCommand(_settings));
+		_ = PersistThemeAsync(value);
 	}
+
+	// The snapshot above only gates commits; the write re-reads the current settings so a theme change
+	// never reverts a model, device, or hotkey changed since this switcher loaded (WHISPER-142).
+	private async Task PersistThemeAsync(ThemePreference value) =>
+		_settings = await SettingsWriter.UpdateAsync(_mediator, current => current with { ThemePreference = value });
 }

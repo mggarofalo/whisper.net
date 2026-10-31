@@ -6,174 +6,164 @@
         <!-- Declared locally so the view is self-contained: parse-time StaticResource only
              sees the view's own resources and the Application, and the smoke harness composes without one. -->
         <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
-
-        <!-- Compact rating chip: a small Low/Medium/High badge that replaces the wide inline
-             rating strip, so the list reads in far less width. Theme-agnostic (semi-transparent border,
-             inherited foreground) so it works against both the light and dark Fluent themes. -->
-        <Style x:Key="RatingBadge"
-               TargetType="Border">
-            <Setter Property="BorderBrush"
-                    Value="#80808080" />
-            <Setter Property="BorderThickness"
-                    Value="1" />
-            <Setter Property="CornerRadius"
-                    Value="3" />
-            <Setter Property="Padding"
-                    Value="6,1" />
-            <Setter Property="Margin"
-                    Value="0,0,6,0" />
-            <Setter Property="VerticalAlignment"
-                    Value="Center" />
-        </Style>
     </UserControl.Resources>
-    <DockPanel Margin="24">
-        <StackPanel DockPanel.Dock="Top"
-                    Orientation="Horizontal"
-                    Margin="0,0,0,12">
-            <TextBlock Text="Model"
-                       FontSize="18"
-                       FontWeight="SemiBold"
-                       VerticalAlignment="Center" />
-            <TextBlock Text="{Binding ActiveModelId, StringFormat='Active: {0}', TargetNullValue='Active: (none)'}"
-                       Margin="16,0,0,0"
-                       Opacity="0.8"
-                       VerticalAlignment="Center" />
-            <Button Content="Refresh"
-                    AutomationProperties.Name="Refresh model list"
-                    Command="{Binding LoadCommand}"
-                    Margin="16,0,0,0"
-                    Padding="12,4" />
+    <!-- Typography, spacing and colour come from the shared tokens in ShellResources.xaml (WHISPER-142). -->
+    <DockPanel Margin="{DynamicResource PageMargin}">
+        <!-- Page header: the title alone on the left, the page command on the right, and the active model as
+             a caption under the title rather than a peer of the title on one baseline. -->
+        <Grid DockPanel.Dock="Top"
+              Margin="{DynamicResource PageHeaderMargin}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel>
+                <TextBlock Text="Model"
+                           Style="{DynamicResource PageTitle}" />
+                <TextBlock Text="{Binding ActiveModelId, StringFormat='Active: {0}', TargetNullValue='Active: (none)'}"
+                           Style="{DynamicResource CaptionText}" />
+            </StackPanel>
             <!-- Lightweight loading state: visible while the activation-triggered load runs. -->
-            <TextBlock Text="Loading…"
-                       Opacity="0.7"
-                       Margin="16,0,0,0"
+            <TextBlock Grid.Column="1"
+                       Text="Loading…"
+                       Style="{DynamicResource CaptionText}"
+                       Margin="0,0,8,0"
                        VerticalAlignment="Center"
                        Visibility="{Binding LoadCommand.IsRunning, Converter={StaticResource BoolToVisibility}}" />
-        </StackPanel>
+            <Button Grid.Column="2"
+                    Content="&#xE72C;"
+                    FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                    Background="Transparent"
+                    BorderBrush="Transparent"
+                    Padding="8"
+                    VerticalAlignment="Center"
+                    ToolTip="Refresh model list"
+                    AutomationProperties.Name="Refresh model list"
+                    Command="{Binding LoadCommand}" />
+        </Grid>
 
         <!-- One compact row per model: name + ratings stacked on the left, and a SINGLE
              state-relevant action on the right (Download / Cancel / Select), never a permanent button
-             block. Wrapped in a ScrollViewer so the list scrolls; the header above is
-             DockPanel.Dock="Top" and stays fixed. -->
-        <!-- Right padding reserves room for the vertical scrollbar (the Fluent overlay scrollbar otherwise
-             draws over the row's Download/Select buttons at the right edge). -->
-        <ScrollViewer VerticalScrollBarVisibility="Auto"
-                      Padding="0,0,16,0">
+             block. The shared scroll style reserves a right gutter so the overlay scrollbar never paints over
+             the row actions; the header above is DockPanel.Dock="Top" and stays fixed. -->
+        <ScrollViewer Style="{DynamicResource ContentScrollViewer}">
             <ItemsControl ItemsSource="{Binding Models}">
+                <!-- Each row's automation name is the model's display name, not the row view-model's type name. -->
+                <ItemsControl.ItemContainerStyle>
+                    <Style TargetType="ContentPresenter">
+                        <Setter Property="AutomationProperties.Name"
+                                Value="{Binding DisplayName}" />
+                    </Style>
+                </ItemsControl.ItemContainerStyle>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Border BorderBrush="#40808080"
-                                BorderThickness="0,0,0,1"
-                                Padding="0,6">
-                            <!-- The active model's row is tinted so the selection is visible at a glance
-, in addition to the inline "Active" badge. -->
-                            <Border.Style>
-                                <Style TargetType="Border">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsActive}"
-                                                     Value="True">
-                                            <Setter Property="Background"
-                                                    Value="#22308AE0" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Border.Style>
-                            <StackPanel>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
+                        <Border Style="{DynamicResource ListRow}"
+                                Padding="0">
+                            <!-- The active model's row is tinted (a neutral subtle fill) so the selection is
+                                 visible at a glance, in addition to the inline accent "Active" chip. -->
+                            <Border Padding="8">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsActive}"
+                                                         Value="True">
+                                                <Setter Property="Background"
+                                                        Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <StackPanel>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
 
-                                    <!-- Left: identity, compact rating badges, and (only while downloading)
-                                         this row's own progress. -->
-                                    <StackPanel Grid.Column="0"
-                                                Margin="0,0,12,0">
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="{Binding DisplayName}"
-                                                       FontWeight="SemiBold"
-                                                       VerticalAlignment="Center" />
-                                            <!-- Selected indicator. -->
-                                            <Border Background="#308AE0"
-                                                    CornerRadius="3"
-                                                    Padding="6,1"
-                                                    Margin="8,0,0,0"
-                                                    VerticalAlignment="Center"
-                                                    Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}">
-                                                <TextBlock Text="Active"
-                                                           Foreground="White"
-                                                           FontSize="11"
-                                                           FontWeight="SemiBold"
-                                                           AutomationProperties.Name="{Binding DisplayName, StringFormat='{}{0} is the active model'}" />
-                                            </Border>
+                                        <!-- Left: identity, compact rating chips, and (only while downloading)
+                                             this row's own progress. -->
+                                        <StackPanel Grid.Column="0"
+                                                    Margin="0,0,12,0">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding DisplayName}"
+                                                           Style="{DynamicResource FieldLabel}"
+                                                           VerticalAlignment="Center" />
+                                                <!-- Selected indicator: the system accent, like the nav selection. -->
+                                                <Border Style="{DynamicResource AccentChip}"
+                                                        Margin="8,0,0,0"
+                                                        Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}">
+                                                    <TextBlock Text="Active"
+                                                               Style="{DynamicResource AccentChipText}"
+                                                               AutomationProperties.Name="{Binding DisplayName, StringFormat='{}{0} is the active model'}" />
+                                                </Border>
+                                            </StackPanel>
+                                            <TextBlock Text="{Binding Id}"
+                                                       Style="{DynamicResource CaptionText}"
+                                                       Margin="0,1,0,0" />
+                                            <StackPanel Orientation="Horizontal"
+                                                        Margin="0,4,0,0">
+                                                <Border Style="{DynamicResource RatingChip}">
+                                                    <TextBlock Text="{Binding Speed, StringFormat='Speed: {0}'}"
+                                                               Style="{DynamicResource CaptionText}" />
+                                                </Border>
+                                                <Border Style="{DynamicResource RatingChip}">
+                                                    <TextBlock Text="{Binding Accuracy, StringFormat='Accuracy: {0}'}"
+                                                               Style="{DynamicResource CaptionText}" />
+                                                </Border>
+                                                <Border Style="{DynamicResource RatingChip}">
+                                                    <TextBlock Text="{Binding Memory, StringFormat='RAM: {0}'}"
+                                                               Style="{DynamicResource CaptionText}" />
+                                                </Border>
+                                            </StackPanel>
+                                            <!-- Progress: shown only while this row is downloading. -->
+                                            <StackPanel Orientation="Horizontal"
+                                                        Margin="0,4,0,0"
+                                                        Visibility="{Binding IsDownloading, Converter={StaticResource BoolToVisibility}}">
+                                                <ProgressBar Value="{Binding DownloadPercent}"
+                                                             AutomationProperties.Name="{Binding DisplayName, StringFormat='Download progress for {0}'}"
+                                                             Width="160"
+                                                             Height="6"
+                                                             VerticalAlignment="Center" />
+                                                <TextBlock Text="{Binding DownloadPercent, StringFormat='{}{0:0}%'}"
+                                                           Style="{DynamicResource CaptionText}"
+                                                           Margin="8,0,0,0"
+                                                           VerticalAlignment="Center" />
+                                            </StackPanel>
                                         </StackPanel>
-                                        <TextBlock Text="{Binding Id}"
-                                                   Opacity="0.6"
-                                                   FontSize="11"
-                                                   Margin="0,1,0,0" />
-                                        <StackPanel Orientation="Horizontal"
-                                                    Margin="0,4,0,0">
-                                            <Border Style="{StaticResource RatingBadge}">
-                                                <TextBlock Text="{Binding Speed, StringFormat='Speed: {0}'}"
-                                                           FontSize="11" />
-                                            </Border>
-                                            <Border Style="{StaticResource RatingBadge}">
-                                                <TextBlock Text="{Binding Accuracy, StringFormat='Accuracy: {0}'}"
-                                                           FontSize="11" />
-                                            </Border>
-                                            <Border Style="{StaticResource RatingBadge}">
-                                                <TextBlock Text="{Binding Memory, StringFormat='RAM: {0}'}"
-                                                           FontSize="11" />
-                                            </Border>
-                                        </StackPanel>
-                                        <!-- Progress: shown only while this row is downloading. -->
-                                        <StackPanel Orientation="Horizontal"
-                                                    Margin="0,4,0,0"
-                                                    Visibility="{Binding IsDownloading, Converter={StaticResource BoolToVisibility}}">
-                                            <ProgressBar Value="{Binding DownloadPercent}"
-                                                         AutomationProperties.Name="{Binding DisplayName, StringFormat='Download progress for {0}'}"
-                                                         Width="160"
-                                                         Height="6"
-                                                         VerticalAlignment="Center" />
-                                            <TextBlock Text="{Binding DownloadPercent, StringFormat='{}{0:0}%'}"
-                                                       FontSize="11"
-                                                       Margin="8,0,0,0"
-                                                       VerticalAlignment="Center" />
-                                        </StackPanel>
-                                    </StackPanel>
 
-                                    <!-- Right: only the contextually valid action for this row. -->
-                                    <StackPanel Grid.Column="1"
-                                                Orientation="Horizontal"
-                                                VerticalAlignment="Center">
-                                        <!-- Download: only when not downloaded and not downloading. -->
-                                        <Button Content="Download"
-                                                AutomationProperties.Name="{Binding DisplayName, StringFormat='Download {0}'}"
-                                                Command="{Binding DownloadCommand}"
-                                                Padding="12,4"
-                                                Visibility="{Binding CanDownload, Converter={StaticResource BoolToVisibility}}" />
-                                        <!-- Cancel: only this row's in-flight download, only while running. -->
-                                        <Button Content="Cancel"
-                                                AutomationProperties.Name="{Binding DisplayName, StringFormat='Cancel download for {0}'}"
-                                                Command="{Binding DownloadCancelCommand}"
-                                                Padding="12,4"
-                                                Visibility="{Binding IsDownloading, Converter={StaticResource BoolToVisibility}}" />
-                                        <!-- Select: only when downloaded and not already active. -->
-                                        <Button Content="Select"
-                                                AutomationProperties.Name="{Binding DisplayName, StringFormat='Select {0}'}"
-                                                Command="{Binding DataContext.SelectCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                                CommandParameter="{Binding}"
-                                                Padding="12,4"
-                                                Visibility="{Binding CanSelect, Converter={StaticResource BoolToVisibility}}" />
-                                    </StackPanel>
-                                </Grid>
-                                <!-- A failed download surfaces per row natively, not as a crash;
-                                     empty (and effectively invisible) when this row has no error. -->
-                                <TextBlock Text="{Binding DownloadError}"
-                                           Foreground="#C03030"
-                                           TextWrapping="Wrap"
-                                           Margin="0,4,0,0" />
-                            </StackPanel>
+                                        <!-- Right: only the contextually valid action for this row. -->
+                                        <StackPanel Grid.Column="1"
+                                                    Orientation="Horizontal"
+                                                    VerticalAlignment="Center">
+                                            <!-- Download: only when not downloaded and not downloading. -->
+                                            <Button Content="Download"
+                                                    AutomationProperties.Name="{Binding DisplayName, StringFormat='Download {0}'}"
+                                                    Command="{Binding DownloadCommand}"
+                                                    Padding="12,4"
+                                                    Visibility="{Binding CanDownload, Converter={StaticResource BoolToVisibility}}" />
+                                            <!-- Cancel: only this row's in-flight download, only while running. -->
+                                            <Button Content="Cancel"
+                                                    AutomationProperties.Name="{Binding DisplayName, StringFormat='Cancel download for {0}'}"
+                                                    Command="{Binding DownloadCancelCommand}"
+                                                    Padding="12,4"
+                                                    Visibility="{Binding IsDownloading, Converter={StaticResource BoolToVisibility}}" />
+                                            <!-- Select: only when downloaded and not already active. -->
+                                            <Button Content="Select"
+                                                    AutomationProperties.Name="{Binding DisplayName, StringFormat='Select {0}'}"
+                                                    Command="{Binding DataContext.SelectCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                    CommandParameter="{Binding}"
+                                                    Padding="12,4"
+                                                    Visibility="{Binding CanSelect, Converter={StaticResource BoolToVisibility}}" />
+                                        </StackPanel>
+                                    </Grid>
+                                    <!-- A failed download surfaces per row natively, not as a crash;
+                                         empty (and effectively invisible) when this row has no error. -->
+                                    <TextBlock Text="{Binding DownloadError}"
+                                               Style="{DynamicResource ErrorText}"
+                                               Margin="0,4,0,0" />
+                                </StackPanel>
+                            </Border>
                         </Border>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>

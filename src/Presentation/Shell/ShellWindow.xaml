@@ -4,8 +4,10 @@
         xmlns:vm="clr-namespace:Logic.AppManagement.Shell;assembly=Logic.AppManagement"
         xmlns:views="clr-namespace:Presentation.Shell.Views"
         Title="Whisper"
-        Width="720"
-        Height="480"
+        Width="880"
+        Height="600"
+        MinWidth="640"
+        MinHeight="480"
         WindowStartupLocation="CenterScreen">
     <Window.Resources>
         <ResourceDictionary>
@@ -53,8 +55,7 @@
                 <StackPanel DockPanel.Dock="Bottom"
                             Margin="8,4,8,8">
                     <TextBlock Text="Theme"
-                               Opacity="0.7"
-                               FontSize="11"
+                               Style="{StaticResource CaptionText}"
                                Margin="4,0,0,2" />
                     <ComboBox ItemsSource="{Binding Theme.Themes}"
                               SelectedItem="{Binding Theme.SelectedTheme, Mode=TwoWay}"

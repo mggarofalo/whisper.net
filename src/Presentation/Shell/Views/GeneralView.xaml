@@ -2,35 +2,35 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              KeyboardNavigation.TabNavigation="Local">
-    <StackPanel Margin="24">
+    <!-- Typography, spacing and colour come from the shared tokens in ShellResources.xaml (WHISPER-142). -->
+    <StackPanel Margin="{DynamicResource PageMargin}">
         <TextBlock Text="General"
-                   FontSize="18"
-                   FontWeight="SemiBold" />
+                   Style="{DynamicResource PageTitle}"
+                   Margin="{DynamicResource PageHeaderMargin}" />
 
         <CheckBox Content="Start Whisper when I sign in to Windows"
                   AutomationProperties.Name="Start Whisper at login"
-                  IsChecked="{Binding RunAtLogin, Mode=TwoWay}"
-                  Margin="0,16,0,0" />
+                  IsChecked="{Binding RunAtLogin, Mode=TwoWay}" />
 
+        <!-- Helper text sits flush with its control, the same as every other helper on the page. -->
         <TextBlock Text="Whisper launches automatically and waits in the system tray, so the dictation hotkey works right after you sign in."
-                   Opacity="0.7"
-                   FontSize="12"
-                   TextWrapping="Wrap"
-                   Margin="24,4,0,0" />
+                   Style="{DynamicResource CaptionText}"
+                   Margin="0,4,0,0" />
 
         <TextBlock x:Name="OverlayDisplayLabel"
                    Text="Recording overlay display"
-                   FontWeight="SemiBold"
-                   Margin="0,24,0,0" />
+                   Style="{DynamicResource FieldLabel}"
+                   Margin="{DynamicResource GapSection}" />
 
         <!-- Which monitor the recording pill appears on. "Primary display (default)" persists as null, so a
              fresh install and a removed display both fall back to the primary. The two-way SelectedValue
              binding is the whole contract: the view-model commits a genuine user pick and ignores the
              programmatic selection a reload performs; the stored value is the stable device name. -->
         <ComboBox x:Name="OverlayMonitorBox"
-                  Width="320"
+                  MinWidth="320"
+                  MaxWidth="420"
                   HorizontalAlignment="Left"
-                  Margin="0,8,0,0"
+                  Margin="{DynamicResource GapTight}"
                   AutomationProperties.Name="Recording overlay display"
                   AutomationProperties.LabeledBy="{Binding ElementName=OverlayDisplayLabel}"
                   ItemsSource="{Binding OverlayMonitors}"
@@ -39,9 +39,7 @@
                   SelectedValue="{Binding SelectedOverlayMonitor, Mode=TwoWay}" />
 
         <TextBlock Text="The small recording overlay appears at the bottom-center of the display you choose here."
-                   Opacity="0.7"
-                   FontSize="12"
-                   TextWrapping="Wrap"
+                   Style="{DynamicResource CaptionText}"
                    Margin="0,4,0,0" />
     </StackPanel>
 </UserControl>
