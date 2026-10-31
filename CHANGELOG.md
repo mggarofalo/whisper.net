@@ -6,6 +6,31 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-10-31
+
+### Added
+
+- **History has pages and a search box.** History now shows 25 transcripts a page, with Previous,
+  "Page X of Y" and Next pinned below the list in place of "Load more". The search box at the top filters
+  by text, ignoring case (accented letters included), and a new search starts back at page 1. A search
+  with no hits says so, separately from an empty history. (WHISPER-146)
+
+### Changed
+
+- **Row actions are icons.** Download, Cancel and Copy are square icon buttons with tooltips. On the
+  Model page, a model you can switch to shows an empty ring to click, and the active model shows a filled
+  ring in your accent colour, so "select this" and "this is selected" no longer look the same. (WHISPER-147)
+
+### Removed
+
+- **The Stats page.** It repeated the transcriptions, words and time-saved figures already shown in
+  Home > Usage. (WHISPER-148)
+
+### Fixed
+
+- **Text boxes keep the Windows 11 look.** The shared text-box style had replaced the Fluent design with a
+  plain white box that was hard to read in dark mode. This affected the hotkey capture box too. (WHISPER-146)
+
 ## [0.5.1] - 2026-10-31
 
 ### Fixed
@@ -359,7 +384,8 @@ that shipped in 0.1.0, organized by category.
 - **The persisted active model is shown in the picker** before it loads. (WHISPER-118)
 - **The Home dashboard refreshes** on every activation. (WHISPER-119)
 
-[Unreleased]: https://github.com/mggarofalo/whisper.net/compare/v0.5.1...HEAD
+[Unreleased]: https://github.com/mggarofalo/whisper.net/compare/v0.5.2...HEAD
+[0.5.2]: https://github.com/mggarofalo/whisper.net/releases/tag/v0.5.2
 [0.5.1]: https://github.com/mggarofalo/whisper.net/releases/tag/v0.5.1
 [0.5.0]: https://github.com/mggarofalo/whisper.net/releases/tag/v0.5.0
 [0.4.0]: https://github.com/mggarofalo/whisper.net/releases/tag/v0.4.0
