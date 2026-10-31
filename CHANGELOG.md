@@ -6,6 +6,17 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-10-31
+
+### Fixed
+
+- **The recording pill stays one tidy row.** In 0.5.0 the muted-mic hint and the no-audio message
+  were added on a second line, so the pill grew. Worse, after a message, the next recording came up still
+  tall with an empty band below the row, because the window kept its old size while hidden. The pill is now
+  one fixed-height row in every state. A message takes the meter's place ("No audio — is your mic muted?"
+  while recording, "No audio detected — mic muted?" afterwards), and the meter returns the moment the mic
+  hears you. The window also re-fits itself every time it appears. (WHISPER-145)
+
 ## [0.5.0] - 2026-10-31
 
 ### Added
@@ -348,7 +359,8 @@ that shipped in 0.1.0, organized by category.
 - **The persisted active model is shown in the picker** before it loads. (WHISPER-118)
 - **The Home dashboard refreshes** on every activation. (WHISPER-119)
 
-[Unreleased]: https://github.com/mggarofalo/whisper.net/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/mggarofalo/whisper.net/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/mggarofalo/whisper.net/releases/tag/v0.5.1
 [0.5.0]: https://github.com/mggarofalo/whisper.net/releases/tag/v0.5.0
 [0.4.0]: https://github.com/mggarofalo/whisper.net/releases/tag/v0.4.0
 [0.3.2]: https://github.com/mggarofalo/whisper.net/releases/tag/v0.3.2
