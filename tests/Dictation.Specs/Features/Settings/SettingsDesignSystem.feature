@@ -12,6 +12,8 @@
 #  AC7 time saved reads "4h 23m" -> TimeSavedFormatterTests (a pure formatting rule; no scenario needed)
 #  AC8 list rows have meaningful automation names -> "List rows are announced by their content"
 #  AC9 the Home vs Model active-model disagreement -> SettingsWriteIsolation.feature
+#  AC10 Download / Copy / Select / Refresh use shared Fluent icons; icon-only buttons stay accessible
+#         -> "Buttons use one shared, accessible icon set"
 #  The rendered look in light and dark is verified by before/after screenshots in the PR (manual).
 
 @WHISPER-142
@@ -40,6 +42,10 @@ Feature: The settings pages share one theme-aware design system
 
   Scenario: The settings window cannot shrink below a usable size
     Then the settings window declares a minimum width and height
+
+  Scenario: Buttons use one shared, accessible icon set
+    Then the Refresh, Download, Copy and Select buttons take their icons from the shared Fluent glyphs
+    And every icon-only button has a tooltip and an accessible name
 
   Scenario: List rows are announced by their content
     Then the History, Home and Model list rows expose their content as the automation name

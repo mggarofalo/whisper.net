@@ -5,7 +5,8 @@
      instantiates the real window without a live Application. -->
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:shell="clr-namespace:Presentation.Shell">
+                    xmlns:shell="clr-namespace:Presentation.Shell"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
 
     <!-- Converters referenced by StaticResource at parse time live IN the consuming views (see
          HistoryView/ModelView), not here: a UserControl's parse-time lookup sees only its own resources
@@ -244,6 +245,30 @@
                 Value="Disabled" />
         <Setter Property="Padding"
                 Value="0,0,16,0" />
+    </Style>
+
+    <!-- Iconography: the Fluent icon font that ships with Windows 11 (falling back to Segoe MDL2 Assets on
+         older systems), with each glyph defined ONCE here so the views never carry literal code points. A
+         button pairs a ButtonGlyph with its label; an icon-only button carries a ToolTip and an
+         AutomationProperties.Name so it stays accessible. -->
+    <FontFamily x:Key="IconFont">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
+    <sys:String x:Key="GlyphRefresh">&#xE72C;</sys:String>
+    <sys:String x:Key="GlyphDownload">&#xE896;</sys:String>
+    <sys:String x:Key="GlyphCopy">&#xE8C8;</sys:String>
+    <sys:String x:Key="GlyphSelect">&#xE73E;</sys:String>
+    <sys:String x:Key="GlyphCancel">&#xE711;</sys:String>
+
+    <!-- The icon half of an icon + label button. -->
+    <Style x:Key="ButtonGlyph"
+           TargetType="TextBlock">
+        <Setter Property="FontFamily"
+                Value="{DynamicResource IconFont}" />
+        <Setter Property="FontSize"
+                Value="14" />
+        <Setter Property="Margin"
+                Value="0,0,8,0" />
+        <Setter Property="VerticalAlignment"
+                Value="Center" />
     </Style>
 
     <!-- ============================================================================================

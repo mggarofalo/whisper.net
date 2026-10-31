@@ -39,6 +39,12 @@ public sealed class SettingsDesignSystemSteps(SettingsDesignSystemDriver design,
 	[Then(@"the History, Home and Model list rows expose their content as the automation name")]
 	public void ThenRowAutomationNames() => design.AssertListRowsHaveMeaningfulAutomationNames();
 
+	[Then(@"the Refresh, Download, Copy and Select buttons take their icons from the shared Fluent glyphs")]
+	public void ThenSharedIcons() => design.AssertButtonsUseTheSharedIconSet();
+
+	[Then(@"every icon-only button has a tooltip and an accessible name")]
+	public void ThenIconButtonsAccessible() => design.AssertIconOnlyButtonsAreAccessible();
+
 	[Given(@"the persisted active model is ""(.*)""")]
 	public void GivenActiveModel(string modelId) => isolation.GivenActiveModel(modelId);
 

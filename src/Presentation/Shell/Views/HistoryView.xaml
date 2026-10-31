@@ -29,8 +29,8 @@
                        VerticalAlignment="Center"
                        Visibility="{Binding LoadCommand.IsRunning, Converter={StaticResource BoolToVisibility}}" />
             <Button Grid.Column="2"
-                    Content="&#xE72C;"
-                    FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                    Content="{DynamicResource GlyphRefresh}"
+                    FontFamily="{DynamicResource IconFont}"
                     Background="Transparent"
                     BorderBrush="Transparent"
                     Padding="8"
@@ -73,12 +73,18 @@
                                                    Margin="0,2,0,0" />
                                     </StackPanel>
                                     <Button Grid.Column="1"
-                                            Content="Copy"
                                             AutomationProperties.Name="Copy transcript"
                                             Command="{Binding DataContext.CopyCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                             CommandParameter="{Binding}"
                                             VerticalAlignment="Center"
-                                            Padding="12,4" />
+                                            Padding="12,4">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{DynamicResource GlyphCopy}"
+                                                       Style="{DynamicResource ButtonGlyph}" />
+                                            <TextBlock Text="Copy"
+                                                       VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
                                 </Grid>
                             </Border>
                         </DataTemplate>

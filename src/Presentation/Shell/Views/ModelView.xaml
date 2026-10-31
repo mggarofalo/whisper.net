@@ -32,8 +32,8 @@
                        VerticalAlignment="Center"
                        Visibility="{Binding LoadCommand.IsRunning, Converter={StaticResource BoolToVisibility}}" />
             <Button Grid.Column="2"
-                    Content="&#xE72C;"
-                    FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                    Content="{DynamicResource GlyphRefresh}"
+                    FontFamily="{DynamicResource IconFont}"
                     Background="Transparent"
                     BorderBrush="Transparent"
                     Padding="8"
@@ -137,24 +137,42 @@
                                                     Orientation="Horizontal"
                                                     VerticalAlignment="Center">
                                             <!-- Download: only when not downloaded and not downloading. -->
-                                            <Button Content="Download"
-                                                    AutomationProperties.Name="{Binding DisplayName, StringFormat='Download {0}'}"
+                                            <Button AutomationProperties.Name="{Binding DisplayName, StringFormat='Download {0}'}"
                                                     Command="{Binding DownloadCommand}"
                                                     Padding="12,4"
-                                                    Visibility="{Binding CanDownload, Converter={StaticResource BoolToVisibility}}" />
+                                                    Visibility="{Binding CanDownload, Converter={StaticResource BoolToVisibility}}">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="{DynamicResource GlyphDownload}"
+                                                               Style="{DynamicResource ButtonGlyph}" />
+                                                    <TextBlock Text="Download"
+                                                               VerticalAlignment="Center" />
+                                                </StackPanel>
+                                            </Button>
                                             <!-- Cancel: only this row's in-flight download, only while running. -->
-                                            <Button Content="Cancel"
-                                                    AutomationProperties.Name="{Binding DisplayName, StringFormat='Cancel download for {0}'}"
+                                            <Button AutomationProperties.Name="{Binding DisplayName, StringFormat='Cancel download for {0}'}"
                                                     Command="{Binding DownloadCancelCommand}"
                                                     Padding="12,4"
-                                                    Visibility="{Binding IsDownloading, Converter={StaticResource BoolToVisibility}}" />
+                                                    Visibility="{Binding IsDownloading, Converter={StaticResource BoolToVisibility}}">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="{DynamicResource GlyphCancel}"
+                                                               Style="{DynamicResource ButtonGlyph}" />
+                                                    <TextBlock Text="Cancel"
+                                                               VerticalAlignment="Center" />
+                                                </StackPanel>
+                                            </Button>
                                             <!-- Select: only when downloaded and not already active. -->
-                                            <Button Content="Select"
-                                                    AutomationProperties.Name="{Binding DisplayName, StringFormat='Select {0}'}"
+                                            <Button AutomationProperties.Name="{Binding DisplayName, StringFormat='Select {0}'}"
                                                     Command="{Binding DataContext.SelectCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                     CommandParameter="{Binding}"
                                                     Padding="12,4"
-                                                    Visibility="{Binding CanSelect, Converter={StaticResource BoolToVisibility}}" />
+                                                    Visibility="{Binding CanSelect, Converter={StaticResource BoolToVisibility}}">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="{DynamicResource GlyphSelect}"
+                                                               Style="{DynamicResource ButtonGlyph}" />
+                                                    <TextBlock Text="Select"
+                                                               VerticalAlignment="Center" />
+                                                </StackPanel>
+                                            </Button>
                                         </StackPanel>
                                     </Grid>
                                     <!-- A failed download surfaces per row natively, not as a crash;

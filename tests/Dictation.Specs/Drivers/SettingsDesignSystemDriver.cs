@@ -138,6 +138,42 @@ public sealed partial class SettingsDesignSystemDriver(IEnumerable<NavigationSec
 		}
 	}
 
+	public void AssertButtonsUseTheSharedIconSet()
+	{
+		Resources.Should().Contain("<FontFamily x:Key=\"IconFont\">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>",
+			"icons use the Windows 11 Fluent icon font, falling back to MDL2");
+		foreach (string glyph in new[] { "GlyphRefresh", "GlyphDownload", "GlyphCopy", "GlyphSelect" })
+		{
+			Resources.Should().Contain($"x:Key=\"{glyph}\"", $"{glyph} is defined once in the shared dictionary");
+		}
+
+		foreach ((string view, string xaml) in Views)
+		{
+			xaml.Should().NotContain("&#x", $"{view} takes its glyphs from the shared dictionary, not literal code points");
+		}
+
+		Views["ModelView"].Should().Contain("{DynamicResource GlyphDownload}").And.Contain("{DynamicResource GlyphSelect}");
+		Views["HistoryView"].Should().Contain("{DynamicResource GlyphCopy}");
+	}
+
+	public void AssertIconOnlyButtonsAreAccessible()
+	{
+		Views.Values.Sum(xaml => IconOnlyButton().Count(xaml))
+			.Should().BeGreaterThan(0, "the page Refresh commands are icon-only buttons");
+
+		foreach ((string view, string xaml) in Views)
+		{
+			foreach (Match button in IconOnlyButton().Matches(xaml))
+			{
+				button.Value.Should().Contain("ToolTip=", $"{view}'s icon-only button explains itself on hover");
+				button.Value.Should().Contain("AutomationProperties.Name=", $"{view}'s icon-only button has an accessible name");
+			}
+		}
+	}
+
+	[GeneratedRegex("<Button\\b[^>]*Content=\"\\{DynamicResource Glyph\\w+\\}\"[^>]*>")]
+	private static partial Regex IconOnlyButton();
+
 	[GeneratedRegex("\"#[0-9A-Fa-f]{3,8}\"")]
 	private static partial Regex ColourLiteral();
 

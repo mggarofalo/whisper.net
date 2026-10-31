@@ -28,8 +28,8 @@
                        VerticalAlignment="Center"
                        Visibility="{Binding LoadCommand.IsRunning, Converter={StaticResource BoolToVisibility}}" />
             <Button Grid.Column="2"
-                    Content="&#xE72C;"
-                    FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                    Content="{DynamicResource GlyphRefresh}"
+                    FontFamily="{DynamicResource IconFont}"
                     Background="Transparent"
                     BorderBrush="Transparent"
                     Padding="8"
