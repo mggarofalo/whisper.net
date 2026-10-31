@@ -23,7 +23,8 @@ public sealed class DictationOrchestratorDriver(
 	FakeTextInjectorFactory injectors,
 	RecordingLogger<DictationOrchestrator> logger,
 	ManualTimeProvider time,
-	AudioBufferingOptions bufferingOptions)
+	AudioBufferingOptions bufferingOptions,
+	RecordingUserNotifier notifier)
 {
 	// One buffer of interleaved stereo samples at the fake device's 48 kHz/2ch default. Filled with
 	// speech-level energy (not silence) so the captured clip survives the no-speech gate —
@@ -57,6 +58,15 @@ public sealed class DictationOrchestratorDriver(
 		await orchestrator.StopAndElapseGraceAsync(time, bufferingOptions);
 	}
 
+	// A recording with nothing but digital silence — what a tap-muted microphone delivers. The trimmer
+	// collapses it to empty, so the pipeline skips transcription.
+	public async Task RunSilentDictation()
+	{
+		orchestrator.Start();
+		captureClient.ProduceFrame(new float[960]);
+		await orchestrator.StopAndElapseGraceAsync(time, bufferingOptions);
+	}
+
 	// Stop while the faked transcriber throws, so the stop drives the pipeline into its error path.
 	public async Task TranscriptionFails()
 	{
@@ -78,6 +88,16 @@ public sealed class DictationOrchestratorDriver(
 
 	public void AssertFailureLogged() =>
 		logger.Entries.Should().Contain(entry => entry.Level == LogLevel.Error);
+
+	public void AssertNoAudioNotified() =>
+		notifier.Notifications.Should().ContainSingle(n => n.Title == DictationOrchestrator.NoAudioNoticeTitle);
+
+	public void AssertNoAudioNotNotified() =>
+		notifier.Notifications.Should().NotContain(n => n.Title == DictationOrchestrator.NoAudioNoticeTitle);
+
+	public void AssertNoAudioLogged() =>
+		logger.Entries.Should().Contain(entry =>
+			entry.Level == LogLevel.Warning && entry.Message.Contains("no audio", StringComparison.OrdinalIgnoreCase));
 
 	public void AssertIdle() => orchestrator.Stage.Should().Be(DictationStage.Idle);
 }

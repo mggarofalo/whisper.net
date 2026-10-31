@@ -24,6 +24,9 @@ public sealed class EndToEndDictationSteps(DictationOrchestratorDriver driver)
 	[When(@"the user starts dictation, speaks, and stops")]
 	public Task WhenTheUserStartsDictationSpeaksAndStops() => driver.RunFullDictation();
 
+	[When(@"the user starts dictation, stays silent, and stops")]
+	public Task WhenTheUserStartsDictationStaysSilentAndStops() => driver.RunSilentDictation();
+
 	[When(@"transcription fails")]
 	public Task WhenTranscriptionFails() => driver.TranscriptionFails();
 
@@ -38,6 +41,15 @@ public sealed class EndToEndDictationSteps(DictationOrchestratorDriver driver)
 
 	[Then(@"the dictation failure is logged")]
 	public void ThenTheDictationFailureIsLogged() => driver.AssertFailureLogged();
+
+	[Then(@"the user is told no audio was detected")]
+	public void ThenTheUserIsToldNoAudioWasDetected() => driver.AssertNoAudioNotified();
+
+	[Then(@"the user is not told no audio was detected")]
+	public void ThenTheUserIsNotToldNoAudioWasDetected() => driver.AssertNoAudioNotNotified();
+
+	[Then(@"the no-audio outcome is logged")]
+	public void ThenTheNoAudioOutcomeIsLogged() => driver.AssertNoAudioLogged();
 
 	[Then(@"the dictation pipeline returns to idle")]
 	public void ThenTheDictationPipelineReturnsToIdle() => driver.AssertIdle();

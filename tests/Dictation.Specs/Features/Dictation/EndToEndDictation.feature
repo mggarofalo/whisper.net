@@ -7,6 +7,11 @@
 #  AC6 transitions/durations logged structurally                              -> "the failure is logged" + unit coverage in Logic.AppManagement.Tests
 #  WHISPER-110 AC1 a completed dictation appears in the History section       -> "A delivered transcription appears in the history"
 #  WHISPER-110 AC2 stats reflect real usage after dictations                  -> "A delivered transcription is counted in the usage stats"
+#  WHISPER-141 AC1 a recording with no audio tells the user                   -> "A silent recording tells the user no audio was detected"
+#  WHISPER-141 AC2 no notice when speech was captured (even if it yields no words)
+#                                                                             -> "Speech that yields no words does not claim no audio was detected"
+#  WHISPER-141 AC3 nothing is typed and the pipeline returns to Idle          -> "A silent recording tells the user no audio was detected"
+#  WHISPER-141 AC4 the no-audio outcome is logged distinctly                  -> "A silent recording tells the user no audio was detected"
 
 @WHISPER-14
 Feature: End-to-end dictation orchestration
@@ -48,3 +53,22 @@ Feature: End-to-end dictation orchestration
     When the user starts dictation, speaks, and stops
     And the user opens the stats dashboard
     Then the usage stats count 1 transcription and 5 words
+
+  # WHISPER-141: an all-silent recording (e.g. a tap-muted microphone) is deliberately never
+  # transcribed (WHISPER-125), but skipping it without a word reads as "the app is broken" in a
+  # windowless tray app. The user is told no audio was detected so a muted mic is obvious.
+  @WHISPER-141
+  Scenario: A silent recording tells the user no audio was detected
+    Given the dictation pipeline is idle
+    When the user starts dictation, stays silent, and stops
+    Then the user is told no audio was detected
+    And the no-audio outcome is logged
+    And no text is delivered to the active application
+    And the dictation pipeline returns to idle
+
+  @WHISPER-141
+  Scenario: Speech that yields no words does not claim no audio was detected
+    Given the model will transcribe the captured audio to ""
+    When the user starts dictation, speaks, and stops
+    Then the user is not told no audio was detected
+    And no text is delivered to the active application

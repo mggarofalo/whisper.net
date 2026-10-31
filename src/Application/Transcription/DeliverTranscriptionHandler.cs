@@ -34,9 +34,10 @@ public sealed class DeliverTranscriptionHandler(
 		// Feeding empty/silent audio to Whisper makes it HALLUCINATE a phrase (e.g. it emitted
 		// "SILENT PRACTICE" on a first, near-silent dictation), so skip transcription and deliver nothing.
 		// Quiet speech stays above the energy floor, so it is never collapsed and still transcribes.
+		// Reported as NoAudio so the caller can surface it (a muted mic otherwise looks like a broken app).
 		if (trimmed.Samples.Count == 0)
 		{
-			return new DeliveryResult(Delivered: false, Text: string.Empty);
+			return new DeliveryResult(Delivered: false, Text: string.Empty, Block: DeliveryBlock.NoAudio);
 		}
 
 		Domain.Audio.TranscriptionResult transcription = await transcriber.TranscribeAsync(trimmed, cancellationToken);
