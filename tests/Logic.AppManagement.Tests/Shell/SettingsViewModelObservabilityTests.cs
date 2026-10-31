@@ -6,6 +6,7 @@
 
 using System.ComponentModel;
 using System.Reflection;
+using Application.History;
 using Application.Ports;
 using AwesomeAssertions;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -72,10 +73,20 @@ public sealed class SettingsViewModelObservabilityTests
 		nameof(ModelViewModel) => new ModelViewModel(Substitute.For<IMediator>()),
 		nameof(AudioDeviceViewModel) => new AudioDeviceViewModel(Substitute.For<IMediator>(), new Logic.AudioManagement.DeviceSelectionPolicy()),
 		nameof(HotkeyViewModel) => new HotkeyViewModel(Substitute.For<IMediator>(), new CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger()),
-		nameof(HistoryViewModel) => new HistoryViewModel(Substitute.For<IMediator>(), new CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger(), Substitute.For<IUiCollectionSynchronizer>()),
+		nameof(HistoryViewModel) => new HistoryViewModel(EmptyHistoryMediator(), new CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger(), Substitute.For<IUiCollectionSynchronizer>()),
 		nameof(StatsViewModel) => new StatsViewModel(Substitute.For<IMediator>(), new CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger(), new Logic.AppManagement.Threading.InlineUiDispatcher()),
 		_ => throw new ArgumentOutOfRangeException(nameof(viewModelName), viewModelName, "unknown view-model"),
 	};
+
+	// Setting HistoryViewModel.SearchText re-runs the history query, so its mediator must answer that query
+	// the way the real one does (an empty page) rather than with a substitute's null.
+	private static IMediator EmptyHistoryMediator()
+	{
+		IMediator mediator = Substitute.For<IMediator>();
+		mediator.Send(Arg.Any<SearchHistoryQuery>(), Arg.Any<CancellationToken>())
+			.Returns(new ValueTask<HistoryPageDto>(new HistoryPageDto([], 1, 25, 0)));
+		return mediator;
+	}
 
 	// A value guaranteed to differ from the current one, so SetProperty's equality guard does not suppress
 	// the change notification we are asserting.

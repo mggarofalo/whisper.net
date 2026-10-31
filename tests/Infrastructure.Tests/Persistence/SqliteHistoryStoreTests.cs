@@ -173,5 +173,62 @@ public sealed class SqliteHistoryStoreTests : IDisposable
 		remaining.Should().BeEmpty();
 	}
 
+	[Fact]
+	public async Task Search_without_text_pages_the_whole_history_newest_first_with_its_total()
+	{
+		IHistoryStore store = NewStore();
+		await store.AddAsync(TranscriptEntry.Create("middle", Middle), CancellationToken.None);
+		await store.AddAsync(TranscriptEntry.Create("oldest", Oldest), CancellationToken.None);
+		await store.AddAsync(TranscriptEntry.Create("newest", Newest), CancellationToken.None);
+
+		HistoryPage first = await NewStore().SearchAsync(text: null, skip: 0, take: 2, CancellationToken.None);
+		HistoryPage second = await NewStore().SearchAsync(text: null, skip: 2, take: 2, CancellationToken.None);
+
+		first.Entries.Select(entry => entry.Text).Should().Equal("newest", "middle");
+		first.TotalCount.Should().Be(3);
+		second.Entries.Select(entry => entry.Text).Should().Equal("oldest");
+		second.TotalCount.Should().Be(3);
+	}
+
+	[Fact]
+	public async Task Search_matches_text_case_insensitively_including_non_ascii()
+	{
+		IHistoryStore store = NewStore();
+		await store.AddAsync(TranscriptEntry.Create("Buy MILK", Oldest), CancellationToken.None);
+		await store.AddAsync(TranscriptEntry.Create("walk the dog", Middle), CancellationToken.None);
+		await store.AddAsync(TranscriptEntry.Create("meet at the CAFÉ", Newest), CancellationToken.None);
+
+		HistoryPage milk = await NewStore().SearchAsync("milk", 0, 10, CancellationToken.None);
+		HistoryPage cafe = await NewStore().SearchAsync("café", 0, 10, CancellationToken.None);
+
+		milk.Entries.Select(entry => entry.Text).Should().Equal("Buy MILK");
+		milk.TotalCount.Should().Be(1);
+		cafe.Entries.Select(entry => entry.Text).Should().Equal("meet at the CAFÉ");
+	}
+
+	[Fact]
+	public async Task Search_treats_like_wildcards_literally()
+	{
+		IHistoryStore store = NewStore();
+		await store.AddAsync(TranscriptEntry.Create("100% done", Oldest), CancellationToken.None);
+		await store.AddAsync(TranscriptEntry.Create("100 done", Newest), CancellationToken.None);
+
+		HistoryPage result = await NewStore().SearchAsync("0%", 0, 10, CancellationToken.None);
+
+		result.Entries.Select(entry => entry.Text).Should().Equal("100% done");
+	}
+
+	[Fact]
+	public async Task Search_with_no_matches_returns_an_empty_page_and_zero_total()
+	{
+		IHistoryStore store = NewStore();
+		await store.AddAsync(TranscriptEntry.Create("newest", Newest), CancellationToken.None);
+
+		HistoryPage result = await NewStore().SearchAsync("zebra", 0, 10, CancellationToken.None);
+
+		result.Entries.Should().BeEmpty();
+		result.TotalCount.Should().Be(0);
+	}
+
 	public void Dispose() => _fixture.Dispose();
 }

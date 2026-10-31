@@ -1,8 +1,10 @@
 // Unit depth for the live history feed, beyond the acceptance scenarios. Pins that a
 // recorded-transcription message prepends the new entry newest-first and clears the empty state; that
 // the feed stays live for the section's whole lifetime — including while it is the inactive cached
-// instance (WHISPER-136), so an entry recorded on another tab is not missed; and that a redelivered
-// message never doubles an entry already shown.
+// instance (WHISPER-136), so an entry recorded on another tab is not missed; that a redelivered
+// message never doubles an entry already shown; and, with paging and search (WHISPER-146), that a live
+// entry keeps page 1 at its page size, never lands on a later page, and is skipped when it does not match
+// the active search.
 
 using Application.History;
 using Application.Ports;
@@ -17,6 +19,8 @@ namespace Logic.AppManagement.Tests.Shell;
 
 public sealed class HistoryViewModelLiveFeedTests
 {
+	private const int PageSize = 25;
+
 	private readonly IMediator _mediator = Substitute.For<IMediator>();
 	private readonly IMessenger _messenger = new WeakReferenceMessenger();
 	private readonly HistoryViewModel _viewModel;
@@ -24,13 +28,16 @@ public sealed class HistoryViewModelLiveFeedTests
 	public HistoryViewModelLiveFeedTests()
 	{
 		// First-activation load returns an empty page by default; specific tests configure it before opening.
-		_mediator.Send(Arg.Any<BrowseHistoryQuery>(), Arg.Any<CancellationToken>())
-			.Returns(new ValueTask<IReadOnlyList<TranscriptEntryDto>>(Array.Empty<TranscriptEntryDto>()));
+		ReturnPage([], totalCount: 0);
 		_viewModel = new HistoryViewModel(_mediator, _messenger, Substitute.For<IUiCollectionSynchronizer>());
 	}
 
 	private static TranscriptEntryDto Dto(string text) =>
 		new(Guid.NewGuid(), text, new DateTimeOffset(2026, 1, 1, 12, 0, 0, TimeSpan.Zero), text.Length);
+
+	private void ReturnPage(IReadOnlyList<TranscriptEntryDto> entries, int totalCount, int page = 1) =>
+		_mediator.Send(Arg.Any<SearchHistoryQuery>(), Arg.Any<CancellationToken>())
+			.Returns(new ValueTask<HistoryPageDto>(new HistoryPageDto(entries, page, PageSize, totalCount)));
 
 	private void Open() => _viewModel.OnNavigatedTo();
 
@@ -50,8 +57,7 @@ public sealed class HistoryViewModelLiveFeedTests
 	[Fact]
 	public void A_recorded_entry_is_prepended_above_existing_entries()
 	{
-		_mediator.Send(Arg.Any<BrowseHistoryQuery>(), Arg.Any<CancellationToken>())
-			.Returns(new ValueTask<IReadOnlyList<TranscriptEntryDto>>(new[] { Dto("older") }));
+		ReturnPage([Dto("older")], totalCount: 1);
 		Open();
 		_viewModel.Entries.Should().ContainSingle();
 
@@ -85,5 +91,46 @@ public sealed class HistoryViewModelLiveFeedTests
 		_messenger.Send(new TranscriptionRecordedMessage(entry));
 
 		_viewModel.Entries.Should().ContainSingle("a redelivery of the same entry must not double it up");
+	}
+
+	[Fact]
+	public void A_live_entry_keeps_a_full_first_page_at_its_page_size_and_grows_the_page_count()
+	{
+		ReturnPage(Enumerable.Range(0, PageSize).Select(i => Dto($"entry {i}")).ToList(), totalCount: PageSize);
+		Open();
+		_viewModel.HasNextPage.Should().BeFalse();
+
+		_messenger.Send(new TranscriptionRecordedMessage(Dto("newest")));
+
+		_viewModel.Entries.Should().HaveCount(PageSize);
+		_viewModel.Entries[0].Text.Should().Be("newest");
+		_viewModel.TotalPages.Should().Be(2);
+		_viewModel.HasNextPage.Should().BeTrue("the displaced oldest entry now sits on page 2");
+	}
+
+	[Fact]
+	public async Task A_live_entry_is_not_inserted_into_a_later_page()
+	{
+		ReturnPage(Enumerable.Range(0, PageSize).Select(i => Dto($"entry {i}")).ToList(), totalCount: 30);
+		Open();
+		ReturnPage([Dto("older")], totalCount: 30, page: 2);
+		await _viewModel.NextPageCommand.ExecuteAsync(null);
+
+		_messenger.Send(new TranscriptionRecordedMessage(Dto("newest")));
+
+		_viewModel.Entries.Select(entry => entry.Text).Should().Equal("older");
+		_viewModel.TotalCount.Should().Be(31);
+	}
+
+	[Fact]
+	public void A_live_entry_that_does_not_match_the_search_is_skipped()
+	{
+		Open();
+		_viewModel.SearchText = "milk";
+
+		_messenger.Send(new TranscriptionRecordedMessage(Dto("walk the dog")));
+		_messenger.Send(new TranscriptionRecordedMessage(Dto("buy MILK")));
+
+		_viewModel.Entries.Should().ContainSingle().Which.Text.Should().Be("buy MILK");
 	}
 }

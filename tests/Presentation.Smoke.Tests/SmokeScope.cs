@@ -63,6 +63,8 @@ internal sealed class SmokeScope : IDisposable
 			IHistoryStore store = Substitute.For<IHistoryStore>();
 			store.GetEntriesAsync(Arg.Any<DateTimeOffset?>(), Arg.Any<DateTimeOffset?>(), Arg.Any<int?>(), Arg.Any<CancellationToken>())
 				.Returns(Array.Empty<Domain.History.TranscriptEntry>());
+			store.SearchAsync(Arg.Any<string?>(), Arg.Any<int>(), Arg.Any<int>(), Arg.Any<CancellationToken>())
+				.Returns(new HistoryPage([], 0));
 			return store;
 		});
 

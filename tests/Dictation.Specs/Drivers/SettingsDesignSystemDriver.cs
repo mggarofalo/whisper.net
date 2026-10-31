@@ -96,11 +96,14 @@ public sealed partial class SettingsDesignSystemDriver(IEnumerable<NavigationSec
 
 	public void AssertPageCommandsLeaveTheTitleRow()
 	{
-		// History's Load more is at the END of the list (after the ItemsControl), not in the header.
+		// History's paging controls are at the END of the list (after the ItemsControl), not in the header.
 		string history = Views["HistoryView"];
-		history.IndexOf("Load more", StringComparison.Ordinal)
-			.Should().BeGreaterThan(history.IndexOf("</ItemsControl>", StringComparison.Ordinal),
-				"Load more sits below the list, where the reader is");
+		foreach (string control in new[] { "Previous history page", "Next history page" })
+		{
+			history.IndexOf(control, StringComparison.Ordinal)
+				.Should().BeGreaterThan(history.IndexOf("</ItemsControl>", StringComparison.Ordinal),
+					$"{control} sits below the list, where the reader is");
+		}
 
 		// No page header is a horizontal StackPanel mixing the title with buttons.
 		foreach ((string view, string xaml) in Views)

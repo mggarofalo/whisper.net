@@ -27,8 +27,8 @@ public sealed class SettingsDesignSystemSteps(SettingsDesignSystemDriver design,
 	[Then(@"no page title shares a toolbar row with its commands")]
 	public void ThenTitleRowClear() => design.AssertPageCommandsLeaveTheTitleRow();
 
-	[Then(@"the History page offers ""Load more"" below its list")]
-	public void ThenLoadMoreAtBottom() => design.AssertPageCommandsLeaveTheTitleRow();
+	[Then(@"the History page offers its paging controls below its list")]
+	public void ThenPagingAtBottom() => design.AssertPageCommandsLeaveTheTitleRow();
 
 	[Then(@"the scrolling settings pages reserve a gutter for the scrollbar")]
 	public void ThenScrollbarGutter() => design.AssertScrollingPagesReserveTheScrollbarGutter();
