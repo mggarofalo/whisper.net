@@ -15,9 +15,6 @@ public sealed class SectionAutoLoadSteps(SectionAutoLoadDriver driver)
 	[Given(@"the history store holds a transcription ""(.*)""")]
 	public void GivenTheHistoryStoreHoldsATranscription(string text) => driver.HistoryHolds(text);
 
-	[Given(@"the history store holds two recorded transcriptions")]
-	public void GivenTheHistoryStoreHoldsTwoRecordedTranscriptions() => driver.HistoryHoldsTwoTranscriptions();
-
 	[Given(@"the user has opened the ""(.*)"" section")]
 	public async Task GivenTheUserHasOpenedTheSection(string section) => await driver.OpenSection(section);
 
@@ -50,9 +47,6 @@ public sealed class SectionAutoLoadSteps(SectionAutoLoadDriver driver)
 
 	[Then(@"the history list shows ""(.*)"" without a manual refresh")]
 	public void ThenTheHistoryListShows(string text) => driver.AssertHistoryShows(text);
-
-	[Then(@"the dashboard shows the recorded totals without a manual refresh")]
-	public void ThenTheDashboardShowsTheRecordedTotals() => driver.AssertRecordedTotalsShown();
 
 	[Then(@"the history was queried exactly once")]
 	public void ThenTheHistoryWasQueriedExactlyOnce() => driver.AssertHistoryQueriedExactly(1);

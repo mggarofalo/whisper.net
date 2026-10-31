@@ -36,7 +36,7 @@ Feature: End-to-end dictation orchestration
 
   # WHISPER-110: the orchestrator delivered the transcription but never recorded it, so the History
   # section stayed empty and the stats stayed zeroed however much the user dictated. These pin the
-  # write-through by reading back through the real read path (the history browser and the stats
+  # write-through by reading back through the real read path (the history browser and the Home
   # dashboard over the real Mediator pipeline), not by asserting on the store fake.
   @WHISPER-110
   Scenario: A delivered transcription appears in the history
@@ -51,8 +51,8 @@ Feature: End-to-end dictation orchestration
     Given the dictation history starts empty
     And the model will transcribe the captured audio to "book the flight for friday"
     When the user starts dictation, speaks, and stops
-    And the user opens the stats dashboard
-    Then the usage stats count 1 transcription and 5 words
+    And the user opens the Home dashboard
+    Then the Home usage totals count 1 transcription and 5 words
 
   # WHISPER-141: an all-silent recording (e.g. a tap-muted microphone) is deliberately never
   # transcribed (WHISPER-125), but skipping it without a word reads as "the app is broken" in a

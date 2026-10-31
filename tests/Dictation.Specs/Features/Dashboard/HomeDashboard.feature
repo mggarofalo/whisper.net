@@ -50,3 +50,6 @@ Feature: The Home section is a live status dashboard
     When a transcription "live note" is recorded while Home is open
     Then the dashboard lists 1 recent transcriptions
     And the most recent dashboard transcription is "live note"
+    # WHISPER-148: Home > Usage is now the only place for the totals (the duplicate Stats page is gone),
+    # so the live update must move the totals too, not just the recent list.
+    And the dashboard shows 1 transcriptions and 2 words

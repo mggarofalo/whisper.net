@@ -17,13 +17,12 @@ public sealed class SettingsViewModelFoundationDriver(
 	ModelViewModel model,
 	AudioDeviceViewModel audio,
 	HotkeyViewModel hotkey,
-	HistoryViewModel history,
-	StatsViewModel stats)
+	HistoryViewModel history)
 {
 	private string? _changedProperty;
 
 	// Every section the shell can navigate to, resolved for real from the scenario scope.
-	private IReadOnlyList<object> FeatureViewModels => [home, model, audio, hotkey, history, stats];
+	private IReadOnlyList<object> FeatureViewModels => [home, model, audio, hotkey, history];
 
 	// AC1: each feature view-model derives from ObservableValidator, so validation and the
 	// instant-apply channel have one uniform, validation-capable observable base to build on.

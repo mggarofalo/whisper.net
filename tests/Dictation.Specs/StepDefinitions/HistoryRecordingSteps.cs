@@ -11,7 +11,7 @@ namespace Dictation.Specs.StepDefinitions;
 public sealed class HistoryRecordingSteps(
 	HistoryRecordingDriver driver,
 	HistoryBrowserDriver browser,
-	StatsDashboardDriver stats)
+	HomeDashboardDriver home)
 {
 	[Given(@"the dictation history starts empty")]
 	public void GivenTheDictationHistoryStartsEmpty() => driver.HistoryStartsEmpty();
@@ -19,7 +19,11 @@ public sealed class HistoryRecordingSteps(
 	[Then(@"the history lists ""(.*)"" as the most recent entry")]
 	public void ThenTheHistoryListsTheMostRecentEntry(string text) => browser.AssertMostRecentEntryIs(text);
 
-	[Then(@"the usage stats count (\d+) transcriptions? and (\d+) words?")]
-	public void ThenTheUsageStatsCount(int transcriptions, int words) =>
-		stats.AssertTotals(transcriptions, words);
+	// The usage totals live on Home > Usage (WHISPER-148 removed the duplicate Stats page).
+	[When(@"the user opens the Home dashboard")]
+	public Task WhenTheUserOpensTheHomeDashboard() => home.OpenOverRecordedHistory();
+
+	[Then(@"the Home usage totals count (\d+) transcriptions? and (\d+) words?")]
+	public void ThenTheHomeUsageTotalsCount(int transcriptions, int words) =>
+		home.AssertTotals(transcriptions, words);
 }

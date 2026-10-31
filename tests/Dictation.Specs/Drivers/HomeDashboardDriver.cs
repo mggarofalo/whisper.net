@@ -61,6 +61,14 @@ public sealed class HomeDashboardDriver
 
 	public void GivenNoHistory() => ReturnEntries();
 
+	// Open Home over whatever history the scenario actually recorded (the end-to-end write-through): only the
+	// settings are arranged here, so the totals come from the round-tripping store, not a canned list.
+	public Task OpenOverRecordedHistory()
+	{
+		GivenSettingsWithSystemDefaultDevice(AppSettings.Default.ModelId);
+		return OpenDashboard();
+	}
+
 	// Enter the section through the real activation lifecycle so the activation refresh runs, then await it.
 	public async Task OpenDashboard()
 	{
