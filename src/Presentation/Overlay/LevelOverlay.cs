@@ -208,6 +208,27 @@ public sealed class LevelOverlay : IDisposable
 		row.Children.Add(elapsed);
 		row.Children.Add(warming);
 
+		// The message line (WHISPER-144): the muted-mic hint while a recording hears nothing, or the
+		// no-audio message after one. Collapsed when there is nothing to say, so the pill keeps its compact
+		// single-row footprint; when shown it wraps within the pill's fixed width and the window grows down
+		// (SizeChanged re-anchors it above the taskbar).
+		TextBlock message = new()
+		{
+			Foreground = Brushes.White,
+			FontSize = 12,
+			Margin = new Thickness(0, 6, 0, 0),
+			TextWrapping = TextWrapping.Wrap,
+			TextAlignment = TextAlignment.Center,
+			HorizontalAlignment = HorizontalAlignment.Center,
+		};
+		message.SetBinding(TextBlock.TextProperty, new Binding(nameof(LevelOverlayViewModel.Message)));
+		message.SetBinding(UIElement.VisibilityProperty,
+			new Binding(nameof(LevelOverlayViewModel.Message)) { Converter = new MessageToVisibilityConverter() });
+
+		StackPanel content = new() { Orientation = Orientation.Vertical };
+		content.Children.Add(row);
+		content.Children.Add(message);
+
 		return new Border
 		{
 			Background = new SolidColorBrush(Color.FromArgb(170, 16, 16, 16)),
@@ -217,7 +238,7 @@ public sealed class LevelOverlay : IDisposable
 			// never cut off on the right: dot(10+8) + meter(120) + elapsed(8+44) + padding(28)
 			// = 218; 224 leaves a little slack. Stays within the compact-pill footprint.
 			Width = 224,
-			Child = row,
+			Child = content,
 		};
 	}
 

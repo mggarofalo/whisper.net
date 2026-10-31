@@ -34,6 +34,10 @@ public sealed partial class LevelOverlayViewModel : ObservableObject, IDisposabl
 	[ObservableProperty]
 	private bool _isNearCap;
 
+	/// <summary>The line of text under the meter (the muted-mic hint or the no-audio message), or null.</summary>
+	[ObservableProperty]
+	private string? _message;
+
 	public LevelOverlayViewModel(LevelOverlayController controller, IUiDispatcher dispatcher)
 	{
 		_controller = controller;
@@ -42,6 +46,7 @@ public sealed partial class LevelOverlayViewModel : ObservableObject, IDisposabl
 		_level = controller.Level;
 		_state = controller.State;
 		_isNearCap = controller.NearCap;
+		_message = controller.Message;
 		_elapsedText = Format(controller.Elapsed);
 		_controller.VisibilityChanged += OnVisibilityChanged;
 		_controller.LevelChanged += OnLevelChanged;
@@ -71,6 +76,7 @@ public sealed partial class LevelOverlayViewModel : ObservableObject, IDisposabl
 		{
 			State = _controller.State;
 			IsNearCap = _controller.NearCap;
+			Message = _controller.Message;
 		});
 
 	private void OnElapsedChanged(object? sender, EventArgs e) =>

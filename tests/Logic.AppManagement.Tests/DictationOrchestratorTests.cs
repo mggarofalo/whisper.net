@@ -215,11 +215,16 @@ public sealed class DictationOrchestratorTests
 			.Send(Arg.Any<DeliverTranscriptionCommand>(), Arg.Any<CancellationToken>())
 			.Returns(new DeliveryResult(Delivered: false, Text: string.Empty, Block: DeliveryBlock.NoAudio));
 		DictationOrchestrator sut = CreateSut();
+		int noAudioSignals = 0;
+		DictationStage? stageWhenSignalled = null;
+		_messenger.Register<DictationNoAudioMessage>(this, (_, _) => { noAudioSignals++; stageWhenSignalled = sut.Stage; });
 
 		sut.Start();
 		await sut.StopAsync(TestContext.Current.CancellationToken);
 
-		_userNotifier.Received(1).NotifyError(DictationOrchestrator.NoAudioNoticeTitle, Arg.Any<string>());
+		noAudioSignals.Should().Be(1, "the overlay shows the no-audio message");
+		stageWhenSignalled.Should().NotBe(DictationStage.Idle, "the signal precedes the return to Idle so the overlay holds it");
+		_userNotifier.DidNotReceive().NotifyError(Arg.Any<string>(), Arg.Any<string>());
 		Assert.Equal(DictationStage.Idle, sut.Stage);
 	}
 
@@ -230,10 +235,13 @@ public sealed class DictationOrchestratorTests
 			.Send(Arg.Any<DeliverTranscriptionCommand>(), Arg.Any<CancellationToken>())
 			.Returns(new DeliveryResult(Delivered: false, Text: string.Empty));
 		DictationOrchestrator sut = CreateSut();
+		int noAudioSignals = 0;
+		_messenger.Register<DictationNoAudioMessage>(this, (_, _) => noAudioSignals++);
 
 		sut.Start();
 		await sut.StopAsync(TestContext.Current.CancellationToken);
 
+		noAudioSignals.Should().Be(0);
 		_userNotifier.DidNotReceive().NotifyError(Arg.Any<string>(), Arg.Any<string>());
 	}
 

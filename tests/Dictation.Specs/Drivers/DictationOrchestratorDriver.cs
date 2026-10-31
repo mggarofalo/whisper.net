@@ -5,8 +5,10 @@
 // port boundaries plus the orchestrator's own pipeline stage and structured log.
 
 using System;
+using Application.Dictation;
 using Application.Ports;
 using AwesomeAssertions;
+using CommunityToolkit.Mvvm.Messaging;
 using Dictation.Specs.Support;
 using Domain.Audio;
 using Logic.AppManagement;
@@ -24,8 +26,25 @@ public sealed class DictationOrchestratorDriver(
 	RecordingLogger<DictationOrchestrator> logger,
 	ManualTimeProvider time,
 	AudioBufferingOptions bufferingOptions,
-	RecordingUserNotifier notifier)
+	RecordingUserNotifier notifier,
+	IMessenger messenger)
 {
+	// The no-audio signals the orchestrator publishes for the overlay (WHISPER-144), counted from the first
+	// driven dictation on.
+	private int _noAudioSignals;
+	private bool _subscribed;
+
+	private void SubscribeToNoAudio()
+	{
+		if (_subscribed)
+		{
+			return;
+		}
+
+		_subscribed = true;
+		messenger.Register<DictationNoAudioMessage>(this, (_, _) => _noAudioSignals++);
+	}
+
 	// One buffer of interleaved stereo samples at the fake device's 48 kHz/2ch default. Filled with
 	// speech-level energy (not silence) so the captured clip survives the no-speech gate —
 	// the trimmer collapses all-silence to empty and the pipeline would skip transcription. The exact
@@ -53,6 +72,7 @@ public sealed class DictationOrchestratorDriver(
 	// drains the post-release grace window on the scenario's manual clock.
 	public async Task RunFullDictation()
 	{
+		SubscribeToNoAudio();
 		orchestrator.Start();
 		captureClient.ProduceFrame(SpokenFrame());
 		await orchestrator.StopAndElapseGraceAsync(time, bufferingOptions);
@@ -62,6 +82,7 @@ public sealed class DictationOrchestratorDriver(
 	// collapses it to empty, so the pipeline skips transcription.
 	public async Task RunSilentDictation()
 	{
+		SubscribeToNoAudio();
 		orchestrator.Start();
 		captureClient.ProduceFrame(new float[960]);
 		await orchestrator.StopAndElapseGraceAsync(time, bufferingOptions);
@@ -89,11 +110,14 @@ public sealed class DictationOrchestratorDriver(
 	public void AssertFailureLogged() =>
 		logger.Entries.Should().Contain(entry => entry.Level == LogLevel.Error);
 
-	public void AssertNoAudioNotified() =>
-		notifier.Notifications.Should().ContainSingle(n => n.Title == DictationOrchestrator.NoAudioNoticeTitle);
+	// Told through the overlay (WHISPER-144), not a tray balloon Windows may suppress.
+	public void AssertNoAudioNotified()
+	{
+		_noAudioSignals.Should().Be(1, "the overlay is told the recording held no audio");
+		notifier.Notifications.Should().BeEmpty("the no-audio message no longer goes through the tray balloon");
+	}
 
-	public void AssertNoAudioNotNotified() =>
-		notifier.Notifications.Should().NotContain(n => n.Title == DictationOrchestrator.NoAudioNoticeTitle);
+	public void AssertNoAudioNotNotified() => _noAudioSignals.Should().Be(0);
 
 	public void AssertNoAudioLogged() =>
 		logger.Entries.Should().Contain(entry =>

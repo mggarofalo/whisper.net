@@ -37,12 +37,6 @@ namespace Logic.AppManagement;
 
 public sealed class DictationOrchestrator
 {
-	/// <summary>Title of the notice shown when a recording captured no audio (silent throughout).</summary>
-	public const string NoAudioNoticeTitle = "No audio detected";
-
-	private const string NoAudioNoticeMessage =
-		"Your recording was silent, so nothing was typed. Is your microphone muted?";
-
 	private readonly IAudioSource _audioSource;
 	private readonly RecordingStateMachine _stateMachine;
 	private readonly CaptureBuffer _captureBuffer;
@@ -256,13 +250,14 @@ public sealed class DictationOrchestrator
 
 			// No audio: the recording was silent throughout, so it was never transcribed. In a
 			// windowless app that reads as "nothing happened", and the usual cause is a muted microphone —
-			// so say so instead of failing silently.
+			// so say so in the overlay (WHISPER-144). Sent before the finally returns the pipeline to Idle, so
+			// the overlay holds the message instead of hiding. Not a tray balloon: Windows can suppress those.
 			if (result.Block == DeliveryBlock.NoAudio)
 			{
 				_logger.LogWarning(
 					"Dictation captured no audio ({AudioDurationMs:F0} ms recorded, all silent); the microphone may be muted.",
 					audioDuration.TotalMilliseconds);
-				_userNotifier.NotifyError(NoAudioNoticeTitle, NoAudioNoticeMessage);
+				_messenger.Send(new DictationNoAudioMessage());
 			}
 
 			// History write-through: a delivered transcription is recorded so the History
