@@ -19,6 +19,7 @@ public sealed class TrayIcon : IDisposable
 {
 	private readonly TaskbarIcon _icon;
 	private readonly TrayIconViewModel _viewModel;
+	private bool _disposed;
 
 	public TrayIcon(TrayIconViewModel viewModel)
 	{
@@ -43,12 +44,28 @@ public sealed class TrayIcon : IDisposable
 		_icon.ForceCreate();
 	}
 
-	/// <summary>Shows a tray balloon notification — the presenter the TrayUserNotifier attaches.</summary>
-	public void ShowNotification(string title, string message) =>
+	/// <summary>
+	/// Shows a tray balloon notification — the presenter the TrayUserNotifier attaches. A no-op once the
+	/// icon is disposed, so a late notification during shutdown cannot throw ObjectDisposedException.
+	/// </summary>
+	public void ShowNotification(string title, string message)
+	{
+		if (_disposed)
+		{
+			return;
+		}
+
 		_icon.ShowNotification(title, message, NotificationIcon.Error);
+	}
 
 	public void Dispose()
 	{
+		if (_disposed)
+		{
+			return;
+		}
+
+		_disposed = true;
 		_viewModel.Dispose();
 		_icon.Dispose();
 	}

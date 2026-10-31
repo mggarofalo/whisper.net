@@ -10,6 +10,9 @@ public interface IInstanceLock
 	/// <summary>Attempts to become the sole instance. Returns true if acquired, false if already held.</summary>
 	bool TryAcquire();
 
-	/// <summary>Releases the lock so a subsequent launch can become the sole instance.</summary>
+	/// <summary>
+	/// Releases the lock so a subsequent launch can become the sole instance. Idempotent, and safe to call
+	/// from any thread during shutdown — it must never throw.
+	/// </summary>
 	void Release();
 }

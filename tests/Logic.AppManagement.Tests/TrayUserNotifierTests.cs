@@ -55,6 +55,20 @@ public sealed class TrayUserNotifierTests
 	}
 
 	[Fact]
+	public void Logs_instead_of_presenting_once_the_presenter_is_detached()
+	{
+		RecordingTestLogger logger = new();
+		TrayUserNotifier notifier = new(_dispatcher, logger);
+		notifier.AttachPresenter((title, message) => _balloons.Add((title, message)));
+
+		notifier.DetachPresenter();
+		notifier.NotifyError("title", "message");
+
+		_balloons.Should().BeEmpty("the tray icon is disposed after the presenter is detached at shutdown");
+		logger.Warnings.Should().ContainSingle();
+	}
+
+	[Fact]
 	public void Logs_and_swallows_a_presenter_failure()
 	{
 		RecordingTestLogger logger = new();

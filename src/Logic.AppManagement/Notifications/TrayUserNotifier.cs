@@ -17,6 +17,12 @@ public sealed class TrayUserNotifier(IUiDispatcher dispatcher, ILogger<TrayUserN
 	/// <summary>Attaches the balloon presenter (the tray icon's notification call) once it exists.</summary>
 	public void AttachPresenter(Action<string, string> presenter) => _presenter = presenter;
 
+	/// <summary>
+	/// Detaches the balloon presenter before the tray icon is disposed, so a shutdown-time failure is
+	/// logged rather than presented through a disposed icon.
+	/// </summary>
+	public void DetachPresenter() => _presenter = null;
+
 	public void NotifyError(string title, string message)
 	{
 		if (dispatcher.CheckAccess())
@@ -30,7 +36,9 @@ public sealed class TrayUserNotifier(IUiDispatcher dispatcher, ILogger<TrayUserN
 
 	private void Present(string title, string message)
 	{
-		if (_presenter is null)
+		// Read once: the presenter can be detached (shutdown) between a Post and its execution.
+		Action<string, string>? presenter = _presenter;
+		if (presenter is null)
 		{
 			logger.LogWarning("User notification suppressed (no balloon presenter attached): {Title}: {Message}", title, message);
 			return;
@@ -38,7 +46,7 @@ public sealed class TrayUserNotifier(IUiDispatcher dispatcher, ILogger<TrayUserN
 
 		try
 		{
-			_presenter(title, message);
+			presenter(title, message);
 		}
 		catch (Exception exception)
 		{

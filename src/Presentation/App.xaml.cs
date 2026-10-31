@@ -279,19 +279,25 @@ public partial class App
 
 	protected override void OnExit(ExitEventArgs e)
 	{
+		// Detach the balloon presenter before the tray icon goes away: from here on a failure (including
+		// one raised by the teardown below) is logged, never presented through a disposed icon.
+		_host?.Services.GetRequiredService<TrayUserNotifier>().DetachPresenter();
 		_levelOverlay?.Dispose();
 		_trayIcon?.Dispose();
 
 		if (_host is not null)
 		{
 			// Graceful shutdown: StopAsync stops every hosted service before the process exits. Skipped if
-			// the host never started (a second instance that exited after activating the primary); disposing
-			// the host still releases the single-instance lock and stops the activation listener.
+			// the host never started (a second instance that exited after activating the primary).
 			if (_hostStarted)
 			{
 				_host.StopAsync().GetAwaiter().GetResult();
 			}
 
+			// Release the single-instance lock HERE, on the UI thread that acquired it in OnStartup, once the
+			// hosted services have stopped. A mutex can only be released by its owning thread, and the host's
+			// Dispose resumes on a pool thread; the coordinator's own Dispose is then a no-op.
+			_host.Services.GetRequiredService<SingleInstanceCoordinator>().ReleasePrimary();
 			_host.Dispose();
 		}
 
