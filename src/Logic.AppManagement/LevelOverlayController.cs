@@ -13,6 +13,7 @@ using Application.Models;
 using Application.Ports;
 using CommunityToolkit.Mvvm.Messaging;
 using Domain.Recording;
+using Logic.AudioManagement;
 
 namespace Logic.AppManagement;
 
@@ -37,14 +38,33 @@ public sealed class LevelOverlayController : IDisposable
 	// under a real TimeProvider and under the tests' one-shot manual clock.
 	private static readonly TimeSpan ElapsedTick = TimeSpan.FromSeconds(1);
 
+	// How long a recording may hear nothing before the pill asks whether the mic is muted (WHISPER-144):
+	// long enough that a normal pause before speaking never triggers it.
+	private static readonly TimeSpan SilenceHintAfter = TimeSpan.FromSeconds(3);
+
+	/// <summary>Shown while recording once <see cref="SilenceHintAfter"/> has passed with no audio.</summary>
+	public const string SilenceHintMessage = "No audio — is your mic muted?";
+
+	/// <summary>Shown briefly after a recording ended with no audio at all.</summary>
+	public const string NoAudioMessage = "No audio detected — is your mic muted?";
+
 	private readonly RecordingStateMachine _stateMachine;
 	private readonly IAudioSource _audioSource;
 	private readonly IMessenger _messenger;
 	private readonly TimeProvider _timeProvider;
 	private readonly ITimer _elapsedTimer;
 	private readonly ITimer _dismissTimer;
+	private readonly ITimer _silenceTimer;
+
+	// The RMS energy that counts as "the mic picked something up". Shared with the silence trimmer, so the
+	// hint agrees with what the pipeline will treat as no audio: below it the clip is trimmed to nothing.
+	private readonly double _speechEnergyThreshold;
 
 	private DateTimeOffset _recordingStartedAt;
+
+	// Whether the current recording has captured any input above the threshold. Written on the capture
+	// thread and read on the silence timer's thread, hence volatile.
+	private volatile bool _heardInput;
 
 	// The model warm-up signal, tracked independently of the recording state: a background
 	// reason to show the pill. Recording/transcribing/error always take precedence; warming only owns the
@@ -55,18 +75,21 @@ public sealed class LevelOverlayController : IDisposable
 		RecordingStateMachine stateMachine,
 		IAudioSource audioSource,
 		IMessenger messenger,
-		TimeProvider timeProvider)
+		TimeProvider timeProvider,
+		SilenceTrimmerOptions? silenceTrimmerOptions = null)
 	{
 		_stateMachine = stateMachine;
 		_audioSource = audioSource;
 		_messenger = messenger;
 		_timeProvider = timeProvider;
+		_speechEnergyThreshold = (silenceTrimmerOptions ?? new SilenceTrimmerOptions()).EnergyThreshold;
 
 		IsVisible = stateMachine.State == RecordingState.Recording;
 		State = OverlayState.Recording;
 
 		_elapsedTimer = _timeProvider.CreateTimer(_ => OnElapsedTick(), null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
 		_dismissTimer = _timeProvider.CreateTimer(_ => OnErrorDismissed(), null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+		_silenceTimer = _timeProvider.CreateTimer(_ => OnSilenceTimeout(), null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
 
 		_stateMachine.StateChanged += OnStateChanged;
 		_audioSource.FrameAvailable += OnFrameAvailable;
@@ -77,6 +100,7 @@ public sealed class LevelOverlayController : IDisposable
 		_messenger.Register<LevelOverlayController, DictationAtLimitMessage>(this, (recipient, _) => recipient.RaiseNearCap());
 		_messenger.Register<LevelOverlayController, DictationHardLimitStopMessage>(this, (recipient, _) => recipient.RaiseNearCap());
 		_messenger.Register<LevelOverlayController, DictationFailedMessage>(this, (recipient, _) => recipient.RaiseError());
+		_messenger.Register<LevelOverlayController, DictationNoAudioMessage>(this, (recipient, _) => recipient.RaiseNoAudio());
 
 		// Model warm-up: the warm-up service broadcasts started/cleared on the same messenger,
 		// so the pill can announce "warming up" until the model is ready. Weak registration; removed on Dispose.
@@ -98,6 +122,21 @@ public sealed class LevelOverlayController : IDisposable
 	/// <summary>True once the current recording has neared (or reached) the duration cap — a warning before
 	/// any audio could be lost. Reset when the next recording starts.</summary>
 	public bool NearCap { get; private set; }
+
+	/// <summary>
+	/// True while recording once <see cref="SilenceHintAfter"/> has passed without any input above the
+	/// silence threshold; cleared the moment input crosses it. Reset when the next recording starts.
+	/// </summary>
+	public bool SilenceHint { get; private set; }
+
+	/// <summary>
+	/// The text line the pill shows under its meter, or null for none: the muted-mic hint while recording,
+	/// or the no-audio message after a silent recording (WHISPER-144). Changes raise <see cref="StateChanged"/>.
+	/// </summary>
+	public string? Message =>
+		State == OverlayState.NoAudio ? NoAudioMessage
+		: State == OverlayState.Recording && SilenceHint ? SilenceHintMessage
+		: null;
 
 	/// <summary>Raised when <see cref="IsVisible"/> changes, so the view can show/hide the overlay.</summary>
 	public event EventHandler? VisibilityChanged;
@@ -146,6 +185,11 @@ public sealed class LevelOverlayController : IDisposable
 		_dismissTimer.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
 		_elapsedTimer.Change(ElapsedTick, Timeout.InfiniteTimeSpan);
 
+		// Arm the muted-mic hint: it fires only if nothing above the threshold arrives first.
+		_heardInput = false;
+		SilenceHint = false;
+		_silenceTimer.Change(SilenceHintAfter, Timeout.InfiniteTimeSpan);
+
 		SetVisible(true);
 		StateChanged?.Invoke(this, EventArgs.Empty);
 		ElapsedChanged?.Invoke(this, EventArgs.Empty);
@@ -156,6 +200,7 @@ public sealed class LevelOverlayController : IDisposable
 	{
 		State = OverlayState.Transcribing;
 		_elapsedTimer.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+		DisarmSilenceHint();
 
 		// The meter is a recording cue; quiet it while transcribing so a stale level does not linger.
 		ResetLevel();
@@ -166,9 +211,11 @@ public sealed class LevelOverlayController : IDisposable
 	private void ReturnToRest()
 	{
 		_elapsedTimer.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+		DisarmSilenceHint();
 
-		// An error lingers (its own dismiss timer hides it); a normal return to Idle hides immediately.
-		if (State == OverlayState.Error)
+		// An error or no-audio message lingers (its own dismiss timer hides it); a normal return to Idle
+		// hides immediately.
+		if (State is OverlayState.Error or OverlayState.NoAudio)
 		{
 			return;
 		}
@@ -194,6 +241,37 @@ public sealed class LevelOverlayController : IDisposable
 		double perceptual = ToPerceptualLevel(rms);
 		Level = (SmoothingFactor * perceptual) + ((1 - SmoothingFactor) * Level);
 		LevelChanged?.Invoke(this, EventArgs.Empty);
+
+		// The mic picked something up: the hint never fires for this recording, and clears if it already did
+		// (a quiet room, then the user starts talking).
+		if (rms >= _speechEnergyThreshold && !_heardInput && State == OverlayState.Recording)
+		{
+			_heardInput = true;
+			_silenceTimer.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+			if (SilenceHint)
+			{
+				SilenceHint = false;
+				StateChanged?.Invoke(this, EventArgs.Empty);
+			}
+		}
+	}
+
+	private void OnSilenceTimeout()
+	{
+		// Re-checked here: speech may have landed on the capture thread just as the timer fired.
+		if (_heardInput || State != OverlayState.Recording || !IsVisible || SilenceHint)
+		{
+			return;
+		}
+
+		SilenceHint = true;
+		StateChanged?.Invoke(this, EventArgs.Empty);
+	}
+
+	private void DisarmSilenceHint()
+	{
+		_silenceTimer.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+		SilenceHint = false;
 	}
 
 	private void OnElapsedTick()
@@ -219,11 +297,18 @@ public sealed class LevelOverlayController : IDisposable
 		StateChanged?.Invoke(this, EventArgs.Empty);
 	}
 
-	private void RaiseError()
+	private void RaiseError() => ShowBriefly(OverlayState.Error);
+
+	// The recording ended with no audio at all: say so on the pill for a few seconds (WHISPER-144).
+	private void RaiseNoAudio() => ShowBriefly(OverlayState.NoAudio);
+
+	// Show a dictation outcome (an error, or no audio) on the pill, then dismiss it on its own timer.
+	private void ShowBriefly(OverlayState state)
 	{
-		State = OverlayState.Error;
+		State = state;
 		NearCap = false;
 		_elapsedTimer.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+		DisarmSilenceHint();
 		ResetLevel();
 
 		SetVisible(true);
@@ -236,7 +321,7 @@ public sealed class LevelOverlayController : IDisposable
 
 	private void OnErrorDismissed()
 	{
-		if (State != OverlayState.Error)
+		if (State is not (OverlayState.Error or OverlayState.NoAudio))
 		{
 			return;
 		}
@@ -262,7 +347,7 @@ public sealed class LevelOverlayController : IDisposable
 
 		_isWarming = isWarming;
 
-		if (IsVisible && State is OverlayState.Recording or OverlayState.Transcribing or OverlayState.Error)
+		if (IsVisible && State is OverlayState.Recording or OverlayState.Transcribing or OverlayState.Error or OverlayState.NoAudio)
 		{
 			return;
 		}
@@ -350,5 +435,6 @@ public sealed class LevelOverlayController : IDisposable
 		_audioSource.FrameAvailable -= OnFrameAvailable;
 		_elapsedTimer.Dispose();
 		_dismissTimer.Dispose();
+		_silenceTimer.Dispose();
 	}
 }

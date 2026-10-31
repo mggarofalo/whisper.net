@@ -19,4 +19,8 @@ public enum OverlayState
 	/// <summary>The dictation model is warming up; shown while the warm-up runs, until it
 	/// clears. A background state — any active recording/transcribing/error takes precedence over it.</summary>
 	Warming,
+
+	/// <summary>The last recording held no audio at all (usually a muted microphone), so nothing was
+	/// transcribed; shown briefly with a message, then dismissed like an error.</summary>
+	NoAudio,
 }

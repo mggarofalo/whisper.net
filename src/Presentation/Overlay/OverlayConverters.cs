@@ -27,7 +27,7 @@ public sealed class OverlayStateToBrushConverter : IValueConverter
 			{
 				OverlayState.Transcribing => Transcribing,
 				OverlayState.Error => Error,
-				OverlayState.Warming => Warming,
+				OverlayState.Warming or OverlayState.NoAudio => Warming,
 				_ => Recording,
 			}
 			: Recording;
@@ -41,6 +41,17 @@ public sealed class OverlayStateToBrushConverter : IValueConverter
 		brush.Freeze();
 		return brush;
 	}
+}
+
+// The message line is shown only when there is something to say (the muted-mic hint or the
+// no-audio message), so the pill keeps its compact one-row footprint the rest of the time.
+public sealed class MessageToVisibilityConverter : IValueConverter
+{
+	public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+		value is string { Length: > 0 } ? Visibility.Visible : Visibility.Collapsed;
+
+	public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+		throw new NotSupportedException();
 }
 
 // The meter's colour: amber once the recording nears the duration cap, green otherwise.
@@ -83,6 +94,7 @@ public sealed class OverlayStateToNameConverter : IValueConverter
 				OverlayState.Transcribing => "Transcribing",
 				OverlayState.Error => "Dictation error",
 				OverlayState.Warming => "Warming up the model",
+				OverlayState.NoAudio => "No audio detected",
 				_ => "Recording",
 			}
 			: "Recording";
@@ -103,11 +115,12 @@ public sealed class WarmingToVisibilityConverter : IValueConverter
 }
 
 // The level meter is hidden while warming — there is no input level to show before a
-// recording — so the pill collapses to the dot + the "Warming up…" label; it is shown for every other state.
+// recording — so the pill collapses to the dot + the "Warming up…" label. It is also hidden for the
+// no-audio outcome, where the message line says what happened; it is shown for every other state.
 public sealed class MeterVisibilityConverter : IValueConverter
 {
 	public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
-		value is OverlayState.Warming ? Visibility.Collapsed : Visibility.Visible;
+		value is OverlayState.Warming or OverlayState.NoAudio ? Visibility.Collapsed : Visibility.Visible;
 
 	public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
 		throw new NotSupportedException();

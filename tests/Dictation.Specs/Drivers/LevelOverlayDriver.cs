@@ -137,6 +137,30 @@ public sealed class LevelOverlayDriver : IDisposable
 
 	public void AssertPresentRequestCount(int expected) => _presentRequests.Should().Be(expected);
 
+	// --- the muted-mic hint ---
+
+	// Capture constant-amplitude frames for the given span, one frame per 100 ms of the scenario's manual
+	// clock, so the silence timer and the frame-driven speech detection interleave as they would live.
+	public void CaptureFor(int seconds, float amplitude)
+	{
+		for (int tick = 0; tick < seconds * 10; tick++)
+		{
+			EmitFrameAt(amplitude);
+			_time.Advance(TimeSpan.FromMilliseconds(100));
+		}
+	}
+
+	// The orchestrator's order for a silent recording: stop -> Transcribing, the delivery reports NoAudio and
+	// the no-audio signal is published, then the pipeline completes back to Idle.
+	public void EndWithNoAudio()
+	{
+		_stateMachine.RequestStop();
+		_messenger.Send(new DictationNoAudioMessage());
+		_stateMachine.CompleteTranscription();
+	}
+
+	public void AssertMessage(string? expected) => _controller.Message.Should().Be(expected);
+
 	// --- the window's on-screen read-back, judged by the pure verdict the overlay logs ---
 
 	public void ReadBackScreenState(string condition)

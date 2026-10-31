@@ -8,6 +8,7 @@ using System;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
+using Application.Dictation;
 using Application.Display;
 using Application.Models;
 using Application.Ports;
@@ -48,6 +49,31 @@ public sealed class OverlayViewSmokeTests
 		// clip the right edge; still a compact pill, not a panel.
 		content.DesiredSize.Width.Should().BeInRange(160, 240, "the overlay keeps its compact width");
 		content.DesiredSize.Height.Should().BeInRange(20, 48, "the overlay stays a compact pill, not a panel");
+	});
+
+	// WHISPER-144: the message line binds cleanly and, when shown, wraps inside the pill's fixed width —
+	// the pill grows a line taller rather than widening into a panel.
+	[Fact]
+	public void Overlay_message_line_binds_and_wraps_within_the_pill() => StaThread.Run(() =>
+	{
+		using BindingErrorCollector bindingErrors = new();
+		WeakReferenceMessenger messenger = new();
+		using LevelOverlayController controller = new(new RecordingStateMachine(), new StubAudioSource(), messenger, TimeProvider.System);
+		using LevelOverlayViewModel viewModel = new(controller, new InlineDispatcher());
+
+		messenger.Send(new DictationNoAudioMessage());
+		viewModel.Message.Should().Be(LevelOverlayController.NoAudioMessage);
+
+		FrameworkElement content = LevelOverlay.BuildContent();
+		content.DataContext = viewModel;
+		content.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+		content.Arrange(new Rect(content.DesiredSize));
+		content.UpdateLayout();
+		FlushDispatcherQueue();
+
+		bindingErrors.Errors.Should().BeEmpty();
+		content.DesiredSize.Width.Should().BeInRange(160, 240, "the message wraps instead of widening the pill");
+		content.DesiredSize.Height.Should().BeInRange(48, 96, "the message adds a line or two, not a panel");
 	});
 
 	// The durable-fix reproduction (WHISPER-139): construct the REAL overlay window and drive it through a
