@@ -14,6 +14,11 @@
 #  AC9 the Home vs Model active-model disagreement -> SettingsWriteIsolation.feature
 #  AC10 Download / Copy / Select / Refresh use shared Fluent icons; icon-only buttons stay accessible
 #         -> "Buttons use one shared, accessible icon set"
+#  WHISPER-147 AC1 Download / Cancel / Copy (and Select) are icon-only, accessible -> "Row actions are icons only"
+#                                                                                   + "...shared, accessible icon set"
+#  WHISPER-147 AC2 distinct select / selected icons in one slot                    -> "Selecting a model and the selected..."
+#  WHISPER-147 AC3 shared glyphs, implicit Fluent button style                     -> "...shared, accessible icon set"
+#                                                                                   (no keyed button Style: review)
 #  The rendered look in light and dark is verified by before/after screenshots in the PR (manual).
 
 @WHISPER-142
@@ -46,6 +51,14 @@ Feature: The settings pages share one theme-aware design system
   Scenario: Buttons use one shared, accessible icon set
     Then the Refresh, Download, Copy and Select buttons take their icons from the shared Fluent glyphs
     And every icon-only button has a tooltip and an accessible name
+
+  @WHISPER-147
+  Scenario: Row actions are icons only
+    Then the Download, Cancel, Select and Copy row actions are icon-only buttons
+
+  @WHISPER-147
+  Scenario: Selecting a model and the selected model use different icons
+    Then a selectable model and the selected model show different icons in the same slot
 
   Scenario: List rows are announced by their content
     Then the History, Home and Model list rows expose their content as the automation name
