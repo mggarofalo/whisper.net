@@ -256,6 +256,13 @@ public static class TestDependencies
 		// reload. Applying it to WPF's ThemeMode is the App's job and a manual remainder.
 		services.AddScoped<ThemeSwitcherDriver>();
 
+		// Settings design system (WHISPER-142): inspects the shell XAML for the shared tokens, title/nav
+		// parity, scrollbar gutter, window minimum size and row automation names. Write isolation drives the
+		// real section view-models over a round-tripping store to prove a section's change never reverts
+		// another field (the Home vs Model active-model disagreement).
+		services.AddScoped<SettingsDesignSystemDriver>();
+		services.AddScoped<SettingsWriteIsolationDriver>();
+
 		// View resolution convention: inspects the documented standard, the shell's implicit
 		// DataTemplates (against the real registered sections), and the code-behind discipline; the commit
 		// decision that moved out of the device view's code-behind is driven via the picker driver.

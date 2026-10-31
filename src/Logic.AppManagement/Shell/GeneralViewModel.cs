@@ -114,7 +114,12 @@ public sealed partial class GeneralViewModel : FeatureViewModel
 		}
 
 		_settings = _settings with { OverlayMonitorDeviceName = value };
-		_ = _mediator.Send(new UpdateSettingsCommand(_settings));
+		_ = PersistOverlayMonitorAsync(value);
 		OnPropertyChanged(nameof(CommittedOverlayMonitor));
 	}
+
+	// Re-read before writing so the overlay pick never reverts a field changed elsewhere since this
+	// section loaded (WHISPER-142).
+	private async Task PersistOverlayMonitorAsync(string? value) =>
+		_settings = await SettingsWriter.UpdateAsync(_mediator, current => current with { OverlayMonitorDeviceName = value });
 }

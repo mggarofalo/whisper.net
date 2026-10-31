@@ -62,7 +62,11 @@ public sealed partial class StatsViewModel : FeatureViewModel
 
 	/// <summary>Estimated typing time saved, derived by the Application layer from the word count.</summary>
 	[ObservableProperty]
+	[NotifyPropertyChangedFor(nameof(EstimatedTimeSavedText))]
 	private TimeSpan _estimatedTimeSaved;
+
+	/// <summary>The time saved for display, e.g. "4h 23m" (WHISPER-142).</summary>
+	public string EstimatedTimeSavedText => TimeSavedFormatter.Format(EstimatedTimeSaved);
 
 	// Auto-load the totals on first activation: the dashboard opens populated, the cached
 	// instance does not re-query on later tab switches, and Refresh stays the manual re-query.

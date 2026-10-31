@@ -6,46 +6,54 @@
              sees the view's own resources and the Application, and the smoke harness composes without one. -->
         <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
     </UserControl.Resources>
-    <StackPanel Margin="24">
-        <StackPanel Orientation="Horizontal"
-                    Margin="0,0,0,16">
-            <TextBlock Text="Usage"
-                       FontSize="18"
-                       FontWeight="SemiBold"
-                       VerticalAlignment="Center" />
-            <Button Content="Refresh"
-                    Command="{Binding RefreshCommand}"
-                    Margin="16,0,0,0"
-                    Padding="12,4" />
+    <!-- Typography, spacing and colour come from the shared tokens in ShellResources.xaml (WHISPER-142); the
+         figures use the same StatValue/Caption pair as Home's usage block. -->
+    <StackPanel Margin="{DynamicResource PageMargin}">
+        <!-- Page header: the title alone on the left, the page command on the right. -->
+        <Grid Margin="{DynamicResource PageHeaderMargin}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="Stats"
+                       Style="{DynamicResource PageTitle}" />
             <!-- Lightweight loading state: visible while the activation-triggered load runs. -->
-            <TextBlock Text="Loading…"
-                       Opacity="0.7"
-                       Margin="16,0,0,0"
+            <TextBlock Grid.Column="1"
+                       Text="Loading…"
+                       Style="{DynamicResource CaptionText}"
+                       Margin="0,0,8,0"
                        VerticalAlignment="Center"
                        Visibility="{Binding RefreshCommand.IsRunning, Converter={StaticResource BoolToVisibility}}" />
-        </StackPanel>
+            <Button Grid.Column="2"
+                    Content="{DynamicResource GlyphRefresh}"
+                    FontFamily="{DynamicResource IconFont}"
+                    Background="Transparent"
+                    BorderBrush="Transparent"
+                    Padding="8"
+                    ToolTip="Refresh stats"
+                    AutomationProperties.Name="Refresh stats"
+                    Command="{Binding RefreshCommand}" />
+        </Grid>
 
         <UniformGrid Columns="3">
             <StackPanel>
                 <TextBlock Text="{Binding TotalTranscriptions}"
-                           FontSize="28"
-                           FontWeight="Bold" />
-                <TextBlock Text="Transcriptions"
-                           Opacity="0.7" />
+                           Style="{DynamicResource StatValue}" />
+                <TextBlock Text="transcriptions"
+                           Style="{DynamicResource CaptionText}" />
             </StackPanel>
             <StackPanel>
                 <TextBlock Text="{Binding TotalWords}"
-                           FontSize="28"
-                           FontWeight="Bold" />
-                <TextBlock Text="Words"
-                           Opacity="0.7" />
+                           Style="{DynamicResource StatValue}" />
+                <TextBlock Text="words"
+                           Style="{DynamicResource CaptionText}" />
             </StackPanel>
             <StackPanel>
-                <TextBlock Text="{Binding EstimatedTimeSaved, StringFormat='{}{0:hh\\:mm\\:ss}'}"
-                           FontSize="28"
-                           FontWeight="Bold" />
-                <TextBlock Text="Est. time saved"
-                           Opacity="0.7" />
+                <TextBlock Text="{Binding EstimatedTimeSavedText}"
+                           Style="{DynamicResource StatValue}" />
+                <TextBlock Text="time saved"
+                           Style="{DynamicResource CaptionText}" />
             </StackPanel>
         </UniformGrid>
     </StackPanel>

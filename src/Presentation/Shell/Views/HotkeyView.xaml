@@ -5,25 +5,26 @@
              xmlns:behaviors="clr-namespace:Presentation.Behaviors"
              xmlns:controls="clr-namespace:Presentation.Shell.Controls"
              KeyboardNavigation.TabNavigation="Local">
-    <!-- AdornerDecorator so the validated chord field renders its native error adorner. -->
+    <!-- AdornerDecorator so the validated chord field renders its native error adorner. Typography,
+         spacing and colour come from the shared tokens in ShellResources.xaml (WHISPER-142). -->
     <AdornerDecorator>
-        <StackPanel Margin="24">
-            <TextBlock Text="Dictation hotkey"
-                       FontSize="18"
-                       FontWeight="SemiBold" />
+        <StackPanel Margin="{DynamicResource PageMargin}">
+            <TextBlock Text="Hotkey"
+                       Style="{DynamicResource PageTitle}"
+                       Margin="{DynamicResource PageHeaderMargin}" />
 
-            <StackPanel Orientation="Horizontal"
-                        Margin="0,12,0,0">
+            <StackPanel Orientation="Horizontal">
                 <TextBlock Text="Current:"
+                           Style="{DynamicResource BodyText}"
                            VerticalAlignment="Center" />
                 <TextBlock Text="{Binding CurrentHotkey, TargetNullValue='(none)'}"
+                           Style="{DynamicResource FieldLabel}"
                            Margin="8,0,0,0"
-                           FontWeight="SemiBold"
                            VerticalAlignment="Center" />
             </StackPanel>
 
             <StackPanel Orientation="Horizontal"
-                        Margin="0,12,0,0">
+                        Margin="{DynamicResource GapGroup}">
                 <!-- The capture control records a pressed combination into the validated HotkeyInput, so an
                      invalid/unregisterable combo flags an adorner and the Save button (gated by
                      AssignCommand.CanExecute) disables. Press Esc/Backspace in the field to clear. The
@@ -42,10 +43,13 @@
                         Padding="12,4" />
             </StackPanel>
 
+            <TextBlock Text="Click the field, then press the key combination you want to use for dictation."
+                       Style="{DynamicResource CaptionText}"
+                       Margin="0,4,0,0" />
+
             <TextBlock Text="{Binding Error}"
-                       Foreground="#C03030"
-                       Margin="0,8,0,0"
-                       TextWrapping="Wrap" />
+                       Style="{DynamicResource ErrorText}"
+                       Margin="{DynamicResource GapTight}" />
         </StackPanel>
     </AdornerDecorator>
 </UserControl>

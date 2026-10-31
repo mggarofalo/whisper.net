@@ -9,27 +9,26 @@
         <!-- Render stored-UTC timestamps in the user's local time; storage stays UTC. -->
         <shell:UtcToLocalConverter x:Key="UtcToLocal" />
     </UserControl.Resources>
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="24">
-            <TextBlock Text="Overview"
-                       FontSize="18"
-                       FontWeight="SemiBold" />
+    <!-- Typography, spacing and colour come from the shared tokens in ShellResources.xaml (WHISPER-142).
+         The shared scroll style reserves a right gutter so the overlay scrollbar never covers content. -->
+    <ScrollViewer Style="{DynamicResource ContentScrollViewer}">
+        <StackPanel Margin="{DynamicResource PageMargin}">
+            <TextBlock Text="Home"
+                       Style="{DynamicResource PageTitle}"
+                       Margin="{DynamicResource PageHeaderMargin}" />
 
             <!-- Model warm-up status: a status line shown while the dictation model is warming
-                 up, lifted by the app-wide cleared event so it never lingers. Amber to match the overlay cue. -->
-            <Border Background="#1FFB8C00"
-                    BorderBrush="#FB8C00"
-                    BorderThickness="1"
-                    CornerRadius="4"
-                    Padding="10,6"
-                    Margin="0,12,0,0"
+                 up, lifted by the app-wide cleared event so it never lingers. Caution colours to match the
+                 overlay cue. -->
+            <Border Style="{DynamicResource CautionBanner}"
+                    Margin="0,0,0,16"
                     Visibility="{Binding IsModelWarming, Converter={StaticResource BoolToVisibility}}">
                 <TextBlock Text="Warming up the model so your first dictation is fast…"
-                           TextWrapping="Wrap" />
+                           Style="{DynamicResource BodyText}" />
             </Border>
 
             <!-- Current configuration at a glance: live from settings. -->
-            <Grid Margin="0,16,0,0">
+            <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
@@ -40,71 +39,64 @@
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="Model" Opacity="0.7" Margin="0,0,16,4" />
-                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding ActiveModel, TargetNullValue='(none)'}" Margin="0,0,0,4" />
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Model" Style="{DynamicResource CaptionText}" VerticalAlignment="Center" Margin="0,0,16,4" />
+                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding ActiveModel, TargetNullValue='(none)'}" Style="{DynamicResource BodyText}" Margin="0,0,0,4" />
 
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="Hotkey" Opacity="0.7" Margin="0,0,16,4" />
-                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Hotkey, TargetNullValue='(none)'}" Margin="0,0,0,4" />
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Hotkey" Style="{DynamicResource CaptionText}" VerticalAlignment="Center" Margin="0,0,16,4" />
+                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Hotkey, TargetNullValue='(none)'}" Style="{DynamicResource BodyText}" Margin="0,0,0,4" />
 
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="Input device" Opacity="0.7" Margin="0,0,16,4" />
-                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding InputDevice, TargetNullValue='(none)'}" Margin="0,0,0,4" />
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Input device" Style="{DynamicResource CaptionText}" VerticalAlignment="Center" Margin="0,0,16,4" />
+                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding InputDevice, TargetNullValue='(none)'}" Style="{DynamicResource BodyText}" Margin="0,0,0,4" />
             </Grid>
 
-            <!-- Headline usage totals: computed by the Application layer, not here. -->
+            <!-- Headline usage totals: computed by the Application layer, not here; the time-saved text is
+                 formatted by the view-model ("4h 23m"). -->
             <TextBlock Text="Usage"
-                       FontSize="14"
-                       FontWeight="SemiBold"
-                       Margin="0,20,0,0" />
-            <StackPanel Orientation="Horizontal"
-                        Margin="0,8,0,0">
+                       Style="{DynamicResource SectionHeader}" />
+            <StackPanel Orientation="Horizontal">
                 <StackPanel Margin="0,0,32,0">
                     <TextBlock Text="{Binding TotalTranscriptions}"
-                               FontSize="22"
-                               FontWeight="SemiBold" />
+                               Style="{DynamicResource StatValue}" />
                     <TextBlock Text="transcriptions"
-                               Opacity="0.7"
-                               FontSize="11" />
+                               Style="{DynamicResource CaptionText}" />
                 </StackPanel>
                 <StackPanel Margin="0,0,32,0">
                     <TextBlock Text="{Binding TotalWords}"
-                               FontSize="22"
-                               FontWeight="SemiBold" />
+                               Style="{DynamicResource StatValue}" />
                     <TextBlock Text="words"
-                               Opacity="0.7"
-                               FontSize="11" />
+                               Style="{DynamicResource CaptionText}" />
                 </StackPanel>
                 <StackPanel>
-                    <TextBlock Text="{Binding EstimatedTimeSaved, StringFormat='{}{0:hh\\:mm\\:ss}'}"
-                               FontSize="22"
-                               FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding EstimatedTimeSavedText}"
+                               Style="{DynamicResource StatValue}" />
                     <TextBlock Text="time saved"
-                               Opacity="0.7"
-                               FontSize="11" />
+                               Style="{DynamicResource CaptionText}" />
                 </StackPanel>
             </StackPanel>
 
             <!-- The most recent transcriptions — a glance into History, not the full log. -->
             <TextBlock Text="Recent"
-                       FontSize="14"
-                       FontWeight="SemiBold"
-                       Margin="0,20,0,0" />
+                       Style="{DynamicResource SectionHeader}" />
             <TextBlock Text="No transcriptions yet."
-                       Opacity="0.7"
-                       Margin="0,8,0,0"
+                       Style="{DynamicResource CaptionText}"
                        Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisibility}}" />
-            <ItemsControl ItemsSource="{Binding Recent}"
-                          Margin="0,8,0,0">
+            <ItemsControl ItemsSource="{Binding Recent}">
+                <!-- Each row's automation name is the transcript itself, so a screen reader reads the text
+                     rather than the entry DTO's ToString (an id GUID and every field). -->
+                <ItemsControl.ItemContainerStyle>
+                    <Style TargetType="ContentPresenter">
+                        <Setter Property="AutomationProperties.Name"
+                                Value="{Binding Text}" />
+                    </Style>
+                </ItemsControl.ItemContainerStyle>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Border BorderBrush="#40808080"
-                                BorderThickness="0,0,0,1"
-                                Padding="0,6">
+                        <Border Style="{DynamicResource ListRow}">
                             <StackPanel>
                                 <TextBlock Text="{Binding CreatedAt, Converter={StaticResource UtcToLocal}, StringFormat='{}{0:g}'}"
-                                           Opacity="0.6"
-                                           FontSize="11" />
+                                           Style="{DynamicResource CaptionText}" />
                                 <TextBlock Text="{Binding Text}"
-                                           TextWrapping="Wrap"
+                                           Style="{DynamicResource BodyText}"
                                            Margin="0,2,0,0" />
                             </StackPanel>
                         </Border>
