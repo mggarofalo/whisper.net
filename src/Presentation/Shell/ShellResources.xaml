@@ -31,7 +31,10 @@
         </StackPanel>
     </ControlTemplate>
 
-    <Style TargetType="TextBox">
+    <!-- BasedOn keeps the Fluent TextBox look (template, theme brushes): without it this implicit style
+         replaces the Fluent one and every TextBox falls back to the classic white box, unreadable in dark. -->
+    <Style TargetType="TextBox"
+           BasedOn="{StaticResource {x:Type TextBox}}">
         <Setter Property="Validation.ErrorTemplate"
                 Value="{StaticResource ValidationErrorTemplate}" />
         <Style.Triggers>
@@ -257,6 +260,9 @@
     <sys:String x:Key="GlyphCopy">&#xE8C8;</sys:String>
     <sys:String x:Key="GlyphSelect">&#xE73E;</sys:String>
     <sys:String x:Key="GlyphCancel">&#xE711;</sys:String>
+    <sys:String x:Key="GlyphSearch">&#xE721;</sys:String>
+    <sys:String x:Key="GlyphPrevious">&#xE76B;</sys:String>
+    <sys:String x:Key="GlyphNext">&#xE76C;</sys:String>
 
     <!-- The icon half of an icon + label button. -->
     <Style x:Key="ButtonGlyph"

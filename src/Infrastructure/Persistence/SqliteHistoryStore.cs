@@ -1,5 +1,6 @@
 // SQLite-backed implementation of the IHistoryStore port: appends completed transcriptions
-// and reads them back newest-first, optionally bounded by an inclusive date range and/or a maximum count.
+// and reads them back newest-first, optionally bounded by an inclusive date range and/or a maximum count,
+// or a page at a time filtered by a case-insensitive text search (with the total match count).
 // Each entry's timestamp is stored twice — the original DateTimeOffset as a round-trip ("O") string for
 // lossless reload, and its UtcTicks as an integer for correct chronological ordering and range filtering
 // independent of the entry's offset. Reads fail safe to an empty history (logged) and a write failure is
@@ -86,6 +87,69 @@ public sealed class SqliteHistoryStore(SqliteDatabase database, ILogger<SqliteHi
 		}
 	}
 
+	public async ValueTask<HistoryPage> SearchAsync(
+		string? text,
+		int skip,
+		int take,
+		CancellationToken cancellationToken)
+	{
+		List<TranscriptEntry> entries = [];
+
+		try
+		{
+			await using SqliteConnection connection = await database.OpenConnectionAsync(cancellationToken);
+
+			// SQLite's LIKE/lower() only fold ASCII, so the case-insensitive match is a registered .NET function:
+			// it matches "Café" for "CAFÉ" and needs no LIKE-wildcard escaping. The filter still runs inside the
+			// query, so only the requested page (and a count) ever leaves the database.
+			connection.CreateFunction(
+				"contains_ci",
+				(string haystack, string needle) => haystack.Contains(needle, StringComparison.OrdinalIgnoreCase),
+				isDeterministic: true);
+
+			string? filter = string.IsNullOrEmpty(text) ? null : text;
+
+			int total;
+			await using (SqliteCommand count = connection.CreateCommand())
+			{
+				count.CommandText = "SELECT COUNT(*) FROM history WHERE $text IS NULL OR contains_ci(text, $text);";
+				count.Parameters.AddWithValue("$text", filter ?? (object)DBNull.Value);
+				total = Convert.ToInt32(await count.ExecuteScalarAsync(cancellationToken), CultureInfo.InvariantCulture);
+			}
+
+			if (total == 0)
+			{
+				return new HistoryPage([], 0);
+			}
+
+			await using SqliteCommand command = connection.CreateCommand();
+			command.CommandText =
+				"""
+				SELECT id, text, created_at, duration_ticks
+				FROM history
+				WHERE $text IS NULL OR contains_ci(text, $text)
+				ORDER BY created_ticks DESC
+				LIMIT $take OFFSET $skip;
+				""";
+			command.Parameters.AddWithValue("$text", filter ?? (object)DBNull.Value);
+			command.Parameters.AddWithValue("$take", Math.Max(take, 0));
+			command.Parameters.AddWithValue("$skip", Math.Max(skip, 0));
+
+			await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+			while (await reader.ReadAsync(cancellationToken))
+			{
+				entries.Add(ReadEntry(reader));
+			}
+
+			return new HistoryPage(entries, total);
+		}
+		catch (SqliteException ex)
+		{
+			logger.LogError(ex, "Failed to search transcript history; returning an empty result.");
+			return new HistoryPage([], 0);
+		}
+	}
+
 	public async ValueTask<IReadOnlyList<TranscriptEntry>> GetEntriesAsync(
 		DateTimeOffset? from,
 		DateTimeOffset? to,
@@ -116,13 +180,7 @@ public sealed class SqliteHistoryStore(SqliteDatabase database, ILogger<SqliteHi
 			await using var reader = await command.ExecuteReaderAsync(cancellationToken);
 			while (await reader.ReadAsync(cancellationToken))
 			{
-				Guid id = Guid.Parse(reader.GetString(0));
-				string text = reader.GetString(1);
-				DateTimeOffset createdAt = DateTimeOffset.Parse(
-					reader.GetString(2), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind);
-				TimeSpan audioDuration = TimeSpan.FromTicks(reader.GetInt64(3));
-
-				entries.Add(new TranscriptEntry(id, text, createdAt, audioDuration));
+				entries.Add(ReadEntry(reader));
 			}
 		}
 		catch (SqliteException ex)
@@ -132,5 +190,17 @@ public sealed class SqliteHistoryStore(SqliteDatabase database, ILogger<SqliteHi
 		}
 
 		return entries;
+	}
+
+	// Materializes one row selected as (id, text, created_at, duration_ticks).
+	private static TranscriptEntry ReadEntry(SqliteDataReader reader)
+	{
+		Guid id = Guid.Parse(reader.GetString(0));
+		string text = reader.GetString(1);
+		DateTimeOffset createdAt = DateTimeOffset.Parse(
+			reader.GetString(2), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind);
+		TimeSpan audioDuration = TimeSpan.FromTicks(reader.GetInt64(3));
+
+		return new TranscriptEntry(id, text, createdAt, audioDuration);
 	}
 }

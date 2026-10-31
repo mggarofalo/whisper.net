@@ -37,6 +37,45 @@ public sealed class HistoryBrowserSteps(HistoryBrowserDriver driver)
 	[When(@"the user chooses to copy that entry")]
 	public async Task WhenTheUserCopiesAnEntry() => await driver.CopyFirstEntry();
 
+	[Given(@"these transcriptions have been recorded, oldest first:")]
+	public void GivenTheseTranscriptions(DataTable table) => driver.StoreHasEntries(table.Rows.Select(row => row["text"]));
+
+	[Given(@"(\d+) transcriptions mention ""(.*)"" among others that do not")]
+	public void GivenTranscriptionsMention(int count, string term) => driver.StoreHasEntriesMentioning(count, term);
+
+	[When(@"the user browses to the previous page")]
+	public async Task WhenTheUserBrowsesPrevious() => await driver.BrowseToPreviousPage();
+
+	[When(@"the user searches history for ""(.*)""")]
+	public async Task WhenTheUserSearches(string text) => await driver.Search(text);
+
+	[When(@"the user clears the history search")]
+	public async Task WhenTheUserClearsTheSearch() => await driver.Search(string.Empty);
+
+	[Then(@"the history view is on page (\d+) of (\d+)")]
+	public void ThenOnPage(int page, int of) => driver.AssertOnPage(page, of);
+
+	[Then(@"the newest transcription is listed first")]
+	public void ThenNewestFirst() => driver.AssertNewestListedFirst();
+
+	[Then(@"no previous history page is offered")]
+	public void ThenNoPreviousPage() => driver.AssertNoPreviousPageOffered();
+
+	[Then(@"only these transcriptions are listed:")]
+	public void ThenOnlyTheseListed(DataTable table) => driver.AssertListed(table.Rows.Select(row => row["text"]));
+
+	[Then(@"(\d+) transcriptions are listed")]
+	public void ThenCountListed(int count) => driver.AssertListedCount(count);
+
+	[Then(@"the search was answered by the history store")]
+	public void ThenSearchAnsweredByStore() => driver.AssertSearchAnsweredByStore();
+
+	[Then(@"the history view shows that nothing matches the search")]
+	public void ThenNoMatches() => driver.AssertNoMatchesState();
+
+	[Then(@"the history view does not show the empty-history state")]
+	public void ThenNotEmptyHistory() => driver.AssertNotEmptyHistoryState();
+
 	[Then(@"the recent transcriptions are listed most-recent-first")]
 	public void ThenListedNewestFirst() => driver.AssertListedNewestFirst();
 

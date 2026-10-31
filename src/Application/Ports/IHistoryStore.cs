@@ -26,6 +26,18 @@ public interface IHistoryStore
 		CancellationToken cancellationToken);
 
 	/// <summary>
+	/// Returns one page of stored entries newest-first, skipping <paramref name="skip"/> and taking at most
+	/// <paramref name="take"/>, together with the total number of entries that match. When
+	/// <paramref name="text"/> is non-empty only entries whose text contains it (case-insensitively) match,
+	/// so the filter runs in the store rather than over every entry in memory.
+	/// </summary>
+	ValueTask<HistoryPage> SearchAsync(
+		string? text,
+		int skip,
+		int take,
+		CancellationToken cancellationToken);
+
+	/// <summary>
 	/// Enforces the retention limit by deleting all but the most recent <paramref name="maxEntries"/>
 	/// entries (by recorded time), returning the number pruned. Newer entries are never removed in
 	/// preference to older ones. A non-positive <paramref name="maxEntries"/> is a no-op (unbounded).

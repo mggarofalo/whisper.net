@@ -62,12 +62,14 @@ public static class TestDependencies
 		// null list), exactly as a fresh install would. Opening the History or Stats section triggers a
 		// load on first activation, so scenarios that merely navigate the shell — without
 		// configuring the store — must still compose a contract-respecting read. Drivers that need entries
-		// re-configure GetEntriesAsync, which overrides this default.
+		// re-configure GetEntriesAsync, which overrides this default; the History section's store-side search
+		// answers from those same seeded entries.
 		services.AddScoped(_ =>
 		{
 			IHistoryStore store = Substitute.For<IHistoryStore>();
 			store.GetEntriesAsync(Arg.Any<DateTimeOffset?>(), Arg.Any<DateTimeOffset?>(), Arg.Any<int?>(), Arg.Any<CancellationToken>())
 				.Returns(Array.Empty<Domain.History.TranscriptEntry>());
+			HistoryStoreSearchContract.AnswerSearchesFromSeededEntries(store);
 			return store;
 		});
 		services.AddScoped(_ => Substitute.For<IAuditLog>());

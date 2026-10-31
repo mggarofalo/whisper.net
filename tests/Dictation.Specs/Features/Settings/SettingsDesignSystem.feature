@@ -4,7 +4,7 @@
 #  AC2 a shared type scale + spacing tokens; secondary text uses the secondary brush, not Opacity
 #         -> "Every settings page uses the shared type scale and spacing"
 #  AC3 page titles match nav labels -> "Each page is titled with its navigation label"
-#  AC4 Refresh / Load more / status out of the title row; Load more at the bottom of History
+#  AC4 Refresh / paging / status out of the title row; paging at the bottom of History (WHISPER-146)
 #         -> "Page commands stay out of the title row"
 #  AC5 the History and Home scrollbars stop covering the row actions
 #         -> "Scrolling pages keep the scrollbar clear of their row actions"
@@ -35,7 +35,7 @@ Feature: The settings pages share one theme-aware design system
 
   Scenario: Page commands stay out of the title row
     Then no page title shares a toolbar row with its commands
-    And the History page offers "Load more" below its list
+    And the History page offers its paging controls below its list
 
   Scenario: Scrolling pages keep the scrollbar clear of their row actions
     Then the scrolling settings pages reserve a gutter for the scrollbar
