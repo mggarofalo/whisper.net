@@ -190,7 +190,9 @@ public sealed partial class SettingsDesignSystemDriver(IEnumerable<NavigationSec
 
 		foreach (string view in new[] { "ModelView", "HistoryView" })
 		{
-			Views[view].Should().NotContain("ButtonGlyph", $"{view}'s row actions no longer pair an icon with a text label");
+			// Only inside a Button: the search box's leading icon legitimately reuses the ButtonGlyph style.
+			Regex.IsMatch(Views[view], @"<Button\b[^>]*(?<!/)>(?:(?!</Button>).)*ButtonGlyph", RegexOptions.Singleline)
+				.Should().BeFalse($"{view}'s row actions no longer pair an icon with a text label");
 		}
 	}
 
