@@ -14,6 +14,14 @@
 // exists, and on every show reposition against the target monitor and force the window to the top of the
 // Z-order via an explicit HWND_TOPMOST SetWindowPos. The whole path is logged so a single dictation on a
 // user's machine reveals exactly what happened (visibility, thread, computed position, size, work area).
+//
+// WHISPER-143 hardened it further. Presenting no longer hangs off a visibility change alone: every
+// dictation asks the window to present itself, because one started while the warming pill was up changed
+// nothing visible and so never re-ran the show path. Each present also pulls the window onto the current
+// virtual desktop (a tool window is cloaked on every desktop but the one it was first shown on), then
+// reads back the NATIVE on-screen state (visible, cloaked, desktop, top-most, covered) instead of trusting
+// WPF's flag, logs that verdict, and retries once if it fails. While up, the pill re-asserts top-most and
+// follows the current desktop every second.
 
 using System;
 using System.Windows;
@@ -23,6 +31,7 @@ using System.Windows.Data;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 using Application.Display;
 using Application.Ports;
 using Logic.AppManagement;
@@ -32,17 +41,26 @@ namespace Presentation.Overlay;
 
 public sealed class LevelOverlay : IDisposable
 {
+	// How often the pill re-asserts top-most and follows the current virtual desktop while it is up.
+	private static readonly TimeSpan KeepOnTopInterval = TimeSpan.FromSeconds(1);
+
 	private readonly Window _window;
+	private readonly LevelOverlayViewModel _viewModel;
 	private readonly IMonitorCatalog _monitors;
 	private readonly ILogger<LevelOverlay> _logger;
+	private readonly DispatcherTimer _keepOnTop;
 	private string? _targetDeviceName;
 	private bool _realizing;
+	private bool _verificationPending;
 	private bool _disposed;
 
 	public LevelOverlay(LevelOverlayViewModel viewModel, IMonitorCatalog monitors, ILogger<LevelOverlay> logger)
 	{
+		_viewModel = viewModel;
 		_monitors = monitors;
 		_logger = logger;
+		_keepOnTop = new DispatcherTimer(DispatcherPriority.Background) { Interval = KeepOnTopInterval };
+		_keepOnTop.Tick += OnKeepOnTopTick;
 
 		_window = new Window
 		{
@@ -80,6 +98,9 @@ public sealed class LevelOverlay : IDisposable
 		// first-time show. Setting Visibility shows/hides the window exactly like Show()/Hide().
 		_window.SetBinding(UIElement.VisibilityProperty,
 			new Binding(nameof(LevelOverlayViewModel.IsOverlayVisible)) { Converter = new BooleanToVisibilityConverter() });
+
+		// Every dictation re-presents the pill, even when it was already visible (WHISPER-143).
+		_viewModel.PresentRequested += OnPresentRequested;
 	}
 
 	// Far outside any physical or virtual screen, so the one-time realize show is never visible.
@@ -223,24 +244,99 @@ public sealed class LevelOverlay : IDisposable
 
 		if (!_window.IsVisible)
 		{
+			_keepOnTop.Stop();
 			_logger.LogDebug("Overlay hidden.");
 			return;
 		}
 
-		string target = Reposition();
+		_keepOnTop.Start();
+		Present("shown");
+	}
 
-		// Re-assert top-most on every show: this is the durable defence against the ShowInTaskbar hidden-owner
-		// case where the overlay is visible but rendered behind the focused app.
-		nint hwnd = Handle();
-		if (hwnd != nint.Zero)
+	// The single present path (WHISPER-143), run on every show AND every time a dictation takes over the
+	// pill — a dictation started while the warming pill was up changes no visibility, so the show path alone
+	// never re-ran. Re-place against the target monitor, pull the window onto the current virtual desktop,
+	// force it to the top of the Z-order, then — once the window manager has settled — read back what is
+	// really on screen and log it. A failed check gets one corrective retry, so a miss on the user's machine
+	// is both recovered where possible and explained in the log.
+	private void Present(string reason)
+	{
+		if (_realizing || _disposed || !_window.IsVisible)
 		{
-			OverlayWindowInterop.BringToTopmost(hwnd);
+			return;
 		}
 
-		_logger.LogInformation(
-			"Overlay shown: placed at ({Left},{Top}), size {Width}x{Height}, target {Target}, hwnd {Hwnd}.",
-			_window.Left, _window.Top, _window.ActualWidth, _window.ActualHeight, target, hwnd);
+		nint hwnd = Handle();
+		string target = Reposition();
+		if (hwnd == nint.Zero)
+		{
+			_logger.LogWarning("Overlay present ({Reason}) skipped: no window handle.", reason);
+			return;
+		}
+
+		bool? movedDesktop = OverlayWindowInterop.MoveToCurrentDesktop(hwnd);
+		OverlayWindowInterop.BringToTopmost(hwnd);
+
+		// The show and the dictation's present request usually arrive back to back; one verification covers
+		// both, so a single dictation logs a single verdict.
+		if (_verificationPending)
+		{
+			return;
+		}
+
+		_verificationPending = true;
+		_ = _window.Dispatcher.BeginInvoke(DispatcherPriority.ContextIdle, () => Verify(reason, target, hwnd, movedDesktop, retried: false));
 	}
+
+	private void Verify(string reason, string target, nint hwnd, bool? movedDesktop, bool retried)
+	{
+		if (_disposed || !_window.IsVisible)
+		{
+			_verificationPending = false;
+			return; // hidden again before the check ran (a very short dictation); nothing to verify.
+		}
+
+		OverlayScreenState state = OverlayWindowInterop.ReadScreenState(hwnd);
+		if (state.IsOnScreen || retried)
+		{
+			_verificationPending = false;
+			_logger.Log(
+				state.IsOnScreen ? LogLevel.Information : LogLevel.Warning,
+				"Overlay shown ({Reason}): placed at ({Left},{Top}), size {Width}x{Height}, target {Target}, hwnd {Hwnd}, moved desktop {MovedDesktop}; on-screen check: {Verdict}{Retry}. {State}",
+				reason, _window.Left, _window.Top, _window.ActualWidth, _window.ActualHeight, target, hwnd,
+				movedDesktop?.ToString() ?? "unknown", state.Reason, retried ? " after a retry" : string.Empty, state);
+			return;
+		}
+
+		// One corrective retry: pull it onto this desktop again, force it on top and ask the window manager to
+		// show it — without touching WPF's data-bound Visibility — then re-check.
+		_logger.LogWarning("Overlay present ({Reason}) failed its on-screen check ({Verdict}); retrying. {State}", reason, state.Reason, state);
+		bool? movedOnRetry = OverlayWindowInterop.MoveToCurrentDesktop(hwnd);
+		OverlayWindowInterop.ForceShowTopmost(hwnd);
+		_ = _window.Dispatcher.BeginInvoke(DispatcherPriority.ContextIdle, () => Verify(reason, target, hwnd, movedOnRetry, retried: true));
+	}
+
+	// While the pill is up, keep it on top and on the current virtual desktop: another top-most window (a
+	// full-screen app, a game, a screen-share bar) can claim the top after the show, and switching desktops
+	// mid-recording would otherwise strand the pill on the old one. Cheap, non-activating, logged only when
+	// it actually had to move the window.
+	private void OnKeepOnTopTick(object? sender, EventArgs e)
+	{
+		nint hwnd = Handle();
+		if (_disposed || !_window.IsVisible || hwnd == nint.Zero)
+		{
+			return;
+		}
+
+		if (OverlayWindowInterop.MoveToCurrentDesktop(hwnd) == true)
+		{
+			_logger.LogInformation("Overlay followed the user to the current virtual desktop.");
+		}
+
+		OverlayWindowInterop.BringToTopmost(hwnd);
+	}
+
+	private void OnPresentRequested(object? sender, EventArgs e) => Present("dictation");
 
 	/// <summary>
 	/// Point the overlay at a configured display (by device name; null = follow the primary). Called from the
@@ -327,6 +423,9 @@ public sealed class LevelOverlay : IDisposable
 		}
 
 		_disposed = true;
+		_keepOnTop.Stop();
+		_keepOnTop.Tick -= OnKeepOnTopTick;
+		_viewModel.PresentRequested -= OnPresentRequested;
 		_window.SourceInitialized -= OnSourceInitialized;
 		_window.IsVisibleChanged -= OnVisibleChanged;
 		_window.SizeChanged -= OnSizeChanged;

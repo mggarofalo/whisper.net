@@ -47,7 +47,18 @@ public sealed partial class LevelOverlayViewModel : ObservableObject, IDisposabl
 		_controller.LevelChanged += OnLevelChanged;
 		_controller.StateChanged += OnStateChanged;
 		_controller.ElapsedChanged += OnElapsedChanged;
+		_controller.PresentRequested += OnPresentRequested;
 	}
+
+	/// <summary>
+	/// Raised on the UI thread every time a dictation takes over the pill, so the window re-presents and
+	/// verifies itself even when its visibility did not change (WHISPER-143). Ordered after the visibility
+	/// update the same controller action posted, so the window is already shown when this arrives.
+	/// </summary>
+	public event EventHandler? PresentRequested;
+
+	private void OnPresentRequested(object? sender, EventArgs e) =>
+		RunOnUiThread(() => PresentRequested?.Invoke(this, EventArgs.Empty));
 
 	private void OnVisibilityChanged(object? sender, EventArgs e) =>
 		RunOnUiThread(() => IsOverlayVisible = _controller.IsVisible);
@@ -85,5 +96,6 @@ public sealed partial class LevelOverlayViewModel : ObservableObject, IDisposabl
 		_controller.LevelChanged -= OnLevelChanged;
 		_controller.StateChanged -= OnStateChanged;
 		_controller.ElapsedChanged -= OnElapsedChanged;
+		_controller.PresentRequested -= OnPresentRequested;
 	}
 }

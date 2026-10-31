@@ -42,13 +42,17 @@ public sealed class LevelOverlayViewModelTests
 	public void Posts_visibility_and_level_updates_when_off_the_ui_thread()
 	{
 		_dispatcher.IsOnUiThread = false;
+		bool visibleWhenPresentArrived = false;
+		_viewModel.PresentRequested += (_, _) => visibleWhenPresentArrived = _viewModel.IsOverlayVisible;
 
 		_stateMachine.RequestStart();
 		EmitFrame(0.5f);
 
-		// Starting recording marshals visibility, state, and the initial elapsed update; the frame marshals
-		// the level — four Posts, never a blocking InvokeAsync.
-		_dispatcher.PostCount.Should().Be(4);
+		// Starting recording marshals visibility, state, the initial elapsed update and the present request;
+		// the frame marshals the level — five Posts, never a blocking InvokeAsync. The present request is
+		// posted after the visibility update, so the window is already shown when it re-presents itself.
+		_dispatcher.PostCount.Should().Be(5);
+		visibleWhenPresentArrived.Should().BeTrue();
 		_dispatcher.InvokeAsyncCount.Should().Be(0, "per-frame updates must never block the audio thread");
 		_viewModel.IsOverlayVisible.Should().BeTrue();
 		_viewModel.State.Should().Be(OverlayState.Recording);

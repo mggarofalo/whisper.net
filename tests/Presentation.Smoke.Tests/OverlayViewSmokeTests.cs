@@ -15,6 +15,7 @@ using AwesomeAssertions;
 using CommunityToolkit.Mvvm.Messaging;
 using Domain.Audio;
 using Logic.AppManagement;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using Presentation.Overlay;
@@ -85,6 +86,49 @@ public sealed class OverlayViewSmokeTests
 		bindingErrors.Errors.Should().BeEmpty(
 			"the overlay window must bind cleanly through a real realize/show/hide cycle");
 	});
+
+	// WHISPER-143: a dictation started over the already-visible warming pill must run the full native
+	// present path — desktop move, top-most, the deferred on-screen read-back and its log — on the real
+	// window without throwing. Whether the read-back passes depends on the desktop the tests run on, so the
+	// smoke asserts that a verdict was logged, not which one.
+	[Fact]
+	public void A_dictation_over_the_warming_pill_presents_and_verifies_the_real_window() => StaThread.Run(() =>
+	{
+		WeakReferenceMessenger messenger = new();
+		RecordingStateMachine stateMachine = new();
+		using LevelOverlayController controller = new(stateMachine, new StubAudioSource(), messenger, TimeProvider.System);
+		using LevelOverlayViewModel viewModel = new(controller, new InlineDispatcher());
+		IMonitorCatalog monitors = Substitute.For<IMonitorCatalog>();
+		monitors.GetMonitors().Returns([new MonitorInfo("\\\\.\\DISPLAY1", "Primary display (1920 × 1080)", true, 0, 0, 1920, 1040)]);
+		CapturingLogger<LevelOverlay> logger = new();
+		using LevelOverlay overlay = new(viewModel, monitors, logger);
+
+		messenger.Send(new ModelWarmupChangedMessage(true));
+		FlushDispatcherQueue();
+		int verdictsBefore = logger.Messages.Count(m => m.Contains("on-screen check", StringComparison.Ordinal));
+
+		stateMachine.RequestStart();
+		FlushDispatcherQueue();
+		FlushDispatcherQueue(); // a failed check retries once on a later idle pass
+
+		logger.Messages.Count(m => m.Contains("Overlay shown (dictation)", StringComparison.Ordinal))
+			.Should().Be(1, "the dictation re-presented the already-visible pill and logged its on-screen verdict");
+		logger.Messages.Count(m => m.Contains("on-screen check", StringComparison.Ordinal))
+			.Should().BeGreaterThan(verdictsBefore);
+	});
+
+	private sealed class CapturingLogger<T> : ILogger<T>
+	{
+		public List<string> Messages { get; } = [];
+
+		public IDisposable? BeginScope<TState>(TState state)
+			where TState : notnull => null;
+
+		public bool IsEnabled(LogLevel logLevel) => true;
+
+		public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter) =>
+			Messages.Add(formatter(state, exception));
+	}
 
 	private static void FlushDispatcherQueue()
 	{

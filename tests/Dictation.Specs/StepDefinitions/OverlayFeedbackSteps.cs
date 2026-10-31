@@ -39,4 +39,28 @@ public sealed class OverlayFeedbackSteps(LevelOverlayDriver driver)
 
 	[Then(@"the overlay is still visible")]
 	public void ThenStillVisible() => driver.AssertVisible();
+
+	[Given(@"the model is warming up so the overlay shows the warming pill")]
+	public void GivenWarmingPill() => driver.ShowWarmingPill();
+
+	[When(@"a dictation recording starts")]
+	public void WhenRecordingStarts() => driver.BeginRecording();
+
+	[Given(@"the recording finishes and the overlay returns to rest")]
+	public void GivenRecordingFinishes() => driver.FinishRecording();
+
+	[Then(@"the overlay is asked to present itself on screen")]
+	public void ThenPresentRequested() => driver.AssertPresentRequestedByLastAction();
+
+	[Then(@"the overlay has been asked to present itself (\d+) times")]
+	public void ThenPresentRequestedTimes(int times) => driver.AssertPresentRequestCount(times);
+
+	[Given(@"the overlay window reads back as (.*)")]
+	public void GivenScreenState(string condition) => driver.ReadBackScreenState(condition);
+
+	[Then(@"the overlay is judged (.*)")]
+	public void ThenJudged(string verdict) => driver.AssertJudged(verdict == "on screen");
+
+	[Then(@"the on-screen check reports ""(.*)""")]
+	public void ThenCheckReports(string reason) => driver.AssertScreenCheckReason(reason);
 }
