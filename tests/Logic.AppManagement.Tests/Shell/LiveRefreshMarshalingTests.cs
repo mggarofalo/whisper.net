@@ -1,4 +1,4 @@
-// Regression test for WHISPER-138: the live transcription-recorded refresh on Home and Stats MUST be
+// Regression test for WHISPER-138: the live transcription-recorded refresh on Home MUST be
 // marshalled to the UI thread. TranscriptionRecordedMessage is published on the record/background thread;
 // running RefreshCommand there raises AsyncRelayCommand.CanExecuteChanged on the wrong thread, which a
 // bound Refresh button (settings window open) surfaces as a cross-thread InvalidOperationException. These
@@ -37,19 +37,6 @@ public sealed class LiveRefreshMarshalingTests
 
 	private static TranscriptEntryDto Entry() =>
 		new(Guid.NewGuid(), "just dictated", new DateTimeOffset(2026, 1, 1, 9, 0, 0, TimeSpan.Zero), WordCount: 2);
-
-	[Fact]
-	public void Stats_marshals_the_live_refresh_off_the_publishing_thread()
-	{
-		IMessenger messenger = new WeakReferenceMessenger();
-		RecordingDispatcher dispatcher = new();
-		StatsViewModel viewModel = new(Substitute.For<IMediator>(), messenger, dispatcher);
-
-		messenger.Send(new TranscriptionRecordedMessage(Entry()));
-
-		dispatcher.PostCount.Should().Be(1, "the refresh must be posted to the UI thread, not run on the record thread");
-		GC.KeepAlive(viewModel);
-	}
 
 	[Fact]
 	public void Home_marshals_the_live_refresh_off_the_publishing_thread()

@@ -88,14 +88,12 @@ public static class AppManagementServiceCollectionExtensions
 		services.AddSingleton(new Shell.NavigationSection("Hotkey", typeof(Shell.HotkeyViewModel)));
 		services.AddSingleton(new Shell.NavigationSection("General", typeof(Shell.GeneralViewModel)));
 		services.AddSingleton(new Shell.NavigationSection("History", typeof(Shell.HistoryViewModel)));
-		services.AddSingleton(new Shell.NavigationSection("Stats", typeof(Shell.StatsViewModel)));
 		services.AddScoped<Shell.HomeViewModel>();
 		services.AddScoped<Shell.ModelViewModel>();
 		services.AddScoped<Shell.AudioDeviceViewModel>();
 		services.AddScoped<Shell.HotkeyViewModel>();
 		services.AddScoped<Shell.GeneralViewModel>();
 		services.AddScoped<Shell.HistoryViewModel>();
-		services.AddScoped<Shell.StatsViewModel>();
 
 		// First-run setup is no longer a separate flow: the settings shell IS onboarding, opened
 		// on launch when the app is unconfigured. There is no dedicated onboarding view-model to register.

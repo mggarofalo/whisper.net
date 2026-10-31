@@ -3,7 +3,8 @@
 #         -> "The Model section is populated when first opened"
 #         -> "The Audio section lists capture devices when first opened"
 #         -> "The History section shows past transcriptions when first opened"
-#         -> "The Stats section shows recorded totals when first opened"
+#         (Stats was removed in WHISPER-148; its totals live on Home, whose activation load is covered by
+#          HomeDashboard.feature, which opens Home through the real activation lifecycle.)
 #  AC2 Rapid tab switching does not spam duplicate queries
 #         -> "Returning to an already-loaded section does not re-query"
 #         -> "An in-flight first load cannot be double-fired"
@@ -33,11 +34,6 @@ Feature: Sections load their data on first activation
     Given the history store holds a transcription "hello world"
     When the user opens the "History" section
     Then the history list shows "hello world" without a manual refresh
-
-  Scenario: The Stats section shows recorded totals when first opened
-    Given the history store holds two recorded transcriptions
-    When the user opens the "Stats" section
-    Then the dashboard shows the recorded totals without a manual refresh
 
   Scenario: Returning to an already-loaded section does not re-query
     Given the history store holds a transcription "hello world"

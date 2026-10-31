@@ -37,9 +37,6 @@
             <DataTemplate DataType="{x:Type vm:HistoryViewModel}">
                 <views:HistoryView />
             </DataTemplate>
-            <DataTemplate DataType="{x:Type vm:StatsViewModel}">
-                <views:StatsView />
-            </DataTemplate>
         </ResourceDictionary>
     </Window.Resources>
 

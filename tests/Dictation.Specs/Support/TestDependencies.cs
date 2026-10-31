@@ -59,7 +59,7 @@ public static class TestDependencies
 			return store;
 		});
 		// The history-store substitute honors the port contract out of the box: an empty history (never a
-		// null list), exactly as a fresh install would. Opening the History or Stats section triggers a
+		// null list), exactly as a fresh install would. Opening the History or Home section triggers a
 		// load on first activation, so scenarios that merely navigate the shell — without
 		// configuring the store — must still compose a contract-respecting read. Drivers that need entries
 		// re-configure GetEntriesAsync, which overrides this default; the History section's store-side search
@@ -318,13 +318,8 @@ public static class TestDependencies
 
 		// History write-through: re-configures this scenario's IHistoryStore substitute to
 		// round-trip (AddAsync keeps entries; GetEntriesAsync returns them), so a dictation run through the
-		// real orchestrator is asserted via the real read path (history browser / stats dashboard) above.
+		// real orchestrator is asserted via the real read path (history browser / Home dashboard).
 		services.AddScoped<HistoryRecordingDriver>();
-
-		// Stats dashboard: the real StatsViewModel over the real Mediator pipeline
-		// (GetUsageStats + the real Logic usage-stats calculator) and the faked IHistoryStore, so the
-		// dashboard's totals are genuinely computed by the Application layer.
-		services.AddScoped<StatsDashboardDriver>();
 
 		// Home status dashboard: the real HomeViewModel over the real Mediator pipeline
 		// (GetSettings / ListCaptureDevices / GetUsageStats / BrowseHistory) and the faked store/enumerator,

@@ -4,7 +4,7 @@
 // feature view-models — never LoadCommand directly, because the activation-triggered load is exactly
 // what this issue adds. The injected view-models are the same scoped instances navigation resolves, so
 // the assertions observe precisely what the views would bind. Query counting happens at the substituted
-// IHistoryStore seam (one BrowseHistory/GetUsageStats query = one GetEntriesAsync call), which is how
+// IHistoryStore seam (one BrowseHistory query = one GetEntriesAsync call), which is how
 // "no duplicate queries" stays observable without instrumenting the Mediator pipeline.
 
 using Application.Ports;
@@ -23,7 +23,6 @@ public sealed class SectionAutoLoadDriver
 	private readonly ModelViewModel _model;
 	private readonly AudioDeviceViewModel _audio;
 	private readonly HistoryViewModel _history;
-	private readonly StatsViewModel _stats;
 	private readonly IHistoryStore _historyStore;
 	private readonly FakeAudioDeviceEnumerator _enumerator;
 
@@ -39,7 +38,6 @@ public sealed class SectionAutoLoadDriver
 		ModelViewModel model,
 		AudioDeviceViewModel audio,
 		HistoryViewModel history,
-		StatsViewModel stats,
 		IHistoryStore historyStore,
 		FakeAudioDeviceEnumerator enumerator)
 	{
@@ -47,7 +45,6 @@ public sealed class SectionAutoLoadDriver
 		_model = model;
 		_audio = audio;
 		_history = history;
-		_stats = stats;
 		_historyStore = historyStore;
 		_enumerator = enumerator;
 
@@ -64,11 +61,6 @@ public sealed class SectionAutoLoadDriver
 
 	public void HistoryHolds(string text) =>
 		ReturnEntries(new TranscriptEntry(Guid.NewGuid(), text, _day));
-
-	// Two sessions totalling five words: "one two three" (3) + "four five" (2).
-	public void HistoryHoldsTwoTranscriptions() => ReturnEntries(
-		new TranscriptEntry(Guid.NewGuid(), "one two three", _day),
-		new TranscriptEntry(Guid.NewGuid(), "four five", _day.AddMinutes(5)));
 
 	public void HistoryLoadHangsUntilReleased() =>
 		_historyStore.GetEntriesAsync(Arg.Any<DateTimeOffset?>(), Arg.Any<DateTimeOffset?>(), Arg.Any<int?>(), Arg.Any<CancellationToken>())
@@ -141,13 +133,6 @@ public sealed class SectionAutoLoadDriver
 		_history.IsEmpty.Should().BeFalse();
 	}
 
-	// The totals only the real Application aggregation could produce: 2 sessions, 5 words.
-	public void AssertRecordedTotalsShown()
-	{
-		_stats.TotalTranscriptions.Should().Be(2, "opening the Stats section must surface the totals with no manual refresh");
-		_stats.TotalWords.Should().Be(5);
-	}
-
 	public void AssertHistoryQueriedExactly(int times) =>
 		_historyStore.Received(times).GetEntriesAsync(Arg.Any<DateTimeOffset?>(), Arg.Any<DateTimeOffset?>(), Arg.Any<int?>(), Arg.Any<CancellationToken>());
 
@@ -164,7 +149,6 @@ public sealed class SectionAutoLoadDriver
 			"Model" => _model.LoadCommand.ExecutionTask,
 			"Audio" => _audio.LoadCommand.ExecutionTask,
 			"History" => _history.LoadCommand.ExecutionTask,
-			"Stats" => _stats.RefreshCommand.ExecutionTask,
 			_ => null,
 		};
 

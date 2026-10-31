@@ -1,7 +1,7 @@
 // Formats the estimated typing time saved as a benefit ("4h 23m"), not a stopwatch ("04:23:37"). The
 // dashboard figures are coarse estimates, so seconds are shown only while the total is under a minute and
-// hours are never rolled into days. Lives in Logic (not a XAML StringFormat) so Home and Stats share one
-// rule and it is unit-tested.
+// hours are never rolled into days. Lives in Logic (not a XAML StringFormat) so the rule is
+// unit-tested.
 
 namespace Logic.AppManagement.Shell;
 
