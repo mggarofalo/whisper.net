@@ -17,8 +17,16 @@ public sealed record DeliverTranscriptionCommand(AudioClip Clip, DeliveryStrateg
 /// <summary>Why a delivery did not place text into the focused field.</summary>
 public enum DeliveryBlock
 {
-	/// <summary>Delivery was not blocked (it either succeeded or there was no speech to deliver).</summary>
+	/// <summary>
+	/// Delivery was not blocked (it either succeeded or the captured speech yielded no words to deliver).
+	/// </summary>
 	None,
+
+	/// <summary>
+	/// The captured audio held no speech at all (silent throughout — e.g. a muted microphone), so it was
+	/// never transcribed and nothing was delivered; the caller tells the user rather than doing nothing.
+	/// </summary>
+	NoAudio,
 
 	/// <summary>
 	/// The focused window is a higher-integrity (e.g. elevated) process; Windows UIPI would silently

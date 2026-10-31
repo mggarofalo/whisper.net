@@ -209,6 +209,35 @@ public sealed class DictationOrchestratorTests
 	}
 
 	[Fact]
+	public async Task A_no_audio_result_tells_the_user_once_and_returns_to_idle()
+	{
+		_mediator
+			.Send(Arg.Any<DeliverTranscriptionCommand>(), Arg.Any<CancellationToken>())
+			.Returns(new DeliveryResult(Delivered: false, Text: string.Empty, Block: DeliveryBlock.NoAudio));
+		DictationOrchestrator sut = CreateSut();
+
+		sut.Start();
+		await sut.StopAsync(TestContext.Current.CancellationToken);
+
+		_userNotifier.Received(1).NotifyError(DictationOrchestrator.NoAudioNoticeTitle, Arg.Any<string>());
+		Assert.Equal(DictationStage.Idle, sut.Stage);
+	}
+
+	[Fact]
+	public async Task An_empty_transcript_from_captured_speech_does_not_claim_no_audio()
+	{
+		_mediator
+			.Send(Arg.Any<DeliverTranscriptionCommand>(), Arg.Any<CancellationToken>())
+			.Returns(new DeliveryResult(Delivered: false, Text: string.Empty));
+		DictationOrchestrator sut = CreateSut();
+
+		sut.Start();
+		await sut.StopAsync(TestContext.Current.CancellationToken);
+
+		_userNotifier.DidNotReceive().NotifyError(Arg.Any<string>(), Arg.Any<string>());
+	}
+
+	[Fact]
 	public async Task A_history_write_failure_is_swallowed_with_a_warning_and_never_breaks_delivery()
 	{
 		_mediator
