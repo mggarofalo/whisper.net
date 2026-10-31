@@ -6,6 +6,42 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-31
+
+### Added
+
+- **The app tells you when a recording captured no audio.** A recording that was silent all the way
+  through, for example from a muted microphone, is deliberately never transcribed, because Whisper invents
+  phrases on silence. Until now that happened without a word, so a muted mic looked like a broken app. You
+  now get a **"No audio detected"** notice asking whether your microphone is muted, and the log records the
+  outcome on its own line. If you spoke and the speech simply produced no words, there's no notice.
+  (WHISPER-141)
+- **The settings pages share one theme-aware design system.** Every colour now comes from the Windows
+  theme, so the History separators no longer glare white in dark mode, warning and error text meets WCAG AA
+  contrast on dark backgrounds, and the "Active" model chip follows your accent colour. Pages use a
+  consistent type scale and spacing, and their titles match the sidebar labels. Commands such as Refresh
+  have moved out of the title row, and Load more is at the bottom of History. Download, Cancel, Select,
+  Copy and Refresh have Fluent icons, with tooltips and screen-reader names. The window also has a minimum
+  size, and time saved reads as `4h 23m`. (WHISPER-142)
+
+### Changed
+
+- **Transcription runs in a separate, supervised worker process.** All Whisper model loading and inference
+  moved out of the tray app into its own process, which talks to the app over a private local named pipe
+  (no network listener). A GPU driver reset or a native crash now takes down only the worker. The app
+  replaces it, retries the interrupted dictation, and falls back to the CPU if the GPU stays unavailable.
+  The tray app keeps running throughout. (WHISPER-140)
+
+### Fixed
+
+- **The app shuts down cleanly.** Every exit logged a fatal error, because the single-instance lock was
+  released from a thread that didn't own it, followed by an attempt to show an error through the
+  already-closed tray icon. The lock is now released on the thread that took it, a release from any other
+  thread can no longer throw, and errors during shutdown are logged rather than shown.
+- **Changing a setting no longer reverts the active model.** Changes saved from the Theme, General, Audio
+  or Hotkey sections could put back a stale model selection, so Home and the Model page disagreed about
+  which model was active. (WHISPER-142)
+
 ## [0.3.2] - 2026-07-30
 
 ### Added
@@ -286,7 +322,8 @@ that shipped in 0.1.0, organized by category.
 - **The persisted active model is shown in the picker** before it loads. (WHISPER-118)
 - **The Home dashboard refreshes** on every activation. (WHISPER-119)
 
-[Unreleased]: https://github.com/mggarofalo/whisper.net/compare/v0.3.2...HEAD
+[Unreleased]: https://github.com/mggarofalo/whisper.net/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/mggarofalo/whisper.net/releases/tag/v0.4.0
 [0.3.2]: https://github.com/mggarofalo/whisper.net/releases/tag/v0.3.2
 [0.3.1]: https://github.com/mggarofalo/whisper.net/releases/tag/v0.3.1
 [0.3.0]: https://github.com/mggarofalo/whisper.net/releases/tag/v0.3.0
