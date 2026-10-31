@@ -34,9 +34,20 @@ public sealed partial class LevelOverlayViewModel : ObservableObject, IDisposabl
 	[ObservableProperty]
 	private bool _isNearCap;
 
-	/// <summary>The line of text under the meter (the muted-mic hint or the no-audio message), or null.</summary>
+	/// <summary>The muted-mic hint or the no-audio message the pill shows in place of its meter, or null.</summary>
 	[ObservableProperty]
 	private string? _message;
+
+	/// <summary>
+	/// Whether the pill shows its level meter: not while warming (no input yet), and not while a message
+	/// takes the meter's place in the single row.
+	/// </summary>
+	[ObservableProperty]
+	private bool _showsLevel;
+
+	/// <summary>Whether the pill shows the elapsed time: only while recording, and not while a message shows.</summary>
+	[ObservableProperty]
+	private bool _showsElapsed;
 
 	public LevelOverlayViewModel(LevelOverlayController controller, IUiDispatcher dispatcher)
 	{
@@ -44,9 +55,7 @@ public sealed partial class LevelOverlayViewModel : ObservableObject, IDisposabl
 		_dispatcher = dispatcher;
 		_isOverlayVisible = controller.IsVisible;
 		_level = controller.Level;
-		_state = controller.State;
-		_isNearCap = controller.NearCap;
-		_message = controller.Message;
+		ApplyState();
 		_elapsedText = Format(controller.Elapsed);
 		_controller.VisibilityChanged += OnVisibilityChanged;
 		_controller.LevelChanged += OnLevelChanged;
@@ -72,12 +81,18 @@ public sealed partial class LevelOverlayViewModel : ObservableObject, IDisposabl
 		RunOnUiThread(() => Level = _controller.Level);
 
 	private void OnStateChanged(object? sender, EventArgs e) =>
-		RunOnUiThread(() =>
-		{
-			State = _controller.State;
-			IsNearCap = _controller.NearCap;
-			Message = _controller.Message;
-		});
+		RunOnUiThread(ApplyState);
+
+	// The pill is one fixed row (WHISPER-145): the dot, then either the meter + elapsed time, the
+	// "Warming up…" label, or a message in the meter's place — never a second line.
+	private void ApplyState()
+	{
+		State = _controller.State;
+		IsNearCap = _controller.NearCap;
+		Message = _controller.Message;
+		ShowsLevel = State is not (OverlayState.Warming or OverlayState.NoAudio) && Message is null;
+		ShowsElapsed = State == OverlayState.Recording && Message is null;
+	}
 
 	private void OnElapsedChanged(object? sender, EventArgs e) =>
 		RunOnUiThread(() => ElapsedText = Format(_controller.Elapsed));

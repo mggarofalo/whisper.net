@@ -106,6 +106,9 @@ public sealed class LevelOverlay : IDisposable
 	// Far outside any physical or virtual screen, so the one-time realize show is never visible.
 	private const double OffScreen = -32000;
 
+	// The pill's single row height in DIPs: one line of 12 px text, the tallest thing the row ever holds.
+	private const double RowHeight = 16;
+
 	// Realize the window once, off-screen: create the HWND and run a full layout pass so ActualWidth/Height
 	// are final before the first real show. ShowActivated=false + the off-screen park keep this invisible and
 	// non-focus-stealing. Defensive: a failure here must not strand startup — the Visibility binding set by the
@@ -162,10 +165,10 @@ public sealed class LevelOverlay : IDisposable
 		meter.SetBinding(ProgressBar.ValueProperty, new Binding(nameof(LevelOverlayViewModel.Level)));
 		meter.SetBinding(Control.ForegroundProperty,
 			new Binding(nameof(LevelOverlayViewModel.IsNearCap)) { Converter = new NearCapToBrushConverter() });
-		// Hidden while the model is warming up — there is no input level yet, so the pill
-		// collapses to the dot + the "Warming up…" label; shown for every other state.
+		// Hidden while the model is warming up (there is no input level yet) and while a message takes its
+		// place in the row; shown otherwise. The view-model owns that rule (ShowsLevel).
 		meter.SetBinding(UIElement.VisibilityProperty,
-			new Binding(nameof(LevelOverlayViewModel.State)) { Converter = new MeterVisibilityConverter() });
+			new Binding(nameof(LevelOverlayViewModel.ShowsLevel)) { Converter = new BooleanToVisibilityConverter() });
 
 		TextBlock elapsed = new()
 		{
@@ -180,7 +183,7 @@ public sealed class LevelOverlay : IDisposable
 		};
 		elapsed.SetBinding(TextBlock.TextProperty, new Binding(nameof(LevelOverlayViewModel.ElapsedText)));
 		elapsed.SetBinding(UIElement.VisibilityProperty,
-			new Binding(nameof(LevelOverlayViewModel.State)) { Converter = new RecordingToVisibilityConverter() });
+			new Binding(nameof(LevelOverlayViewModel.ShowsElapsed)) { Converter = new BooleanToVisibilityConverter() });
 
 		// The warming label: the on-screen "Warming up…" text the pill shows while the model
 		// warms, so the cue is not colour-only. Hidden for every other state (the meter/elapsed show then), so
@@ -196,10 +199,29 @@ public sealed class LevelOverlay : IDisposable
 		warming.SetBinding(UIElement.VisibilityProperty,
 			new Binding(nameof(LevelOverlayViewModel.State)) { Converter = new WarmingToVisibilityConverter() });
 
-		// Centre the pill's content so it stays balanced when the elapsed time collapses (transcribing/error).
+		// The message (WHISPER-144/145): the muted-mic hint while a recording hears nothing, or the no-audio
+		// message after one. It sits IN the row, in the meter's place — a muted mic's meter is flat anyway, and
+		// the meter returns the moment the mic is heard — so the pill never grows a second line. One line,
+		// trimmed rather than wrapped, so it can never change the pill's height.
+		TextBlock message = new()
+		{
+			Foreground = Brushes.White,
+			FontSize = 12,
+			VerticalAlignment = VerticalAlignment.Center,
+			TextWrapping = TextWrapping.NoWrap,
+			TextTrimming = TextTrimming.CharacterEllipsis,
+		};
+		message.SetBinding(TextBlock.TextProperty, new Binding(nameof(LevelOverlayViewModel.Message)));
+		message.SetBinding(UIElement.VisibilityProperty,
+			new Binding(nameof(LevelOverlayViewModel.Message)) { Converter = new MessageToVisibilityConverter() });
+
+		// One row of FIXED height (the elapsed text's line height), so the pill is the same size in every
+		// state — recording, transcribing, warming, a message — and never jumps or leaves a gap. Centred so it
+		// stays balanced when the elapsed time collapses (transcribing/error).
 		StackPanel row = new()
 		{
 			Orientation = Orientation.Horizontal,
+			Height = RowHeight,
 			VerticalAlignment = VerticalAlignment.Center,
 			HorizontalAlignment = HorizontalAlignment.Center,
 		};
@@ -207,27 +229,9 @@ public sealed class LevelOverlay : IDisposable
 		row.Children.Add(meter);
 		row.Children.Add(elapsed);
 		row.Children.Add(warming);
+		row.Children.Add(message);
 
-		// The message line (WHISPER-144): the muted-mic hint while a recording hears nothing, or the
-		// no-audio message after one. Collapsed when there is nothing to say, so the pill keeps its compact
-		// single-row footprint; when shown it wraps within the pill's fixed width and the window grows down
-		// (SizeChanged re-anchors it above the taskbar).
-		TextBlock message = new()
-		{
-			Foreground = Brushes.White,
-			FontSize = 12,
-			Margin = new Thickness(0, 6, 0, 0),
-			TextWrapping = TextWrapping.Wrap,
-			TextAlignment = TextAlignment.Center,
-			HorizontalAlignment = HorizontalAlignment.Center,
-		};
-		message.SetBinding(TextBlock.TextProperty, new Binding(nameof(LevelOverlayViewModel.Message)));
-		message.SetBinding(UIElement.VisibilityProperty,
-			new Binding(nameof(LevelOverlayViewModel.Message)) { Converter = new MessageToVisibilityConverter() });
-
-		StackPanel content = new() { Orientation = Orientation.Vertical };
-		content.Children.Add(row);
-		content.Children.Add(message);
+		FrameworkElement content = row;
 
 		return new Border
 		{
@@ -286,6 +290,13 @@ public sealed class LevelOverlay : IDisposable
 		{
 			return;
 		}
+
+		// Re-fit before placing. WPF does not re-run SizeToContent for content that changed while the window
+		// was hidden, so a pill hidden while taller (or shorter) came back at its stale size, with an empty band
+		// where a message used to be. Toggling SizeToContent forces the window to adopt the content's size now.
+		_window.SizeToContent = SizeToContent.Manual;
+		_window.SizeToContent = SizeToContent.WidthAndHeight;
+		_window.UpdateLayout();
 
 		nint hwnd = Handle();
 		string target = Reposition();
@@ -435,6 +446,9 @@ public sealed class LevelOverlay : IDisposable
 	}
 
 	private nint Handle() => new WindowInteropHelper(_window).Handle;
+
+	/// <summary>The window's current rendered size in DIPs — logged with each present, and pinned by the smoke tests.</summary>
+	public Size CurrentSize => new(_window.ActualWidth, _window.ActualHeight);
 
 	public void Dispose()
 	{

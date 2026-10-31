@@ -4,6 +4,8 @@
 // when off the UI thread, take the CheckAccess fast-path when on it, and Dispose detaches both
 // controller subscriptions.
 
+using Application.Dictation;
+using Application.Models;
 using Application.Ports;
 using AwesomeAssertions;
 using CommunityToolkit.Mvvm.Messaging;
@@ -57,6 +59,38 @@ public sealed class LevelOverlayViewModelTests
 		_viewModel.IsOverlayVisible.Should().BeTrue();
 		_viewModel.State.Should().Be(OverlayState.Recording);
 		_viewModel.Level.Should().BeGreaterThan(0);
+	}
+
+	[Fact]
+	public void A_message_takes_the_meter_and_elapsed_slots_in_the_single_row()
+	{
+		_dispatcher.IsOnUiThread = true;
+
+		_stateMachine.RequestStart();
+		_viewModel.ShowsLevel.Should().BeTrue();
+		_viewModel.ShowsElapsed.Should().BeTrue();
+
+		_stateMachine.RequestStop();
+		_viewModel.ShowsLevel.Should().BeTrue("transcribing keeps the (quiet) meter");
+		_viewModel.ShowsElapsed.Should().BeFalse("elapsed time is a recording cue");
+
+		_messenger.Send(new DictationNoAudioMessage());
+		_viewModel.Message.Should().Be(LevelOverlayController.NoAudioMessage);
+		_viewModel.ShowsLevel.Should().BeFalse("the message sits in the meter's place");
+		_viewModel.ShowsElapsed.Should().BeFalse();
+	}
+
+	[Fact]
+	public void Warming_shows_neither_meter_nor_elapsed()
+	{
+		_dispatcher.IsOnUiThread = true;
+
+		_messenger.Send(new ModelWarmupChangedMessage(true));
+
+		_viewModel.State.Should().Be(OverlayState.Warming);
+		_viewModel.ShowsLevel.Should().BeFalse();
+		_viewModel.ShowsElapsed.Should().BeFalse();
+		_viewModel.Message.Should().BeNull();
 	}
 
 	[Fact]
