@@ -52,6 +52,7 @@ public sealed class ModelRatingScaleTests
 	[Theory]
 	[InlineData(1_550 * Megabyte, "large-v3-turbo", ModelRating.High)]
 	[InlineData(547 * Megabyte, "large-v3-turbo-q5_0", ModelRating.Medium)]
+	[InlineData(1_449 * Megabyte, "distil-large-v3.5", ModelRating.High)]
 	public void Turbo_models_are_fast_and_accurate_with_memory_following_size(
 		long sizeBytes, string modelId, ModelRating expectedMemory)
 	{

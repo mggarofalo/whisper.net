@@ -17,7 +17,15 @@ public sealed record WhisperModelCatalogEntry
 	/// <summary>Expected SHA-256 (lowercase hex) used to verify a download, or empty when unknown.</summary>
 	public string Sha256 { get; }
 
-	public WhisperModelCatalogEntry(string id, string displayName, string quantization, string fileName, long sizeBytes, string sha256 = "")
+	/// <summary>Where to download the model from, or empty for the standard whisper.cpp model repository
+	/// (where the remote file is named <see cref="FileName"/>).</summary>
+	public string SourceUrl { get; }
+
+	/// <summary>The language the model must transcribe in (e.g. "en" for an English-only model that keeps the
+	/// multilingual tokenizer), or empty to use the configured language or auto-detection.</summary>
+	public string Language { get; }
+
+	public WhisperModelCatalogEntry(string id, string displayName, string quantization, string fileName, long sizeBytes, string sha256 = "", string sourceUrl = "", string language = "")
 	{
 		if (string.IsNullOrWhiteSpace(id))
 		{
@@ -45,5 +53,7 @@ public sealed record WhisperModelCatalogEntry
 		FileName = fileName;
 		SizeBytes = sizeBytes;
 		Sha256 = sha256 ?? string.Empty;
+		SourceUrl = sourceUrl ?? string.Empty;
+		Language = language ?? string.Empty;
 	}
 }

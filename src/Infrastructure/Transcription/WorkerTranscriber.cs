@@ -23,11 +23,11 @@ public sealed class WorkerTranscriber(
 
 	public async ValueTask<TranscriptionResult> TranscribeAsync(AudioClip clip, CancellationToken cancellationToken)
 	{
-		string modelPath = await ResolveModelPathAsync(cancellationToken).ConfigureAwait(false);
+		(string modelPath, string? language) = await ResolveModelAsync(cancellationToken).ConfigureAwait(false);
 		DecodingOptions decodingOptions = vocabularyConditioner.Assemble(_options.CustomVocabulary);
 		InferenceWorkerRequest request = new(
 			modelPath,
-			_options.Language,
+			language,
 			decodingOptions,
 			clip.SampleRate,
 			clip.Samples as float[] ?? [.. clip.Samples]);
@@ -36,10 +36,10 @@ public sealed class WorkerTranscriber(
 
 	public async ValueTask PreloadAsync(CancellationToken cancellationToken)
 	{
-		string modelPath = await ResolveModelPathAsync(cancellationToken).ConfigureAwait(false);
+		(string modelPath, string? language) = await ResolveModelAsync(cancellationToken).ConfigureAwait(false);
 		InferenceWorkerRequest request = new(
 			modelPath,
-			_options.Language,
+			language,
 			DecodingOptions.Default,
 			16_000,
 			WarmupSamples,
@@ -47,7 +47,10 @@ public sealed class WorkerTranscriber(
 		await supervisor.TranscribeAsync(request, cancellationToken).ConfigureAwait(false);
 	}
 
-	private async ValueTask<string> ResolveModelPathAsync(CancellationToken cancellationToken)
+	// The model file to load and the language to decode in. A configured language always wins; otherwise a
+	// catalog model that must be decoded in one language (English-only Distil-Whisper, which keeps the
+	// multilingual tokenizer) supplies it, and everything else auto-detects.
+	private async ValueTask<(string Path, string? Language)> ResolveModelAsync(CancellationToken cancellationToken)
 	{
 		if (!string.IsNullOrWhiteSpace(_options.ModelPath))
 		{
@@ -56,7 +59,7 @@ public sealed class WorkerTranscriber(
 				throw new ModelNotFoundException(_options.ModelPath);
 			}
 
-			return _options.ModelPath;
+			return (_options.ModelPath, _options.Language);
 		}
 
 		AppSettings settings = await settingsStore.LoadAsync(cancellationToken).ConfigureAwait(false);
@@ -67,6 +70,13 @@ public sealed class WorkerTranscriber(
 			throw new ModelNotFoundException(path);
 		}
 
-		return path;
+		string? language = IsAutoDetect(_options.Language) && entry is { Language.Length: > 0 }
+			? entry.Language
+			: _options.Language;
+		return (path, language);
 	}
+
+	// "auto" (the default) or empty means no language was configured.
+	private static bool IsAutoDetect(string? language) =>
+		string.IsNullOrWhiteSpace(language) || language.Equals("auto", StringComparison.OrdinalIgnoreCase);
 }

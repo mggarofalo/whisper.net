@@ -31,6 +31,23 @@ public sealed class WhisperModelCatalogTests
 		ids.Should().Contain(["large-v3-turbo", "large-v3-turbo-q5_0"]);
 	}
 
+	// Distil-Whisper lives in its own Hugging Face repo under a generic file name, so it carries its
+	// download URL and pinned hash, is cached under a distinct name, and is pinned to English.
+	[Fact]
+	public void Offers_distil_large_v3_5_from_its_own_repository()
+	{
+		WhisperModelCatalogEntry distil = _catalog.Find("distil-large-v3.5")!;
+
+		distil.SourceUrl.Should().Be("https://huggingface.co/distil-whisper/distil-large-v3.5-ggml/resolve/main/ggml-model.bin");
+		distil.FileName.Should().Be("ggml-distil-large-v3.5.bin");
+		distil.Sha256.Should().MatchRegex("^[0-9a-f]{64}$");
+		distil.Language.Should().Be("en");
+	}
+
+	[Fact]
+	public void The_standard_models_download_from_the_default_repository() =>
+		_catalog.Entries.Where(entry => !entry.Id.StartsWith("distil-", StringComparison.Ordinal))
+			.Should().OnlyContain(entry => entry.SourceUrl.Length == 0 && entry.Language.Length == 0);
 	[Fact]
 	public void Every_entry_has_a_ggml_file_name_and_a_positive_size()
 	{

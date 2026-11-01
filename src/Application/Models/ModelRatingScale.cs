@@ -19,6 +19,9 @@ public static class ModelRatingScale
 	// Marks the pruned-decoder variants (large-v3-turbo and its quantizations) by id.
 	private const string TurboMarker = "turbo";
 
+	// Marks the Distil-Whisper models by id prefix.
+	private const string DistilMarker = "distil-";
+
 	// Tier boundaries: below ~200 MB is "small" (tiny/base), below ~1 GB is "medium" (small), and the
 	// rest is "large" (medium/large-v3).
 	private const long SmallTierMaxBytes = 200 * Megabyte;
@@ -50,8 +53,11 @@ public static class ModelRatingScale
 		return new ModelRatings(Speed: ModelRating.Low, Accuracy: ModelRating.High, Memory: ModelRating.High);
 	}
 
+	// Distil-Whisper earns the same rating for the same reason: large-v3's encoder with a tiny distilled decoder.
 	private static bool IsTurbo(string modelId) =>
-		!string.IsNullOrEmpty(modelId) && modelId.Contains(TurboMarker, StringComparison.OrdinalIgnoreCase);
+		!string.IsNullOrEmpty(modelId)
+		&& (modelId.Contains(TurboMarker, StringComparison.OrdinalIgnoreCase)
+			|| modelId.StartsWith(DistilMarker, StringComparison.OrdinalIgnoreCase));
 
 	private static ModelRating MemoryFor(long sizeBytes) => sizeBytes switch
 	{

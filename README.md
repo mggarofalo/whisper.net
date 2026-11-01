@@ -99,9 +99,10 @@ Settings apply **instantly** — no restart needed.
 Privacy is the point. Transcription is always **100% local**. The only times whisper.net can touch the
 network are these **opt-in** features, each **off by default** and each clearly disclosed:
 
-- **Model download** — when *you* choose a model, it is downloaded once from
-  [Hugging Face](https://huggingface.co/ggerganov/whisper.cpp) and cached locally. Nothing is uploaded;
-  after caching, transcription is fully offline.
+- **Model download** — when *you* choose a model, it is downloaded once from Hugging Face and cached
+  locally: the Whisper models from [ggerganov/whisper.cpp](https://huggingface.co/ggerganov/whisper.cpp),
+  and Distil Large v3.5 from [distil-whisper/distil-large-v3.5-ggml](https://huggingface.co/distil-whisper/distil-large-v3.5-ggml)
+  (its published SHA-256 is checked). Nothing is uploaded; after caching, transcription is fully offline.
 - **AI rephrase (localhost-only)** — an optional step can rewrite recognized text with a locally-hosted
   [Ollama](https://ollama.com) model. It is **disabled by default** and may target **only** a loopback
   address (`localhost` / `127.0.0.1` / `[::1]`); a remote endpoint is refused. Your text never leaves

@@ -72,6 +72,46 @@ public sealed class WorkerTranscriberTests : IDisposable
 			Arg.Any<CancellationToken>());
 	}
 
+	[Theory]
+	[InlineData("", "en")]
+	[InlineData("auto", "en")]
+	[InlineData("de", "de")]
+	public async Task A_model_pinned_to_a_language_decodes_in_it_unless_one_is_configured(string configured, string expected)
+	{
+		string modelPath = ExistingModelFile();
+		WhisperModelCatalogEntry entry = new("distil-large-v3.5", "Distil", "f16", "ggml-distil-large-v3.5.bin", 1, language: "en");
+		_settings.LoadAsync(Arg.Any<CancellationToken>())
+			.Returns(new AppSettings("distil-large-v3.5", HotkeyBinding.Parse("Ctrl+Win"), 500, false));
+		_catalog.Find("distil-large-v3.5").Returns(entry);
+		_cache.GetCachedPath(entry).Returns(modelPath);
+		WorkerTranscriber transcriber = Create(new WhisperOptions { Language = configured });
+
+		await transcriber.TranscribeAsync(new AudioClip([0.1f], 16_000), CancellationToken.None);
+		await transcriber.PreloadAsync(CancellationToken.None);
+
+		await _supervisor.Received(2).TranscribeAsync(
+			Arg.Is<InferenceWorkerRequest>(request => request.Language == expected),
+			Arg.Any<CancellationToken>());
+	}
+
+	[Fact]
+	public async Task A_model_without_a_language_keeps_auto_detection()
+	{
+		string modelPath = ExistingModelFile();
+		WhisperModelCatalogEntry entry = new("large-v3-turbo", "Turbo", "f16", "ggml-large-v3-turbo.bin", 1);
+		_settings.LoadAsync(Arg.Any<CancellationToken>())
+			.Returns(new AppSettings("large-v3-turbo", HotkeyBinding.Parse("Ctrl+Win"), 500, false));
+		_catalog.Find("large-v3-turbo").Returns(entry);
+		_cache.GetCachedPath(entry).Returns(modelPath);
+		WorkerTranscriber transcriber = Create(new WhisperOptions());
+
+		await transcriber.TranscribeAsync(new AudioClip([0.1f], 16_000), CancellationToken.None);
+
+		await _supervisor.Received(1).TranscribeAsync(
+			Arg.Is<InferenceWorkerRequest>(request => request.Language == "auto"),
+			Arg.Any<CancellationToken>());
+	}
+
 	[Fact]
 	public async Task Missing_model_fails_before_starting_a_worker()
 	{
