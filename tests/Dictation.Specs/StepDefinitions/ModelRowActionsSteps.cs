@@ -22,8 +22,8 @@ public sealed class ModelRowActionsSteps(ModelRowActionsDriver driver)
 	[Then(@"the ""(.*)"" row offers only its Download action")]
 	public void ThenOnlyDownload(string id) => driver.AssertOnlyDownload(id);
 
-	[Then(@"the ""(.*)"" row offers only its Select action")]
-	public void ThenOnlySelect(string id) => driver.AssertOnlySelect(id);
+	[Then(@"the ""(.*)"" row offers no row action")]
+	public void ThenNoAction(string id) => driver.AssertNoAction(id);
 
 	[Then(@"the ""(.*)"" row offers only its Cancel action")]
 	public void ThenOnlyCancel(string id) => driver.AssertOnlyCancel(id);

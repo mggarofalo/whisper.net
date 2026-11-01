@@ -1,6 +1,6 @@
 // The shell's model picker: it lists the
 // catalog models with speed/accuracy/memory ratings, lets the user download them with live progress, and
-// switches the active model on selection. It depends on nothing but IMediator — no ports, no handlers,
+// switches the active model when a row is chosen. It depends on nothing but IMediator — no ports, no handlers,
 // no Infrastructure: it loads via ListModelsQuery and activates via SwitchActiveModelCommand. Downloads
 // are owned per row: each ModelItemViewModel has its own Download/Cancel command and state,
 // so several models can download concurrently; this section coordinates only the list and the active
@@ -29,6 +29,15 @@ public sealed partial class ModelViewModel : FeatureViewModel
 	[ObservableProperty]
 	private string? _activeModelId;
 
+	/// <summary>The row of the model in use: the model list's selection. It only moves once a switch has
+	/// succeeded, so a failed or still-pending choice never shows as selected.</summary>
+	[ObservableProperty]
+	private ModelItemViewModel? _activeModel;
+
+	// The most recent choice still on its way to becoming active. A later choice supersedes an earlier one
+	// that is still downloading, so the download finishes but no longer switches.
+	private ModelItemViewModel? _pendingChoice;
+
 	// Auto-load the catalog on first activation: the section opens populated, the cached
 	// instance does not re-query on later tab switches, and Refresh stays the manual re-query.
 	protected override IAsyncRelayCommand FirstActivationLoadCommand => LoadCommand;
@@ -46,53 +55,88 @@ public sealed partial class ModelViewModel : FeatureViewModel
 			Models.Add(new ModelItemViewModel(item, _mediator));
 		}
 
-		ActiveModelId = items.FirstOrDefault(item => item.IsActive)?.Id;
+		ActiveModel = Models.FirstOrDefault(model => model.IsActive);
+		ActiveModelId = ActiveModel?.Id;
 	}
 
-	// Selecting a model activates it. If it is not yet downloaded, drive that row's own download first (with
+	// Choosing a row activates its model. If it is not yet downloaded, drive that row's own download first (with
 	// progress) and only switch on a successful download — a failed download leaves the active model
-	// unchanged. The download lives on the row; this only coordinates the active switch.
-	[RelayCommand]
+	// unchanged. The download lives on the row; this only coordinates the active switch. Choices may overlap
+	// (the user picks another row while one downloads), so executions run concurrently and the latest wins.
+	[RelayCommand(AllowConcurrentExecutions = true)]
 	private async Task SelectAsync(ModelItemViewModel? item, CancellationToken cancellationToken)
 	{
-		if (item is null)
+		// The model already in use needs nothing. (On a fresh install the persisted default is "active" before it
+		// is downloaded; choosing it still downloads it.)
+		if (item is null || (item.IsActive && item.IsDownloaded))
 		{
 			return;
 		}
 
-		if (!item.IsDownloaded)
-		{
-			// Drive the row's own download — but never via ExecuteAsync while it is already running. For a
-			// cancelable command ExecuteAsync cancels the in-flight token and restarts, which would silently
-			// kill a download the user just started from the row's own Download button (then click Select on
-			// the same row). If one is already in flight, await it instead of restarting it.
-			// (SelectCommand is not itself cancelable, so its cancellationToken never fires; the download owns
-			// its own cancellation via the row's Cancel button.)
-			if (item.DownloadCommand.IsRunning)
-			{
-				await (item.DownloadCommand.ExecutionTask ?? Task.CompletedTask);
-			}
-			else
-			{
-				await item.DownloadCommand.ExecuteAsync(null);
-			}
-
-			if (item.DownloadState != ModelDownloadState.Succeeded)
-			{
-				return;
-			}
-		}
-
-		await _mediator.Send(new SwitchActiveModelCommand(item.Id), cancellationToken);
-		SetActive(item.Id);
-	}
-
-	private void SetActive(string modelId)
-	{
-		ActiveModelId = modelId;
+		_pendingChoice = item;
 		foreach (ModelItemViewModel model in Models)
 		{
-			model.IsActive = string.Equals(model.Id, modelId, StringComparison.OrdinalIgnoreCase);
+			model.IsActivating = ReferenceEquals(model, item);
 		}
+
+		item.ActivationError = null;
+
+		try
+		{
+			if (!item.IsDownloaded)
+			{
+				// Drive the row's own download — but never via ExecuteAsync while it is already running. For a
+				// cancelable command ExecuteAsync cancels the in-flight token and restarts, which would silently
+				// kill a download the user just started from the row's own Download button (then chose the same
+				// row). If one is already in flight, await it instead of restarting it.
+				// (SelectCommand is not itself cancelable, so its cancellationToken never fires; the download owns
+				// its own cancellation via the row's Cancel button.)
+				if (item.DownloadCommand.IsRunning)
+				{
+					await (item.DownloadCommand.ExecutionTask ?? Task.CompletedTask);
+				}
+				else
+				{
+					await item.DownloadCommand.ExecuteAsync(null);
+				}
+
+				if (item.DownloadState != ModelDownloadState.Succeeded || !ReferenceEquals(_pendingChoice, item))
+				{
+					return;
+				}
+			}
+
+			try
+			{
+				await _mediator.Send(new SwitchActiveModelCommand(item.Id), cancellationToken);
+			}
+			catch (Exception)
+			{
+				// A failed switch (the model would not load) is surfaced on the row; the model in use is unchanged.
+				item.ActivationError = $"Couldn't switch to '{item.DisplayName}'. Try again, or choose another model.";
+				return;
+			}
+
+			SetActive(item);
+		}
+		finally
+		{
+			item.IsActivating = false;
+			if (ReferenceEquals(_pendingChoice, item))
+			{
+				_pendingChoice = null;
+			}
+		}
+	}
+
+	private void SetActive(ModelItemViewModel item)
+	{
+		foreach (ModelItemViewModel model in Models)
+		{
+			model.IsActive = ReferenceEquals(model, item);
+		}
+
+		ActiveModelId = item.Id;
+		ActiveModel = item;
 	}
 }

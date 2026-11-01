@@ -1,6 +1,6 @@
-// The shell's model view: a thin view bound to ModelViewModel that shows the active model
-// id and triggers its Mediator-backed Refresh command. Pure view glue — the data and the Mediator call
-// live in the WPF-free view-model — so it is verified by smoke, not by the specs.
+// The shell's model view: a thin view bound to ModelViewModel. The models are a single-selection list whose
+// selection is the model in use; choosing a row goes through CommandedSelectionBehavior to SelectCommand. Pure
+// view glue — the behavior lives in the WPF-free view-model, driven by the specs — so it is verified by smoke.
 
 using System.Windows.Controls;
 

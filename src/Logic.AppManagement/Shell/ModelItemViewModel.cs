@@ -45,16 +45,33 @@ public sealed partial class ModelItemViewModel : ObservableObject
 
 	public ModelRating Memory { get; }
 
+	/// <summary>The download size as Windows shows file sizes ("142 MB", "1.5 GB").</summary>
+	public string SizeText => ModelSizeFormatter.Format(SizeBytes);
+
 	/// <summary>Whether the model file is already in the local cache.</summary>
 	[ObservableProperty]
 	[NotifyPropertyChangedFor(nameof(CanDownload))]
-	[NotifyPropertyChangedFor(nameof(CanSelect))]
+	[NotifyPropertyChangedFor(nameof(StatusText))]
+	[NotifyPropertyChangedFor(nameof(Caption))]
 	private bool _isDownloaded;
 
-	/// <summary>Whether this is the currently active model.</summary>
+	/// <summary>Whether this is the currently active model: the selection in the model list.</summary>
 	[ObservableProperty]
-	[NotifyPropertyChangedFor(nameof(CanSelect))]
+	[NotifyPropertyChangedFor(nameof(StatusText))]
+	[NotifyPropertyChangedFor(nameof(Caption))]
 	private bool _isActive;
+
+	/// <summary>Whether the user chose this model and it is on its way to becoming active (downloading first
+	/// when it is not on this device). The selection mark stays on the model in use until this finishes.</summary>
+	[ObservableProperty]
+	[NotifyPropertyChangedFor(nameof(StatusText))]
+	[NotifyPropertyChangedFor(nameof(Caption))]
+	private bool _isActivating;
+
+	/// <summary>A user-facing error from the last attempt to switch to this model, or null when none failed.</summary>
+	[ObservableProperty]
+	[NotifyPropertyChangedFor(nameof(ErrorText))]
+	private string? _activationError;
 
 	/// <summary>Live download completion in [0, 100]; meaningful while <see cref="DownloadState"/> is in progress.</summary>
 	[ObservableProperty]
@@ -64,10 +81,12 @@ public sealed partial class ModelItemViewModel : ObservableObject
 	[ObservableProperty]
 	[NotifyPropertyChangedFor(nameof(CanDownload))]
 	[NotifyPropertyChangedFor(nameof(IsDownloading))]
+	[NotifyPropertyChangedFor(nameof(StatusText))]
+	[NotifyPropertyChangedFor(nameof(Caption))]
 	private ModelDownloadState _downloadState;
 
-	// Only the action that fits this row's state is shown, so the list is compact rather than
-	// a permanent three-button strip. These are derived from the observable state above and re-raise via
+	// Choosing a model is the list's selection, not a row action, so a row's only actions are its download
+	// lifecycle: Download or Cancel. These are derived from the observable state above and re-raise via
 	// NotifyPropertyChangedFor as it changes, so the view swaps the visible action live.
 
 	/// <summary>Show Download only when the model is not cached and not currently downloading.</summary>
@@ -76,15 +95,29 @@ public sealed partial class ModelItemViewModel : ObservableObject
 	/// <summary>Show Cancel (and the progress bar) only while this row is downloading.</summary>
 	public bool IsDownloading => DownloadState == ModelDownloadState.InProgress;
 
-	/// <summary>Show Select only when the model is downloaded but not already the active one (the active row
-	/// is indicated instead of offering a redundant Select).</summary>
-	public bool CanSelect => IsDownloaded && !IsActive;
+	/// <summary>The row's state in words, shown in its caption and read by a screen reader.</summary>
+	public string StatusText => this switch
+	{
+		{ IsActive: true, IsDownloaded: true } => "In use",
+		{ IsDownloading: true, IsActivating: true } => "Downloading, then switching",
+		{ IsDownloading: true } => "Downloading",
+		{ IsActivating: true } => "Switching",
+		{ IsDownloaded: true } => "On this device",
+		_ => "Not downloaded",
+	};
+
+	/// <summary>The line under the model's name: its id, download size and state.</summary>
+	public string Caption => $"{Id} · {SizeText} · {StatusText}";
 
 	/// <summary>A user-facing error from THIS row's last download attempt, or null when none failed. The view
 	/// shows this per row rather than crashing on a failed download, and per row so one model's
 	/// failure never masks another's progress.</summary>
 	[ObservableProperty]
+	[NotifyPropertyChangedFor(nameof(ErrorText))]
 	private string? _downloadError;
+
+	/// <summary>The one error the row shows: a failed switch, else a failed download.</summary>
+	public string? ErrorText => ActivationError ?? DownloadError;
 
 	// Download this model through Mediator, surfacing live determinate progress and a terminal
 	// success/failure state. The command is async end-to-end (no .Result/.Wait, so the UI thread never

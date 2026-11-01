@@ -1,8 +1,7 @@
-// Inner TDD loop for the model row's contextual actions, WPF-free. The compact list shows
-// only the action that fits each row's state — Download (not downloaded), Cancel (downloading), Select
-// (downloaded but not active) — instead of a permanent three-button strip. These pin the derived flags
-// the view binds (CanDownload / IsDownloading / CanSelect) for every state, and that they re-raise change
-// notification when the underlying state changes so the view swaps the visible action live.
+// Inner TDD loop for the model row, WPF-free. A row's only actions are its download lifecycle — Download
+// (not downloaded) and Cancel (downloading); choosing the model is the list's selection (WHISPER-149). These
+// pin the derived flags and the status the view binds for every state, and that they re-raise change
+// notification when the underlying state changes so the view updates live.
 
 using Application.Models;
 using AwesomeAssertions;
@@ -15,8 +14,8 @@ namespace Logic.AppManagement.Tests.Shell;
 
 public sealed class ModelRowActionsTests
 {
-	private static ModelItemViewModel Row(bool downloaded, bool active) =>
-		new(new ModelListItemDto("base.en", "Base (EN)", 100, default, default, default, IsDownloaded: downloaded, IsActive: active), Substitute.For<IMediator>());
+	private static ModelItemViewModel Row(bool downloaded, bool active, long sizeBytes = 100) =>
+		new(new ModelListItemDto("base.en", "Base (EN)", sizeBytes, default, default, default, IsDownloaded: downloaded, IsActive: active), Substitute.For<IMediator>());
 
 	private static async Task<Unit> WaitForGate(TaskCompletionSource gate, CancellationToken cancellationToken)
 	{
@@ -31,32 +30,31 @@ public sealed class ModelRowActionsTests
 
 		row.CanDownload.Should().BeTrue();
 		row.IsDownloading.Should().BeFalse();
-		row.CanSelect.Should().BeFalse();
+		row.StatusText.Should().Be("Not downloaded");
 	}
 
 	[Fact]
-	public void Downloaded_but_not_active_offers_only_select()
+	public void Downloaded_but_not_active_offers_no_action()
 	{
 		ModelItemViewModel row = Row(downloaded: true, active: false);
 
-		row.CanSelect.Should().BeTrue();
 		row.CanDownload.Should().BeFalse();
 		row.IsDownloading.Should().BeFalse();
+		row.StatusText.Should().Be("On this device");
 	}
 
 	[Fact]
-	public void The_active_model_offers_no_action()
+	public void The_active_model_offers_no_action_and_reads_in_use()
 	{
 		ModelItemViewModel row = Row(downloaded: true, active: true);
 
-		row.IsActive.Should().BeTrue();
-		row.CanSelect.Should().BeFalse("the active model is indicated, not re-selectable");
 		row.CanDownload.Should().BeFalse();
 		row.IsDownloading.Should().BeFalse();
+		row.StatusText.Should().Be("In use");
 	}
 
 	[Fact]
-	public async Task A_downloading_row_offers_only_cancel_then_only_select_on_success()
+	public async Task A_downloading_row_offers_only_cancel_then_nothing_on_success()
 	{
 		TaskCompletionSource gate = new();
 		IMediator mediator = Substitute.For<IMediator>();
@@ -69,36 +67,51 @@ public sealed class ModelRowActionsTests
 
 		row.IsDownloading.Should().BeTrue();
 		row.CanDownload.Should().BeFalse();
-		row.CanSelect.Should().BeFalse();
+		row.StatusText.Should().Be("Downloading");
+		row.IsActivating = true;
+		row.StatusText.Should().Be("Downloading, then switching");
+		row.IsActivating = false;
 
 		gate.SetResult();
 		await download;
 
 		row.IsDownloading.Should().BeFalse();
-		row.CanSelect.Should().BeTrue("a freshly downloaded model can now be selected");
 		row.CanDownload.Should().BeFalse();
+		row.StatusText.Should().Be("On this device");
 	}
 
 	[Fact]
-	public void Flags_re_raise_change_notification_when_state_changes()
+	public void Flags_and_status_re_raise_change_notification_when_state_changes()
 	{
 		ModelItemViewModel row = Row(downloaded: false, active: false);
 		using var monitor = row.Monitor();
 
 		row.IsDownloaded = true;
+		row.IsActivating = true;
+		row.IsActive = true;
 
 		monitor.Should().RaisePropertyChangeFor(x => x.CanDownload);
-		monitor.Should().RaisePropertyChangeFor(x => x.CanSelect);
+		monitor.Should().RaisePropertyChangeFor(x => x.StatusText);
+		monitor.Should().RaisePropertyChangeFor(x => x.Caption);
 	}
 
 	[Fact]
-	public void Becoming_active_hides_its_select_action()
+	public void Caption_reads_id_size_and_status()
 	{
-		ModelItemViewModel row = Row(downloaded: true, active: false);
-		row.CanSelect.Should().BeTrue();
+		ModelItemViewModel row = Row(downloaded: true, active: false, sizeBytes: 147_951_465);
 
-		row.IsActive = true;
+		row.Caption.Should().Be("base.en · 141 MB · On this device");
+	}
 
-		row.CanSelect.Should().BeFalse();
+	[Fact]
+	public void A_switch_error_is_shown_ahead_of_a_download_error()
+	{
+		ModelItemViewModel row = Row(downloaded: false, active: false);
+		row.DownloadError = "download failed";
+		row.ErrorText.Should().Be("download failed");
+
+		row.ActivationError = "switch failed";
+
+		row.ErrorText.Should().Be("switch failed");
 	}
 }

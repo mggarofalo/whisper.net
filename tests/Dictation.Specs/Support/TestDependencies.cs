@@ -305,6 +305,7 @@ public static class TestDependencies
 		// Model picker: the real ModelViewModel over the real Mediator pipeline (list /
 		// download / switch handlers) and the real catalog, faking only the device-facing model ports.
 		services.AddScoped<ModelPickerDriver>();
+		services.AddScoped<ModelSelectionListDriver>();
 
 		// Live history feed: the real HistoryViewModel over the real Mediator pipeline and the
 		// shared messenger, so recording a transcription while History is open prepends the new entry live.

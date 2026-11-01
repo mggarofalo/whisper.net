@@ -39,17 +39,17 @@ public sealed class SettingsDesignSystemSteps(SettingsDesignSystemDriver design,
 	[Then(@"the History, Home and Model list rows expose their content as the automation name")]
 	public void ThenRowAutomationNames() => design.AssertListRowsHaveMeaningfulAutomationNames();
 
-	[Then(@"the Refresh, Download, Copy and Select buttons take their icons from the shared Fluent glyphs")]
+	[Then(@"the Refresh, Download, Cancel and Copy buttons take their icons from the shared Fluent glyphs")]
 	public void ThenSharedIcons() => design.AssertButtonsUseTheSharedIconSet();
 
 	[Then(@"every icon-only button has a tooltip and an accessible name")]
 	public void ThenIconButtonsAccessible() => design.AssertIconOnlyButtonsAreAccessible();
 
-	[Then(@"the Download, Cancel, Select and Copy row actions are icon-only buttons")]
+	[Then(@"the Download, Cancel and Copy row actions are icon-only buttons")]
 	public void ThenRowActionsIconOnly() => design.AssertRowActionsAreIconOnly();
 
-	[Then(@"a selectable model and the selected model show different icons in the same slot")]
-	public void ThenSelectAndSelectedDistinct() => design.AssertSelectAndSelectedAreDistinct();
+	[Then(@"the model list is a single-selection list bound to the model in use")]
+	public void ThenModelSelectionList() => design.AssertModelListIsASelectionList();
 
 	[Given(@"the persisted active model is ""(.*)""")]
 	public void GivenActiveModel(string modelId) => isolation.GivenActiveModel(modelId);
