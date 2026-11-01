@@ -68,6 +68,11 @@ public sealed partial class HomeViewModel : FeatureViewModel
 	[ObservableProperty]
 	private string? _activeModel;
 
+	/// <summary>The model dictation will load, as the shared "In use" card shows it (WHISPER-153); null when
+	/// the catalog has no entry for the configured id.</summary>
+	[ObservableProperty]
+	private InUseModelSummary? _inUseModel;
+
 	/// <summary>The current dictation hotkey chord, from settings.</summary>
 	[ObservableProperty]
 	private string? _hotkey;
@@ -128,6 +133,7 @@ public sealed partial class HomeViewModel : FeatureViewModel
 	{
 		AppSettingsDto settings = await _mediator.Send(new GetSettingsQuery(), cancellationToken);
 		ActiveModel = settings.ModelId;
+		InUseModel = await FindInUseModelAsync(settings.ModelId, cancellationToken);
 		Hotkey = settings.Hotkey;
 		InputDevice = await ResolveDeviceNameAsync(settings.CaptureDeviceId, cancellationToken);
 
@@ -148,6 +154,14 @@ public sealed partial class HomeViewModel : FeatureViewModel
 
 	// Map the persisted device id to a friendly name for display; "follow system default" needs no lookup,
 	// and a device that is no longer present falls back to the same label rather than showing a raw id.
+	// The card summarizes the model settings say dictation will load, matched by id in the model list, so Home
+	// agrees with the "Model" line above it rather than with whatever the runtime last loaded.
+	private async Task<InUseModelSummary?> FindInUseModelAsync(string? modelId, CancellationToken cancellationToken)
+	{
+		IReadOnlyList<ModelListItemDto>? models = await _mediator.Send(new ListModelsQuery(), cancellationToken);
+		ModelListItemDto? model = models?.FirstOrDefault(m => string.Equals(m.Id, modelId, StringComparison.OrdinalIgnoreCase));
+		return model is null ? null : InUseModelSummary.From(model);
+	}
 	private async Task<string> ResolveDeviceNameAsync(string captureDeviceId, CancellationToken cancellationToken)
 	{
 		if (string.Equals(captureDeviceId, AudioDevice.SystemDefault, StringComparison.OrdinalIgnoreCase))

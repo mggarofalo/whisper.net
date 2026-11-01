@@ -9,48 +9,9 @@
              sees the view's own resources and the Application, and the smoke harness composes without one. -->
         <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
 
-        <!-- A Low/Medium/High rating as a three-dot meter: every dot lit for High, two for Medium, one for Low.
-             An unlit dot is the text colour, faded well back, so it reads as empty in either theme. -->
-        <DataTemplate x:Key="RatingDots">
-            <StackPanel Orientation="Horizontal"
-                        VerticalAlignment="Center">
-                <Ellipse Style="{DynamicResource RatingDot}" />
-                <Ellipse x:Name="Second"
-                         Style="{DynamicResource RatingDot}" />
-                <Ellipse x:Name="Third"
-                         Style="{DynamicResource RatingDot}" />
-            </StackPanel>
-            <DataTemplate.Triggers>
-                <DataTrigger Binding="{Binding}"
-                             Value="Low">
-                    <Setter TargetName="Second"
-                            Property="Fill"
-                            Value="{DynamicResource TextFillColorPrimaryBrush}" />
-                    <Setter TargetName="Second"
-                            Property="Opacity"
-                            Value="0.2" />
-                    <Setter TargetName="Third"
-                            Property="Fill"
-                            Value="{DynamicResource TextFillColorPrimaryBrush}" />
-                    <Setter TargetName="Third"
-                            Property="Opacity"
-                            Value="0.2" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding}"
-                             Value="Medium">
-                    <Setter TargetName="Third"
-                            Property="Fill"
-                            Value="{DynamicResource TextFillColorPrimaryBrush}" />
-                    <Setter TargetName="Third"
-                            Property="Opacity"
-                            Value="0.2" />
-                </DataTrigger>
-            </DataTemplate.Triggers>
-        </DataTemplate>
-
         <!-- Rating meters give way to the progress bar while the row downloads. -->
         <Style x:Key="HiddenWhileDownloading"
-               TargetType="StackPanel">
+               TargetType="ContentControl">
             <Style.Triggers>
                 <DataTrigger Binding="{Binding IsDownloading}"
                              Value="True">
@@ -62,8 +23,7 @@
     </UserControl.Resources>
     <!-- Typography, spacing and colour come from the shared tokens in ShellResources.xaml (WHISPER-142). -->
     <DockPanel Margin="{DynamicResource PageMargin}">
-        <!-- Page header: the title with a one-line explanation under it, and the page command on the right. The
-             model in use is the list's selection, so the header no longer repeats it. -->
+        <!-- Page header: the title alone, like every other page, and the page command on the right. -->
         <Grid DockPanel.Dock="Top"
               Margin="{DynamicResource PageHeaderMargin}">
             <Grid.ColumnDefinitions>
@@ -71,13 +31,8 @@
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <StackPanel>
-                <TextBlock Text="Model"
-                           Style="{DynamicResource PageTitle}" />
-                <TextBlock Text="Choose the model to dictate with. Choosing one that isn't on this device downloads it first."
-                           Style="{DynamicResource CaptionText}"
-                           TextWrapping="Wrap" />
-            </StackPanel>
+            <TextBlock Text="Model"
+                       Style="{DynamicResource PageTitle}" />
             <!-- Lightweight loading state: visible while the activation-triggered load runs. -->
             <TextBlock Grid.Column="1"
                        Text="Loading…"
@@ -96,6 +51,14 @@
                     AutomationProperties.Name="Refresh model list"
                     Command="{Binding LoadCommand}" />
         </Grid>
+
+        <!-- WHISPER-153: the model in use, summarized by the same card Home shows. It follows ActiveModel, the
+             list's committed selection, so it changes only once a switch succeeds. -->
+        <ContentControl DockPanel.Dock="Top"
+                        Content="{Binding ActiveModel}"
+                        ContentTemplate="{DynamicResource InUseModelCard}"
+                        Focusable="False"
+                        Margin="0,0,16,16" />
 
         <!-- WHISPER-149: the models are a single-selection list, and the selection IS the model in use. It is
              bound one way from ActiveModel, which only moves once a switch succeeds. CommandedSelectionBehavior
@@ -205,39 +168,11 @@
                                        Style="{DynamicResource CaptionText}"
                                        TextWrapping="Wrap"
                                        Margin="0,1,0,0" />
-                            <StackPanel Orientation="Horizontal"
-                                        Margin="0,6,0,0"
-                                        Style="{StaticResource HiddenWhileDownloading}">
-                                <StackPanel Orientation="Horizontal"
-                                            Margin="0,0,14,0"
-                                            AutomationProperties.Name="{Binding Speed, StringFormat='Speed: {0}'}">
-                                    <TextBlock Text="Speed"
-                                               Style="{DynamicResource CaptionText}"
-                                               Margin="0,0,6,0" />
-                                    <ContentControl Content="{Binding Speed}"
-                                                    ContentTemplate="{StaticResource RatingDots}"
-                                                    Focusable="False" />
-                                </StackPanel>
-                                <StackPanel Orientation="Horizontal"
-                                            Margin="0,0,14,0"
-                                            AutomationProperties.Name="{Binding Accuracy, StringFormat='Accuracy: {0}'}">
-                                    <TextBlock Text="Accuracy"
-                                               Style="{DynamicResource CaptionText}"
-                                               Margin="0,0,6,0" />
-                                    <ContentControl Content="{Binding Accuracy}"
-                                                    ContentTemplate="{StaticResource RatingDots}"
-                                                    Focusable="False" />
-                                </StackPanel>
-                                <StackPanel Orientation="Horizontal"
-                                            AutomationProperties.Name="{Binding Memory, StringFormat='RAM: {0}'}">
-                                    <TextBlock Text="RAM"
-                                               Style="{DynamicResource CaptionText}"
-                                               Margin="0,0,6,0" />
-                                    <ContentControl Content="{Binding Memory}"
-                                                    ContentTemplate="{StaticResource RatingDots}"
-                                                    Focusable="False" />
-                                </StackPanel>
-                            </StackPanel>
+                            <ContentControl Content="{Binding}"
+                                            ContentTemplate="{DynamicResource RatingMeters}"
+                                            Focusable="False"
+                                            Margin="0,6,0,0"
+                                            Style="{StaticResource HiddenWhileDownloading}" />
                             <!-- Progress: shown only while this row is downloading. -->
                             <StackPanel Orientation="Horizontal"
                                         Margin="0,6,0,0"

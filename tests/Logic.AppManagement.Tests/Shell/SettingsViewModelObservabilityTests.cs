@@ -112,6 +112,11 @@ public sealed class SettingsViewModelObservabilityTests
 			return (string?)current == "changed-value" ? "other-value" : "changed-value";
 		}
 
+		if (underlying == typeof(InUseModelSummary))
+		{
+			return new InUseModelSummary("base.en", "Base (EN)", "142 MB", default, default, default, IsDownloaded: true);
+		}
+
 		if (underlying == typeof(ModelItemViewModel))
 		{
 			return new ModelItemViewModel(

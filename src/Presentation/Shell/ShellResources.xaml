@@ -237,6 +237,173 @@
                 Value="{DynamicResource AccentFillColorDefaultBrush}" />
     </Style>
 
+    <!-- A Low/Medium/High rating as a three-dot meter: every dot lit for High, two for Medium, one for Low.
+         An unlit dot is the text colour, faded well back, so it reads as empty in either theme. -->
+    <DataTemplate x:Key="RatingDots">
+        <StackPanel Orientation="Horizontal"
+                    VerticalAlignment="Center">
+            <Ellipse Style="{DynamicResource RatingDot}" />
+            <Ellipse x:Name="Second"
+                     Style="{DynamicResource RatingDot}" />
+            <Ellipse x:Name="Third"
+                     Style="{DynamicResource RatingDot}" />
+        </StackPanel>
+        <DataTemplate.Triggers>
+            <DataTrigger Binding="{Binding}"
+                         Value="Low">
+                <Setter TargetName="Second"
+                        Property="Fill"
+                        Value="{DynamicResource TextFillColorPrimaryBrush}" />
+                <Setter TargetName="Second"
+                        Property="Opacity"
+                        Value="0.2" />
+                <Setter TargetName="Third"
+                        Property="Fill"
+                        Value="{DynamicResource TextFillColorPrimaryBrush}" />
+                <Setter TargetName="Third"
+                        Property="Opacity"
+                        Value="0.2" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding}"
+                         Value="Medium">
+                <Setter TargetName="Third"
+                        Property="Fill"
+                        Value="{DynamicResource TextFillColorPrimaryBrush}" />
+                <Setter TargetName="Third"
+                        Property="Opacity"
+                        Value="0.2" />
+            </DataTrigger>
+        </DataTemplate.Triggers>
+    </DataTemplate>
+
+    <!-- A model's Speed / Accuracy / RAM meters in one row, each announced as "Speed: High". The data context is
+         anything with Speed, Accuracy and Memory ratings: a Model page row or the in-use card's model. -->
+    <DataTemplate x:Key="RatingMeters">
+        <StackPanel Orientation="Horizontal">
+            <StackPanel Orientation="Horizontal"
+                        Margin="0,0,14,0"
+                        AutomationProperties.Name="{Binding Speed, StringFormat='Speed: {0}'}">
+                <TextBlock Text="Speed"
+                           Style="{DynamicResource CaptionText}"
+                           Margin="0,0,6,0" />
+                <ContentControl Content="{Binding Speed}"
+                                ContentTemplate="{DynamicResource RatingDots}"
+                                Focusable="False" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal"
+                        Margin="0,0,14,0"
+                        AutomationProperties.Name="{Binding Accuracy, StringFormat='Accuracy: {0}'}">
+                <TextBlock Text="Accuracy"
+                           Style="{DynamicResource CaptionText}"
+                           Margin="0,0,6,0" />
+                <ContentControl Content="{Binding Accuracy}"
+                                ContentTemplate="{DynamicResource RatingDots}"
+                                Focusable="False" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal"
+                        AutomationProperties.Name="{Binding Memory, StringFormat='RAM: {0}'}">
+                <TextBlock Text="RAM"
+                           Style="{DynamicResource CaptionText}"
+                           Margin="0,0,6,0" />
+                <ContentControl Content="{Binding Memory}"
+                                ContentTemplate="{DynamicResource RatingDots}"
+                                Focusable="False" />
+            </StackPanel>
+        </StackPanel>
+    </DataTemplate>
+
+    <!-- The "In use" card (WHISPER-153): one summary of the model in use, shown at the top of the Model page
+         and of Home. A Fluent card surface: the theme's card fill and stroke, rounded like the window's cards. -->
+    <Style x:Key="InUseCard"
+           TargetType="Border">
+        <Setter Property="Background"
+                Value="{DynamicResource CardBackgroundFillColorDefaultBrush}" />
+        <Setter Property="BorderBrush"
+                Value="{DynamicResource CardStrokeColorDefaultBrush}" />
+        <Setter Property="BorderThickness"
+                Value="1" />
+        <Setter Property="CornerRadius"
+                Value="8" />
+        <Setter Property="Padding"
+                Value="16,12" />
+    </Style>
+
+    <Style x:Key="InUseCardTitle"
+           TargetType="TextBlock">
+        <Setter Property="FontSize"
+                Value="20" />
+        <Setter Property="FontWeight"
+                Value="SemiBold" />
+        <Setter Property="Foreground"
+                Value="{DynamicResource TextFillColorPrimaryBrush}" />
+        <Setter Property="Margin"
+                Value="0,2,0,0" />
+    </Style>
+
+    <Style x:Key="InUseCardLabel"
+           TargetType="TextBlock">
+        <Setter Property="FontSize"
+                Value="12" />
+        <Setter Property="FontWeight"
+                Value="SemiBold" />
+        <Setter Property="Foreground"
+                Value="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+        <Setter Property="VerticalAlignment"
+                Value="Center" />
+    </Style>
+
+    <!-- The card's content. Its data context is the model in use: the Model page's live ActiveModel row or
+         Home's InUseModelSummary, which share these property names. A model that is persisted but not on this
+         device yet (a fresh install) says so. -->
+    <DataTemplate x:Key="InUseModelCard">
+        <Border Style="{DynamicResource InUseCard}"
+                AutomationProperties.Name="{Binding DisplayName, StringFormat='In use: {0}'}">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="{DynamicResource GlyphInUse}"
+                               FontFamily="{DynamicResource IconFont}"
+                               Style="{DynamicResource InUseCardLabel}"
+                               Margin="0,0,6,0" />
+                    <TextBlock Text="In use"
+                               Style="{DynamicResource InUseCardLabel}" />
+                </StackPanel>
+                <TextBlock Text="{Binding DisplayName}"
+                           Style="{DynamicResource InUseCardTitle}"
+                           TextWrapping="Wrap" />
+                <TextBlock Style="{DynamicResource CaptionText}"
+                           Margin="0,1,0,0">
+                    <TextBlock.Text>
+                        <MultiBinding StringFormat="{}{0} · {1}">
+                            <Binding Path="Id" />
+                            <Binding Path="SizeText" />
+                        </MultiBinding>
+                    </TextBlock.Text>
+                </TextBlock>
+                <TextBlock Text="Not downloaded yet"
+                           Margin="0,4,0,0">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock"
+                               BasedOn="{StaticResource WarningText}">
+                            <Setter Property="Visibility"
+                                    Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsDownloaded}"
+                                             Value="False">
+                                    <Setter Property="Visibility"
+                                            Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+                <ContentControl Content="{Binding}"
+                                ContentTemplate="{DynamicResource RatingMeters}"
+                                Focusable="False"
+                                Margin="0,8,0,0" />
+            </StackPanel>
+        </Border>
+    </DataTemplate>
+
     <!-- The scrolling page body: the right padding reserves a gutter for the Fluent overlay scrollbar,
          which otherwise paints over the row actions (Copy / Download / Cancel) at the right edge. -->
     <Style x:Key="ContentScrollViewer"
@@ -258,6 +425,7 @@
     <sys:String x:Key="GlyphDownload">&#xE896;</sys:String>
     <sys:String x:Key="GlyphCopy">&#xE8C8;</sys:String>
     <sys:String x:Key="GlyphCancel">&#xE711;</sys:String>
+    <sys:String x:Key="GlyphInUse">&#xE73E;</sys:String>
     <sys:String x:Key="GlyphSearch">&#xE721;</sys:String>
     <sys:String x:Key="GlyphPrevious">&#xE76B;</sys:String>
     <sys:String x:Key="GlyphNext">&#xE76C;</sys:String>

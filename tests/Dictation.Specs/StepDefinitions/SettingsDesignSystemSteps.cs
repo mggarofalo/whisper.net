@@ -74,4 +74,10 @@ public sealed class SettingsDesignSystemSteps(SettingsDesignSystemDriver design,
 
 	[Then(@"the application resources merge none of the shell styles")]
 	public void ThenAppMergesNoShellStyles() => design.AssertAppMergesNoShellStyles();
+
+	[Then(@"the Model page and Home both show the shared in-use card for the model in use")]
+	public void ThenSharedInUseCard() => design.AssertSharedInUseCard();
+
+	[Then(@"no settings page puts a caption directly under its title")]
+	public void ThenNoSubtitles() => design.AssertNoPageSubtitles();
 }

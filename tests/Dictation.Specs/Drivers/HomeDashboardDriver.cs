@@ -28,9 +28,13 @@ public sealed class HomeDashboardDriver
 	private readonly IHistoryStore _history;
 	private readonly FakeAudioDeviceEnumerator _devices;
 	private readonly IMessenger _messenger;
+	private readonly IModelCatalog _catalog;
+	private readonly IModelCache _cache;
 
-	public HomeDashboardDriver(IMediator mediator, IMessenger messenger, ISettingsStore settings, IHistoryStore history, FakeAudioDeviceEnumerator devices, IUiCollectionSynchronizer synchronizer)
+	public HomeDashboardDriver(IMediator mediator, IMessenger messenger, ISettingsStore settings, IHistoryStore history, FakeAudioDeviceEnumerator devices, IUiCollectionSynchronizer synchronizer, IModelCatalog catalog, IModelCache cache)
 	{
+		_catalog = catalog;
+		_cache = cache;
 		_settings = settings;
 		_history = history;
 		_devices = devices;
@@ -106,6 +110,22 @@ public sealed class HomeDashboardDriver
 	}
 
 	public void AssertActiveModel(string modelId) => _viewModel.ActiveModel.Should().Be(modelId);
+
+	// WHISPER-153: the model file is in the local cache.
+	public void GivenModelOnThisDevice(string modelId) =>
+		_cache.IsCached(Arg.Is<Domain.Models.WhisperModelCatalogEntry>(e => string.Equals(e.Id, modelId, StringComparison.OrdinalIgnoreCase))).Returns(true);
+
+	// WHISPER-153: the in-use card summarizes the catalog entry for the model settings say dictation loads.
+	public void AssertInUseModel(string modelId, bool downloaded)
+	{
+		Domain.Models.WhisperModelCatalogEntry entry = _catalog.Find(modelId) ?? throw new InvalidOperationException($"Unknown model id '{modelId}'.");
+		InUseModelSummary? card = _viewModel.InUseModel;
+		card.Should().NotBeNull("Home shows the model in use");
+		card!.Id.Should().Be(entry.Id);
+		card.DisplayName.Should().Be(entry.DisplayName);
+		card.SizeText.Should().Be(ModelSizeFormatter.Format(entry.SizeBytes));
+		card.IsDownloaded.Should().Be(downloaded);
+	}
 
 	public void AssertInputDevice(string deviceName) => _viewModel.InputDevice.Should().Be(deviceName);
 

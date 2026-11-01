@@ -57,4 +57,13 @@ public sealed class HomeDashboardSteps(HomeDashboardDriver driver)
 
 	[Then(@"the dashboard shows its empty recent state")]
 	public void ThenEmpty() => driver.AssertEmptyRecent();
+
+	[Given(@"the model ""(.*)"" is on this device")]
+	public void GivenModelOnDevice(string modelId) => driver.GivenModelOnThisDevice(modelId);
+
+	[Then(@"Home's in-use card shows ""(.*)"" with its name, size and ratings")]
+	public void ThenInUseCard(string modelId) => driver.AssertInUseModel(modelId, downloaded: true);
+
+	[Then(@"Home's in-use card shows ""(.*)"" as not downloaded yet")]
+	public void ThenInUseCardNotDownloaded(string modelId) => driver.AssertInUseModel(modelId, downloaded: false);
 }
