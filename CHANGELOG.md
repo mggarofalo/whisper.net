@@ -6,6 +6,8 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-01
+
 ### Added
 
 - **See your version and update from inside the app.** Settings → General has a new *About & updates*
@@ -19,6 +21,20 @@ All notable changes to this project are documented here. The format is based on
 - **Network use:** the update check contacts **only** the project's GitHub Releases feed, and **only** when you click
   *Check for updates* or have turned on automatic checks. Opening Settings never checks. No user data is
   sent. See *Privacy & network use* in the README. (WHISPER-151)
+- **An "In use" card for your model.** The top of the Model page and of Home now show the model you
+  dictate with: its name, id and download size, and its speed, accuracy and RAM meters. If the model you
+  picked isn't downloaded yet, the card says so. On Home it replaces the plain "Model" line. (WHISPER-153)
+
+### Changed
+
+- The Model page no longer has a line of explanation under its title, like the other pages. (WHISPER-153)
+
+### Fixed
+
+- **Text boxes follow dark mode.** History's search box, and the other text boxes in Settings, showed as
+  a white box in dark mode. The app was setting up its shared styles before switching to the Windows 11
+  theme. They now pick up the theme in both light and dark, and the search icon is visible in dark mode.
+  (WHISPER-152)
 
 ## [0.5.3] - 2026-11-01
 
@@ -419,7 +435,8 @@ that shipped in 0.1.0, organized by category.
 - **The persisted active model is shown in the picker** before it loads. (WHISPER-118)
 - **The Home dashboard refreshes** on every activation. (WHISPER-119)
 
-[Unreleased]: https://github.com/mggarofalo/whisper.net/compare/v0.5.3...HEAD
+[Unreleased]: https://github.com/mggarofalo/whisper.net/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/mggarofalo/whisper.net/releases/tag/v0.6.0
 [0.5.3]: https://github.com/mggarofalo/whisper.net/releases/tag/v0.5.3
 [0.5.2]: https://github.com/mggarofalo/whisper.net/releases/tag/v0.5.2
 [0.5.1]: https://github.com/mggarofalo/whisper.net/releases/tag/v0.5.1
