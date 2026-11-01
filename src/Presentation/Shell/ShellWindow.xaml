@@ -12,9 +12,10 @@
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <!-- The shared converters + validation chrome the feature views reference:
-                     merged at window level too, so the shell is self-contained — its views resolve their
-                     resources wherever the window is composed, Application or not (the smoke harness). -->
+                <!-- The shared converters, styles and validation chrome the feature views reference. Merged
+                     here only, never in App.xaml: the window is built after OnStartup applies the Fluent theme,
+                     so the implicit styles based on the theme's (the TextBox) resolve to Fluent (WHISPER-152).
+                     It also keeps the shell self-contained for the smoke harness. -->
                 <ResourceDictionary Source="/Presentation;component/Shell/ShellResources.xaml" />
             </ResourceDictionary.MergedDictionaries>
 

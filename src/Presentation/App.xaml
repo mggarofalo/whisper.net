@@ -1,14 +1,8 @@
 <Application x:Class="Presentation.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <Application.Resources>
-        <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <!-- The shell's shared converters + validation chrome: owned by a standalone
-                     dictionary the shell window also merges, so views resolve them with or without a live
-                     Application. Merged here too so any future window gets them app-wide. -->
-                <ResourceDictionary Source="/Presentation;component/Shell/ShellResources.xaml" />
-            </ResourceDictionary.MergedDictionaries>
-        </ResourceDictionary>
-    </Application.Resources>
+    <!-- No shell resources here on purpose (WHISPER-152). App.xaml is parsed before OnStartup sets ThemeMode,
+         so a merge here would build ShellResources' implicit styles (BasedOn the theme's TextBox style, and so
+         on) on the classic Windows theme instead of Fluent, and that app-wide copy shadows the window's. The
+         shell window merges ShellResources itself, after the Fluent theme is in place. -->
 </Application>
