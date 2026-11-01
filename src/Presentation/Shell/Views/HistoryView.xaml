@@ -55,6 +55,7 @@
               Margin="0,0,16,12">
             <TextBlock Text="{DynamicResource GlyphSearch}"
                        Style="{DynamicResource ButtonGlyph}"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                        Margin="10,0,0,0"
                        IsHitTestVisible="False"
                        Panel.ZIndex="1" />

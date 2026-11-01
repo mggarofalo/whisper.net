@@ -200,6 +200,12 @@ public sealed partial class SettingsDesignSystemDriver(IEnumerable<NavigationSec
 		}
 	}
 
+	// WHISPER-152: App.xaml is parsed before OnStartup applies the Fluent theme, so merging the shell styles there
+	// builds the implicit TextBox style (BasedOn the theme's) on the classic theme: a white box in dark mode.
+	public void AssertAppMergesNoShellStyles() =>
+		File.ReadAllText(Path.Combine(ShellDirectory, "..", "App.xaml"))
+			.Should().NotContain("ShellResources.xaml", "the shell window merges its styles after the theme is applied");
+
 	// WHISPER-149: choosing a model is the list's selection, not a row button. The models are a single-selection
 	// ListBox bound one way to the model in use, with no select / selected glyphs left anywhere.
 	public void AssertModelListIsASelectionList()

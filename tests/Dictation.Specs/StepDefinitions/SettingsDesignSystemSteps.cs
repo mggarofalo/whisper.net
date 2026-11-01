@@ -71,4 +71,7 @@ public sealed class SettingsDesignSystemSteps(SettingsDesignSystemDriver design,
 
 	[Then(@"Home and Model agree that ""(.*)"" is the active model")]
 	public Task ThenHomeAndModelAgree(string modelId) => isolation.AssertHomeAndModelAgree(modelId);
+
+	[Then(@"the application resources merge none of the shell styles")]
+	public void ThenAppMergesNoShellStyles() => design.AssertAppMergesNoShellStyles();
 }

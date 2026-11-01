@@ -20,6 +20,8 @@
 #                  list's selection             -> "The model list is a selection list"
 #  WHISPER-147 AC3 shared glyphs, implicit Fluent button style                     -> "...shared, accessible icon set"
 #                                                                                   (no keyed button Style: review)
+#  WHISPER-152 the shell styles are built on the Fluent theme (App.xaml merges none of them)
+#         -> "The shell styles are built on the Fluent theme"; the search icon brush and the dark render: PR screenshots
 #  The rendered look in light and dark is verified by before/after screenshots in the PR (manual).
 
 @WHISPER-142
@@ -63,3 +65,7 @@ Feature: The settings pages share one theme-aware design system
 
   Scenario: List rows are announced by their content
     Then the History, Home and Model list rows expose their content as the automation name
+
+  @WHISPER-152
+  Scenario: The shell styles are built on the Fluent theme
+    Then the application resources merge none of the shell styles
