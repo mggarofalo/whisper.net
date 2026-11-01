@@ -35,6 +35,21 @@ public sealed class WhisperModelCatalog : IModelCatalog
 		new("large-v3-turbo-q5_0", "Large v3 Turbo (multilingual, compressed)", "q5_0", "ggml-large-v3-turbo-q5_0.bin", 547 * Mb),
 		new("large-v3-turbo", "Large v3 Turbo (multilingual)", "f16", "ggml-large-v3-turbo.bin", 1_550 * Mb),
 		new("large-v3", "Large v3 (multilingual)", "f16", "ggml-large-v3.bin", 2_900 * Mb),
+
+		// Distil-Whisper distil-large-v3.5 (MIT): large-v3's encoder with a 2-layer distilled decoder, trained on
+		// English only, so it is pinned to "en" (it keeps the multilingual tokenizer, so auto-detection could
+		// wander). Roughly 1.5x turbo's speed with slightly better short-form accuracy, which suits dictation. It
+		// lives in its own Hugging Face repo under a generic file name, so it carries its download URL and is
+		// cached under a distinct local name; the published SHA-256 is pinned.
+		new(
+			"distil-large-v3.5",
+			"Distil Large v3.5 (English)",
+			"f16",
+			"ggml-distil-large-v3.5.bin",
+			1_519_521_155,
+			sha256: "ec2498919b498c5f6b00041adb45650124b3cd9f26f545fffa8f5d11c28dcf26",
+			sourceUrl: "https://huggingface.co/distil-whisper/distil-large-v3.5-ggml/resolve/main/ggml-model.bin",
+			language: "en"),
 	];
 
 	public IReadOnlyList<WhisperModelCatalogEntry> Entries => CatalogEntries;
