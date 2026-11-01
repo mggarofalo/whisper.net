@@ -27,7 +27,13 @@
                            Style="{DynamicResource BodyText}" />
             </Border>
 
-            <!-- Current configuration at a glance: live from settings. -->
+            <!-- WHISPER-153: the model in use, summarized by the same card the Model page shows. -->
+            <ContentControl Content="{Binding InUseModel}"
+                            ContentTemplate="{DynamicResource InUseModelCard}"
+                            Focusable="False"
+                            Margin="0,0,0,16" />
+
+            <!-- The rest of the configuration at a glance: live from settings. -->
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
@@ -36,17 +42,13 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="Model" Style="{DynamicResource CaptionText}" VerticalAlignment="Center" Margin="0,0,16,4" />
-                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding ActiveModel, TargetNullValue='(none)'}" Style="{DynamicResource BodyText}" Margin="0,0,0,4" />
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Hotkey" Style="{DynamicResource CaptionText}" VerticalAlignment="Center" Margin="0,0,16,4" />
+                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Hotkey, TargetNullValue='(none)'}" Style="{DynamicResource BodyText}" Margin="0,0,0,4" />
 
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="Hotkey" Style="{DynamicResource CaptionText}" VerticalAlignment="Center" Margin="0,0,16,4" />
-                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Hotkey, TargetNullValue='(none)'}" Style="{DynamicResource BodyText}" Margin="0,0,0,4" />
-
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="Input device" Style="{DynamicResource CaptionText}" VerticalAlignment="Center" Margin="0,0,16,4" />
-                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding InputDevice, TargetNullValue='(none)'}" Style="{DynamicResource BodyText}" Margin="0,0,0,4" />
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Input device" Style="{DynamicResource CaptionText}" VerticalAlignment="Center" Margin="0,0,16,4" />
+                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding InputDevice, TargetNullValue='(none)'}" Style="{DynamicResource BodyText}" Margin="0,0,0,4" />
             </Grid>
 
             <!-- Headline usage totals: computed by the Application layer, not here; the time-saved text is

@@ -206,6 +206,29 @@ public sealed partial class SettingsDesignSystemDriver(IEnumerable<NavigationSec
 		File.ReadAllText(Path.Combine(ShellDirectory, "..", "App.xaml"))
 			.Should().NotContain("ShellResources.xaml", "the shell window merges its styles after the theme is applied");
 
+	// WHISPER-153: one "In use" card, defined once and shown on both pages. The Model page binds it to the list's
+	// committed selection (ActiveModel); Home binds it to its InUseModel summary.
+	public void AssertSharedInUseCard()
+	{
+		Resources.Should().Contain("x:Key=\"InUseModelCard\"", "the card is defined once in the shared dictionary");
+		foreach ((string view, string bound) in new[] { ("ModelView", "ActiveModel"), ("HomeView", "InUseModel") })
+		{
+			Views[view].Should().MatchRegex(
+				$"Content=\"\\{{Binding {bound}\\}}\"\\s+ContentTemplate=\"\\{{DynamicResource InUseModelCard\\}}\"",
+				$"{view} shows the shared in-use card for {bound}");
+		}
+	}
+
+	// WHISPER-153: pages are titled, not subtitled — no caption sits directly under a page title.
+	public void AssertNoPageSubtitles()
+	{
+		foreach ((string view, string xaml) in Views)
+		{
+			xaml.Should().NotMatchRegex("PageTitle\\}\"\\s*/>\\s*<TextBlock\\b[^>]*CaptionText",
+				$"{view} has no subtitle under its title");
+		}
+	}
+
 	// WHISPER-149: choosing a model is the list's selection, not a row button. The models are a single-selection
 	// ListBox bound one way to the model in use, with no select / selected glyphs left anywhere.
 	public void AssertModelListIsASelectionList()

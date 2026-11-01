@@ -68,6 +68,23 @@ internal sealed class SmokeScope : IDisposable
 			return store;
 		});
 
+		// The model ports Home's activation refresh reads through ListModelsQuery for its in-use card
+		// (WHISPER-153). Registered by AddModelManagement in production/specs; contract-honoring fakes here:
+		// an empty catalog, nothing cached, no model loaded.
+		services.AddScoped(_ =>
+		{
+			IModelCatalog catalog = Substitute.For<IModelCatalog>();
+			catalog.Entries.Returns([]);
+			return catalog;
+		});
+		services.AddScoped(_ => Substitute.For<IModelCache>());
+		services.AddScoped(_ =>
+		{
+			IModelLifecycle lifecycle = Substitute.For<IModelLifecycle>();
+			lifecycle.Status.Returns(Domain.Models.ModelStatus.Unloaded);
+			return lifecycle;
+		});
+
 		// The device-selection policy the audio section resolves its saved selection through. Registered by
 		// AddAudioManagement in production/specs; the smoke scope composes only Application + AppManagement,
 		// so add it explicitly so the AudioDeviceViewModel resolves exactly as the shell would.

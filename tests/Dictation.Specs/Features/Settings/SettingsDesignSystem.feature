@@ -22,6 +22,8 @@
 #                                                                                   (no keyed button Style: review)
 #  WHISPER-152 the shell styles are built on the Fluent theme (App.xaml merges none of them)
 #         -> "The shell styles are built on the Fluent theme"; the search icon brush and the dark render: PR screenshots
+#  WHISPER-153 one shared in-use card on Model and Home; no page subtitle
+#         -> "Model and Home show the same in-use card" + "No page has a subtitle under its title"
 #  The rendered look in light and dark is verified by before/after screenshots in the PR (manual).
 
 @WHISPER-142
@@ -69,3 +71,11 @@ Feature: The settings pages share one theme-aware design system
   @WHISPER-152
   Scenario: The shell styles are built on the Fluent theme
     Then the application resources merge none of the shell styles
+
+  @WHISPER-153
+  Scenario: Model and Home show the same in-use card
+    Then the Model page and Home both show the shared in-use card for the model in use
+
+  @WHISPER-153
+  Scenario: No page has a subtitle under its title
+    Then no settings page puts a caption directly under its title
