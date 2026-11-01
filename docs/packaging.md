@@ -95,12 +95,25 @@ install root, so Velopack reclaims it on the next install/update anyway.
 `App.OnStartup` calls `VelopackApp.Build().Run()` first, so when the installer or updater launches the
 app with a hook argument it performs the hook and exits instead of starting the tray.
 
-## Auto-update
+## Updates
 
-When the user opts in (`AutoUpdate` settings — **off by default**, so there is no network egress
-otherwise), a startup background check asks the release feed for a newer version and stages it to apply on
-the next restart. The policy (`AutoUpdateService`) keeps the app running on the current version if the
-channel is unreachable. See the network disclosure in [README](../README.md) and [CHANGELOG](../CHANGELOG.md).
+Settings → General shows the running version (`GetAppVersionQuery`: the MinVer informational version cut
+to the version plus a 7-character commit hash) and offers two ways to update, both through the
+`IUpdateSource` port (`VelopackUpdateSource`, Velopack's `UpdateManager` over a `GithubSource` for
+`AutoUpdate:RepositoryUrl`):
+
+- **Manual** — *Check for updates* sends `CheckForUpdateQuery`; a build that is not a Velopack install
+  answers locally ("only available in the installed app") with no request. *Download and restart* sends
+  `InstallUpdateCommand`, which downloads with progress, stages the release with
+  `WaitExitThenApplyUpdates(restart: true)`, and then stops the app through the host lifetime (the tray's
+  Quit path), so settings are saved and the instance lock released before Velopack applies and relaunches.
+- **Automatic** — when the user turns on *Check for updates automatically* (the persisted
+  `AutomaticUpdateChecksEnabled` setting, **off by default**; the `AutoUpdate:Enabled` configuration switch
+  also enables it), a startup background check stages a newer release to apply on the next restart.
+
+Opening Settings never contacts the network. The policy (`AutoUpdateService`) and the handlers keep the
+app running on the current version if the channel is unreachable or a download fails. See the network
+disclosure in [README](../README.md) and [CHANGELOG](../CHANGELOG.md).
 
 ## Code signing
 

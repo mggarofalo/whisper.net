@@ -544,6 +544,18 @@ public static class TestDependencies
 		services.AddScoped(_ => Substitute.For<IUpdateSource>());
 		services.AddScoped<AutoUpdateDriver>();
 
+		// Version display + in-app updates (WHISPER-151): the real GeneralViewModel and update handlers
+		// over the same faked update source, a faked build version (a fresh build reads as 0.0.0 until a
+		// scenario sets one), and a faked app lifetime that records the graceful shutdown an install requests.
+		services.AddScoped(_ =>
+		{
+			IBuildInfo buildInfo = Substitute.For<IBuildInfo>();
+			buildInfo.InformationalVersion.Returns("0.0.0");
+			return buildInfo;
+		});
+		services.AddScoped(_ => Substitute.For<IAppLifetime>());
+		services.AddScoped<VersionAndUpdatesDriver>();
+
 		return services;
 	}
 }

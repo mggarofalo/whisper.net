@@ -10,6 +10,7 @@ using Application.Ports;
 using Application.Updates;
 using AwesomeAssertions;
 using Dictation.Specs.Support;
+using Domain.Settings;
 using Logic.AppManagement.Updates;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -30,7 +31,10 @@ public sealed class AutoUpdateDriver
 	public AutoUpdateDriver(IUpdateSource source)
 	{
 		_source = source;
-		_service = new AutoUpdateService(source, Options.Create(_options), _logger);
+		// The configuration switch is what these scenarios toggle; the user setting stays at its default (off).
+		ISettingsStore settings = Substitute.For<ISettingsStore>();
+		settings.LoadAsync(Arg.Any<CancellationToken>()).Returns(AppSettings.Default);
+		_service = new AutoUpdateService(source, settings, Options.Create(_options), _logger);
 	}
 
 	// --- given ---

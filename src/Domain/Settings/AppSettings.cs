@@ -42,6 +42,11 @@ public sealed record AppSettings
 	// fallback if the chosen display is no longer attached. Defaulted so existing sites need not change.
 	public string? OverlayMonitorDeviceName { get; }
 
+	// Whether the app checks GitHub Releases for a newer version at startup. Network egress, so it is
+	// OFF by default: without this opt-in the only update check is the one the user starts by clicking
+	// "Check for updates". Defaulted so existing sites need not change.
+	public bool AutomaticUpdateChecksEnabled { get; }
+
 	public AppSettings(
 		string modelId,
 		HotkeyBinding hotkey,
@@ -52,7 +57,8 @@ public sealed record AppSettings
 		bool setupCompleted = false,
 		ThemePreference themePreference = ThemePreference.System,
 		string? captureDeviceName = null,
-		string? overlayMonitorDeviceName = null)
+		string? overlayMonitorDeviceName = null,
+		bool automaticUpdateChecksEnabled = false)
 	{
 		if (string.IsNullOrWhiteSpace(modelId))
 		{
@@ -84,6 +90,7 @@ public sealed record AppSettings
 		ThemePreference = themePreference;
 		CaptureDeviceName = captureDeviceName;
 		OverlayMonitorDeviceName = overlayMonitorDeviceName;
+		AutomaticUpdateChecksEnabled = automaticUpdateChecksEnabled;
 	}
 
 	// The settings a fresh install starts from.

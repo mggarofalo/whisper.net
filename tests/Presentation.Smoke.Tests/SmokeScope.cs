@@ -92,6 +92,19 @@ internal sealed class SmokeScope : IDisposable
 			return catalog;
 		});
 
+		// The General section's version line and update buttons (GetAppVersion / CheckForUpdate /
+		// InstallUpdate). The build info and update source are Infrastructure ports and the app lifetime needs a
+		// Generic Host, none of which this scope composes; contract-honoring substitutes (a not-installed
+		// build that is never asked to update) keep a future all-sections activation from leaking a failure.
+		services.AddScoped(_ =>
+		{
+			IBuildInfo buildInfo = Substitute.For<IBuildInfo>();
+			buildInfo.InformationalVersion.Returns("0.5.3+c9efc2f3a7b1d9e0f00112233445566778899aab");
+			return buildInfo;
+		});
+		services.AddScoped(_ => Substitute.For<IUpdateSource>());
+		services.AddScoped(_ => Substitute.For<IAppLifetime>());
+
 		return new SmokeScope(services.BuildServiceProvider());
 	}
 

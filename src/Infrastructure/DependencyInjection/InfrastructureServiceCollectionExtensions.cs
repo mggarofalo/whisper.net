@@ -121,9 +121,13 @@ public static class InfrastructureServiceCollectionExtensions
 		services.AddSingleton<IGlobalKeyHook, SharpHookGlobalKeyHook>();
 		services.AddSingleton<IHotkeyListener, EventLoopHotkeyListener>();
 
-		// In-app auto-update: Velopack UpdateManager over the configured GitHub Releases feed.
-		// Constructing it touches no network; the update policy only calls it when the user has opted in.
+		// In-app updates: Velopack UpdateManager over the configured GitHub Releases feed. Constructing it
+		// touches no network; it is only called when the user clicks "Check for updates" or has opted in to
+		// the automatic startup check.
 		services.AddSingleton<IUpdateSource, Updates.VelopackUpdateSource>();
+
+		// The running build's MinVer version, shown in the General settings section.
+		services.AddSingleton<IBuildInfo, Updates.AssemblyBuildInfo>();
 
 		// Persistence: a single SQLite database backs both the settings and history ports. The
 		// migration runner brings the schema to the latest version on first use (WAL mode, idempotent); the

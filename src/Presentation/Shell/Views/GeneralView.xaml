@@ -2,44 +2,113 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              KeyboardNavigation.TabNavigation="Local">
-    <!-- Typography, spacing and colour come from the shared tokens in ShellResources.xaml (WHISPER-142). -->
-    <StackPanel Margin="{DynamicResource PageMargin}">
-        <TextBlock Text="General"
-                   Style="{DynamicResource PageTitle}"
-                   Margin="{DynamicResource PageHeaderMargin}" />
+    <UserControl.Resources>
+        <!-- Declared locally so the view is self-contained: parse-time StaticResource only
+             sees the view's own resources and the Application, and the smoke harness composes without one. -->
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+    </UserControl.Resources>
+    <!-- Typography, spacing and colour come from the shared tokens in ShellResources.xaml (WHISPER-142).
+         The shared scroll style reserves a right gutter so the overlay scrollbar never covers content. -->
+    <ScrollViewer Style="{DynamicResource ContentScrollViewer}">
+        <StackPanel Margin="{DynamicResource PageMargin}">
+            <TextBlock Text="General"
+                       Style="{DynamicResource PageTitle}"
+                       Margin="{DynamicResource PageHeaderMargin}" />
 
-        <CheckBox Content="Start Whisper when I sign in to Windows"
-                  AutomationProperties.Name="Start Whisper at login"
-                  IsChecked="{Binding RunAtLogin, Mode=TwoWay}" />
+            <CheckBox Content="Start Whisper when I sign in to Windows"
+                      AutomationProperties.Name="Start Whisper at login"
+                      IsChecked="{Binding RunAtLogin, Mode=TwoWay}" />
 
-        <!-- Helper text sits flush with its control, the same as every other helper on the page. -->
-        <TextBlock Text="Whisper launches automatically and waits in the system tray, so the dictation hotkey works right after you sign in."
-                   Style="{DynamicResource CaptionText}"
-                   Margin="0,4,0,0" />
+            <!-- Helper text sits flush with its control, the same as every other helper on the page. -->
+            <TextBlock Text="Whisper launches automatically and waits in the system tray, so the dictation hotkey works right after you sign in."
+                       Style="{DynamicResource CaptionText}"
+                       Margin="0,4,0,0" />
 
-        <TextBlock x:Name="OverlayDisplayLabel"
-                   Text="Recording overlay display"
-                   Style="{DynamicResource FieldLabel}"
-                   Margin="{DynamicResource GapSection}" />
+            <TextBlock x:Name="OverlayDisplayLabel"
+                       Text="Recording overlay display"
+                       Style="{DynamicResource FieldLabel}"
+                       Margin="{DynamicResource GapSection}" />
 
-        <!-- Which monitor the recording pill appears on. "Primary display (default)" persists as null, so a
-             fresh install and a removed display both fall back to the primary. The two-way SelectedValue
-             binding is the whole contract: the view-model commits a genuine user pick and ignores the
-             programmatic selection a reload performs; the stored value is the stable device name. -->
-        <ComboBox x:Name="OverlayMonitorBox"
-                  MinWidth="320"
-                  MaxWidth="420"
-                  HorizontalAlignment="Left"
-                  Margin="{DynamicResource GapTight}"
-                  AutomationProperties.Name="Recording overlay display"
-                  AutomationProperties.LabeledBy="{Binding ElementName=OverlayDisplayLabel}"
-                  ItemsSource="{Binding OverlayMonitors}"
-                  DisplayMemberPath="Label"
-                  SelectedValuePath="DeviceName"
-                  SelectedValue="{Binding SelectedOverlayMonitor, Mode=TwoWay}" />
+            <!-- Which monitor the recording pill appears on. "Primary display (default)" persists as null, so a
+                 fresh install and a removed display both fall back to the primary. The two-way SelectedValue
+                 binding is the whole contract: the view-model commits a genuine user pick and ignores the
+                 programmatic selection a reload performs; the stored value is the stable device name. -->
+            <ComboBox x:Name="OverlayMonitorBox"
+                      MinWidth="320"
+                      MaxWidth="420"
+                      HorizontalAlignment="Left"
+                      Margin="{DynamicResource GapTight}"
+                      AutomationProperties.Name="Recording overlay display"
+                      AutomationProperties.LabeledBy="{Binding ElementName=OverlayDisplayLabel}"
+                      ItemsSource="{Binding OverlayMonitors}"
+                      DisplayMemberPath="Label"
+                      SelectedValuePath="DeviceName"
+                      SelectedValue="{Binding SelectedOverlayMonitor, Mode=TwoWay}" />
 
-        <TextBlock Text="The small recording overlay appears at the bottom-center of the display you choose here."
-                   Style="{DynamicResource CaptionText}"
-                   Margin="0,4,0,0" />
-    </StackPanel>
+            <TextBlock Text="The small recording overlay appears at the bottom-center of the display you choose here."
+                       Style="{DynamicResource CaptionText}"
+                       Margin="0,4,0,0" />
+
+            <!-- About & updates (WHISPER-151). Nothing here touches the network on its own: the release feed is
+                 contacted only when the user clicks Check for updates, or at startup once they opt in below. -->
+            <TextBlock Text="About &amp; updates"
+                       Style="{DynamicResource SectionHeader}" />
+
+            <TextBlock Style="{DynamicResource BodyText}"
+                       AutomationProperties.Name="{Binding AppVersion, StringFormat='Whisper version {0}'}">
+                <Run Text="Version" />
+                <Run Text="{Binding AppVersion, Mode=OneWay}" />
+            </TextBlock>
+
+            <StackPanel Orientation="Horizontal"
+                        Margin="{DynamicResource GapTight}">
+                <Button AutomationProperties.Name="Check for updates"
+                        Command="{Binding CheckForUpdatesCommand}"
+                        Padding="12,4">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{DynamicResource GlyphRefresh}"
+                                   Style="{DynamicResource ButtonGlyph}" />
+                        <TextBlock Text="Check for updates" />
+                    </StackPanel>
+                </Button>
+                <!-- Offered only once a check has found a newer release. -->
+                <Button AutomationProperties.Name="Download update and restart Whisper"
+                        Command="{Binding InstallUpdateCommand}"
+                        Visibility="{Binding IsUpdateAvailable, Converter={StaticResource BoolToVisibility}}"
+                        Margin="8,0,0,0"
+                        Padding="12,4">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{DynamicResource GlyphDownload}"
+                                   Style="{DynamicResource ButtonGlyph}" />
+                        <TextBlock Text="Download and restart" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+
+            <!-- What the last check or install found; the progress bar shows only while an install downloads. -->
+            <TextBlock Text="{Binding UpdateStatus}"
+                       Style="{DynamicResource BodyText}"
+                       AutomationProperties.LiveSetting="Polite"
+                       Margin="{DynamicResource GapTight}" />
+            <ProgressBar Value="{Binding UpdateProgress}"
+                         Width="240"
+                         HorizontalAlignment="Left"
+                         Margin="{DynamicResource GapTight}"
+                         AutomationProperties.Name="Update download progress"
+                         Visibility="{Binding InstallUpdateCommand.IsRunning, Converter={StaticResource BoolToVisibility}}" />
+
+            <TextBlock Text="Checking contacts GitHub (github.com/mggarofalo/whisper.net) for the latest release. Nothing about you or your dictation is sent."
+                       Style="{DynamicResource CaptionText}"
+                       Margin="0,4,0,0" />
+
+            <CheckBox Content="Check for updates automatically when Whisper starts"
+                      AutomationProperties.Name="Check for updates automatically"
+                      IsChecked="{Binding AutomaticUpdateChecks, Mode=TwoWay}"
+                      Margin="{DynamicResource GapGroup}" />
+
+            <TextBlock Text="Off by default. When on, Whisper checks GitHub at startup and downloads a newer release in the background; it installs the next time Whisper restarts."
+                       Style="{DynamicResource CaptionText}"
+                       Margin="0,4,0,0" />
+        </StackPanel>
+    </ScrollViewer>
 </UserControl>

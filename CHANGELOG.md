@@ -6,6 +6,20 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+### Added
+
+- **See your version and update from inside the app.** Settings → General has a new *About & updates*
+  area showing the version you are running, as the version plus a short commit id (for example
+  `0.5.3+c9efc2f`). **Check for updates** asks GitHub whether a newer release exists and says what it
+  found. If there is one, **Download and restart** downloads it, shows progress, and restarts the app into
+  the new version. A failed check or download says why, and the app keeps running. (WHISPER-151)
+- **Optional automatic update checks.** A new *Check for updates automatically when Whisper starts*
+  setting checks at startup, downloads a newer release in the background, and installs it the next time
+  the app restarts. It is **off by default**. (WHISPER-151)
+- **Network use:** the update check contacts **only** the project's GitHub Releases feed, and **only** when you click
+  *Check for updates* or have turned on automatic checks. Opening Settings never checks. No user data is
+  sent. See *Privacy & network use* in the README. (WHISPER-151)
+
 ## [0.5.3] - 2026-11-01
 
 ### Changed

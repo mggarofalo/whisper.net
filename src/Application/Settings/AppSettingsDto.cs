@@ -18,4 +18,5 @@ public sealed record AppSettingsDto(
 	bool SetupCompleted = false,
 	ThemePreference ThemePreference = ThemePreference.System,
 	string? CaptureDeviceName = null,
-	string? OverlayMonitorDeviceName = null);
+	string? OverlayMonitorDeviceName = null,
+	bool AutomaticUpdateChecksEnabled = false);

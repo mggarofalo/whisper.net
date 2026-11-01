@@ -1,7 +1,8 @@
 // The in-app auto-update policy: the single place that decides whether to check, download,
 // and apply an update, and — crucially — that a failed or unreachable update never takes the app down.
-// It honors the opt-in switch first (no check, so no network egress, when disabled), then checks the
-// release source; if a newer release is found it downloads and stages it to apply on the next restart.
+// It honors the opt-in first — the user's persisted "check for updates automatically" setting, or the
+// AutoUpdate:Enabled configuration switch — so with neither on there is no check and no network egress.
+// It then checks the release source; if a newer release is found it downloads and stages it to apply on the next restart.
 // Any failure (channel unreachable, download error) is logged via Serilog and swallowed: the app keeps
 // running on the current version. Cancellation propagates. Pure policy over the IUpdateSource port, so it
 // is unit- and BDD-tested with a faked source — no Velopack, no network.
@@ -16,12 +17,14 @@ namespace Logic.AppManagement.Updates;
 
 public sealed class AutoUpdateService(
 	IUpdateSource source,
+	ISettingsStore settings,
 	IOptions<AutoUpdateOptions> options,
 	ILogger<AutoUpdateService> logger)
 {
 	public async ValueTask<UpdateOutcome> UpdateIfAvailableAsync(CancellationToken cancellationToken)
 	{
-		if (!options.Value.Enabled)
+		bool optedIn = options.Value.Enabled || (await settings.LoadAsync(cancellationToken)).AutomaticUpdateChecksEnabled;
+		if (!optedIn)
 		{
 			// Opt-in is off: do not touch the network at all.
 			logger.LogDebug("Auto-update is disabled; skipping the update check.");

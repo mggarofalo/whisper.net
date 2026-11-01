@@ -6,12 +6,19 @@
 // and the device picker. The overlay-display picker lists the attached monitors (ListMonitorsQuery) with a
 // "Primary display (default)" choice first (persisted as null, so a fresh install and a removed display
 // both fall back to the primary), and persists a change through the whole settings DTO like the other
-// pickers. Built on CommunityToolkit.Mvvm and WPF-free so the behavior is driven for real in specs.
+// pickers.
+//
+// It also hosts "About & updates" (WHISPER-151): the running version, a "Check for updates" button, a
+// "Download and restart" button once a newer release is found, and the opt-in automatic startup check.
+// Opening the section never touches the network — only the user's click sends CheckForUpdateQuery — and
+// the automatic check is a persisted setting that is off by default. Built on CommunityToolkit.Mvvm and
+// WPF-free so the behavior is driven for real in specs.
 
 using System.Collections.ObjectModel;
 using Application.Display;
 using Application.Settings;
 using Application.Startup;
+using Application.Updates;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Mediator;
@@ -42,6 +49,37 @@ public sealed partial class GeneralViewModel : FeatureViewModel
 	[ObservableProperty]
 	private string? _selectedOverlayMonitor;
 
+	/// <summary>The running version, formatted as the version plus a short commit hash.</summary>
+	[ObservableProperty]
+	private string _appVersion = string.Empty;
+
+	/// <summary>Whether the app checks for updates at startup. Opt-in: off by default.</summary>
+	[ObservableProperty]
+	private bool _automaticUpdateChecks;
+
+	/// <summary>What the last check or install found, for the status line beside the buttons.</summary>
+	[ObservableProperty]
+	private string _updateStatus = string.Empty;
+
+	/// <summary>The newer version the last check found, or null when there is nothing to install.</summary>
+	[ObservableProperty]
+	[NotifyPropertyChangedFor(nameof(IsUpdateAvailable))]
+	[NotifyCanExecuteChangedFor(nameof(InstallUpdateCommand))]
+	private string? _availableVersion;
+
+	/// <summary>True while a check or an install is in flight, so the buttons cannot start a second one.</summary>
+	[ObservableProperty]
+	[NotifyCanExecuteChangedFor(nameof(CheckForUpdatesCommand))]
+	[NotifyCanExecuteChangedFor(nameof(InstallUpdateCommand))]
+	private bool _isUpdating;
+
+	/// <summary>Download progress of an install, 0-100.</summary>
+	[ObservableProperty]
+	private int _updateProgress;
+
+	/// <summary>Whether a newer release was found and can be installed.</summary>
+	public bool IsUpdateAvailable => AvailableVersion is not null;
+
 	/// <summary>The overlay display currently persisted in settings — what a selection change is compared
 	/// against to tell a real user pick from the programmatic selection a reload performs.</summary>
 	public string? CommittedOverlayMonitor => _settings?.OverlayMonitorDeviceName;
@@ -63,6 +101,9 @@ public sealed partial class GeneralViewModel : FeatureViewModel
 
 			_settings = await _mediator.Send(new GetSettingsQuery(), cancellationToken);
 			OnPropertyChanged(nameof(CommittedOverlayMonitor));
+			AutomaticUpdateChecks = _settings.AutomaticUpdateChecksEnabled;
+
+			AppVersion = await _mediator.Send(new GetAppVersionQuery(), cancellationToken);
 
 			IReadOnlyList<MonitorInfo> monitors = await _mediator.Send(new ListMonitorsQuery(), cancellationToken);
 
@@ -90,6 +131,85 @@ public sealed partial class GeneralViewModel : FeatureViewModel
 			IsLoading = false;
 		}
 	}
+
+	// The user's explicit request to contact the release feed. A failure is reported in the status line;
+	// nothing is downloaded until the user also clicks "Download and restart".
+	[RelayCommand(CanExecute = nameof(CanCheckForUpdates))]
+	private async Task CheckForUpdatesAsync(CancellationToken cancellationToken)
+	{
+		IsUpdating = true;
+		AvailableVersion = null;
+		UpdateStatus = "Checking for updates…";
+		try
+		{
+			UpdateCheckResult result = await _mediator.Send(new CheckForUpdateQuery(), cancellationToken);
+			AvailableVersion = result.Status == UpdateCheckStatus.Available ? result.Version : null;
+			UpdateStatus = result.Status switch
+			{
+				UpdateCheckStatus.Available => $"Version {result.Version} is available.",
+				UpdateCheckStatus.UpToDate => "Whisper is up to date.",
+				UpdateCheckStatus.NotInstalled => "Updates are only available in the installed app.",
+				_ => $"Couldn't check for updates: {Sentence(result.Error)}",
+			};
+		}
+		finally
+		{
+			IsUpdating = false;
+		}
+	}
+
+	private bool CanCheckForUpdates() => !IsUpdating;
+
+	// Download the release the check found, then restart into it. On success the app is already shutting
+	// down; on failure the status explains why and the app keeps running on the current version.
+	[RelayCommand(CanExecute = nameof(CanInstallUpdate))]
+	private async Task InstallUpdateAsync(CancellationToken cancellationToken)
+	{
+		if (AvailableVersion is not { } version)
+		{
+			return;
+		}
+
+		IsUpdating = true;
+		UpdateProgress = 0;
+		UpdateStatus = $"Downloading version {version}…";
+		bool restarting = false;
+		try
+		{
+			Progress<int> progress = new(percent => UpdateProgress = percent);
+			UpdateInstallResult result = await _mediator.Send(new InstallUpdateCommand(version, progress), cancellationToken);
+			restarting = result.Restarting;
+			UpdateStatus = restarting
+				? $"Restarting to finish installing version {version}…"
+				: $"Couldn't install the update: {Sentence(result.Error)}";
+		}
+		finally
+		{
+			// While the app shuts down to apply the update, keep the buttons disabled.
+			IsUpdating = restarting;
+		}
+	}
+
+	private bool CanInstallUpdate() => !IsUpdating && AvailableVersion is not null;
+
+	// Error messages come from the network stack; end them with exactly one full stop.
+	private static string Sentence(string? message) =>
+		string.IsNullOrWhiteSpace(message) ? "an unknown error occurred." : message.Trim().TrimEnd('.') + ".";
+
+	// A genuine user toggle persists the opt-in; it takes effect at the next startup.
+	partial void OnAutomaticUpdateChecksChanged(bool value)
+	{
+		if (IsLoading || _settings is null || _settings.AutomaticUpdateChecksEnabled == value)
+		{
+			return;
+		}
+
+		_settings = _settings with { AutomaticUpdateChecksEnabled = value };
+		_ = PersistAutomaticUpdateChecksAsync(value);
+	}
+
+	private async Task PersistAutomaticUpdateChecksAsync(bool value) =>
+		_settings = await SettingsWriter.UpdateAsync(_mediator, current => current with { AutomaticUpdateChecksEnabled = value });
 
 	// A genuine user toggle (not the load's programmatic set) applies the change through the command. Both
 	// port operations are idempotent, so a repeated state never duplicates or orphans the registration.
