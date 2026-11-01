@@ -6,6 +6,27 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.5.3] - 2026-11-01
+
+### Changed
+
+- **Choose a model by choosing its row.** The Model page is now a list where the selection is the model
+  in use, marked with a light fill and a short accent bar. Click a row, or press Space or Enter on it, to
+  switch. The mark moves only once the switch has worked, so a model that is still downloading or that
+  failed never looks selected. The arrow keys move between rows without choosing, so browsing never starts
+  a download. The select and selected icons from 0.5.2 are gone. (WHISPER-149)
+- **Each model row says where it stands.** Under the name, a row shows the model's id, its download size
+  and its state in words: In use, On this device, Not downloaded, or "Downloading, then switching". Speed,
+  accuracy and RAM are shown as three-dot meters. The only button left on a row is Download (download
+  without switching) or Cancel. (WHISPER-149)
+- If you choose another model while one is still downloading, your latest choice wins. (WHISPER-149)
+
+### Fixed
+
+- **A model that fails to load now says so on its row** ("Couldn't switch to …"), and the model you were
+  using stays in use. Before, the failure escaped the switch command instead of showing on the page.
+  (WHISPER-149)
+
 ## [0.5.2] - 2026-10-31
 
 ### Added
@@ -384,7 +405,8 @@ that shipped in 0.1.0, organized by category.
 - **The persisted active model is shown in the picker** before it loads. (WHISPER-118)
 - **The Home dashboard refreshes** on every activation. (WHISPER-119)
 
-[Unreleased]: https://github.com/mggarofalo/whisper.net/compare/v0.5.2...HEAD
+[Unreleased]: https://github.com/mggarofalo/whisper.net/compare/v0.5.3...HEAD
+[0.5.3]: https://github.com/mggarofalo/whisper.net/releases/tag/v0.5.3
 [0.5.2]: https://github.com/mggarofalo/whisper.net/releases/tag/v0.5.2
 [0.5.1]: https://github.com/mggarofalo/whisper.net/releases/tag/v0.5.1
 [0.5.0]: https://github.com/mggarofalo/whisper.net/releases/tag/v0.5.0
