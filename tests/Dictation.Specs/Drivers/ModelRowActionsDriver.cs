@@ -1,7 +1,7 @@
 // Drives the contextual-action scenarios. It builds the REAL ModelViewModel over the REAL
 // Mediator pipeline (ListModels / DownloadModel handlers) and the REAL catalog, faking only the
 // device-facing cache, downloader, and lifecycle. So it proves the compact list's rule for real: each row
-// exposes only the action that fits its state (Download / Cancel / Select), derived from the genuine
+// exposes only the action that fits its state (Download / Cancel), derived from the genuine
 // downloaded/active/downloading state the picker computes — not a hand-set flag. The buttons that bind to
 // these flags are Presentation glue verified by smoke.
 
@@ -62,14 +62,13 @@ public sealed class ModelRowActionsDriver
 		ModelItemViewModel row = Item(id);
 		row.CanDownload.Should().BeTrue("an un-downloaded model offers Download");
 		row.IsDownloading.Should().BeFalse();
-		row.CanSelect.Should().BeFalse();
 	}
 
-	public void AssertOnlySelect(string id)
+	// A downloaded model is chosen through the list's selection, so its row carries no action of its own.
+	public void AssertNoAction(string id)
 	{
 		ModelItemViewModel row = Item(id);
-		row.CanSelect.Should().BeTrue("a downloaded, non-active model offers Select");
-		row.CanDownload.Should().BeFalse();
+		row.CanDownload.Should().BeFalse("a downloaded model has nothing to download");
 		row.IsDownloading.Should().BeFalse();
 	}
 
@@ -78,7 +77,6 @@ public sealed class ModelRowActionsDriver
 		ModelItemViewModel row = Item(id);
 		row.IsDownloading.Should().BeTrue("a downloading row offers Cancel");
 		row.CanDownload.Should().BeFalse();
-		row.CanSelect.Should().BeFalse();
 	}
 
 	public void AssertNoActionButActive(string id)
@@ -86,7 +84,6 @@ public sealed class ModelRowActionsDriver
 		ModelItemViewModel row = Item(id);
 		row.IsActive.Should().BeTrue("the selected model is indicated");
 		row.CanDownload.Should().BeFalse();
-		row.CanSelect.Should().BeFalse();
 		row.IsDownloading.Should().BeFalse();
 	}
 

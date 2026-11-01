@@ -1,5 +1,6 @@
 # Coverage map (acceptance criterion -> scenario):
-#  AC2 only contextually valid actions are shown per row (Download / Cancel / Select)
+#  AC2 only contextually valid actions are shown per row (Download / Cancel; since WHISPER-149 choosing a
+#      model is the list's selection, not a row action)
 #         -> "Each row offers only the action that fits its state" + "A downloading row offers only Cancel"
 #  AC1 (the full list is usable at the default window size without horizontal scrolling) and AC3 (the
 #      selected model is visually indicated) are layout/visual outcomes validated by the WHISPER-96 smoke
@@ -8,13 +9,13 @@
 @WHISPER-105
 Feature: The model list shows only the action that fits each row's state
   As someone managing Whisper models
-  I want each row to show only Download, Cancel, or Select as appropriate
+  I want each row to show only Download or Cancel as appropriate
   So that the list is compact instead of a permanent three-button strip
 
   Scenario: Each row offers only the action that fits its state
     Given the model rows are loaded with "small.en" active and "base.en" downloaded
     Then the "medium" row offers only its Download action
-    And the "base.en" row offers only its Select action
+    And the "base.en" row offers no row action
     And the "small.en" row offers no row action and is shown as the selected model
 
   Scenario: A row that is downloading offers only Cancel

@@ -118,11 +118,15 @@ public sealed partial class SettingsDesignSystemDriver(IEnumerable<NavigationSec
 			"x:Key=\"ContentScrollViewer\"[\\s\\S]*?Property=\"Padding\"\\s+Value=\"0,0,16,0\"",
 			"the shared scroll style reserves a right gutter for the overlay scrollbar");
 
-		foreach (string view in new[] { "HomeView", "HistoryView", "ModelView" })
+		foreach (string view in new[] { "HomeView", "HistoryView" })
 		{
 			Views[view].Should().Contain("Style=\"{DynamicResource ContentScrollViewer}\"",
 				$"{view}'s scrollbar must not cover its row actions");
 		}
+
+		// The model list scrolls itself (a ListBox, WHISPER-149), so it reserves the same gutter inside the list.
+		Views["ModelView"].Should().MatchRegex("<ListBox\\b[^>]*Padding=\"0,0,16,0\"",
+			"the model list's scrollbar must not cover its row actions");
 	}
 
 	public void AssertWindowHasAMinimumSize()
@@ -136,7 +140,7 @@ public sealed partial class SettingsDesignSystemDriver(IEnumerable<NavigationSec
 		foreach ((string view, string bound) in new[] { ("HistoryView", "Text"), ("HomeView", "Text"), ("ModelView", "DisplayName") })
 		{
 			Views[view].Should().MatchRegex(
-				$"<ItemsControl\\.ItemContainerStyle>[\\s\\S]*?Property=\"AutomationProperties\\.Name\"\\s+Value=\"\\{{Binding {bound}\\}}\"",
+				$"\\.ItemContainerStyle>[\\s\\S]*?Property=\"AutomationProperties\\.Name\"[\\s\\S]*?\\{{?Binding (Path=\")?{bound}\\b",
 				$"{view}'s rows are announced by their {bound}, not the item's ToString");
 		}
 	}
@@ -145,7 +149,7 @@ public sealed partial class SettingsDesignSystemDriver(IEnumerable<NavigationSec
 	{
 		Resources.Should().Contain("<FontFamily x:Key=\"IconFont\">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>",
 			"icons use the Windows 11 Fluent icon font, falling back to MDL2");
-		foreach (string glyph in new[] { "GlyphRefresh", "GlyphDownload", "GlyphCopy", "GlyphSelect" })
+		foreach (string glyph in new[] { "GlyphRefresh", "GlyphDownload", "GlyphCopy", "GlyphCancel" })
 		{
 			Resources.Should().Contain($"x:Key=\"{glyph}\"", $"{glyph} is defined once in the shared dictionary");
 		}
@@ -155,7 +159,7 @@ public sealed partial class SettingsDesignSystemDriver(IEnumerable<NavigationSec
 			xaml.Should().NotContain("&#x", $"{view} takes its glyphs from the shared dictionary, not literal code points");
 		}
 
-		Views["ModelView"].Should().Contain("{DynamicResource GlyphDownload}").And.Contain("{DynamicResource GlyphSelect}");
+		Views["ModelView"].Should().Contain("{DynamicResource GlyphDownload}").And.Contain("{DynamicResource GlyphCancel}");
 		Views["HistoryView"].Should().Contain("{DynamicResource GlyphCopy}");
 	}
 
@@ -179,7 +183,7 @@ public sealed partial class SettingsDesignSystemDriver(IEnumerable<NavigationSec
 	{
 		(string View, string Glyph)[] actions =
 		[
-			("ModelView", "GlyphDownload"), ("ModelView", "GlyphCancel"), ("ModelView", "GlyphSelect"), ("HistoryView", "GlyphCopy"),
+			("ModelView", "GlyphDownload"), ("ModelView", "GlyphCancel"), ("HistoryView", "GlyphCopy"),
 		];
 		foreach ((string view, string glyph) in actions)
 		{
@@ -196,26 +200,18 @@ public sealed partial class SettingsDesignSystemDriver(IEnumerable<NavigationSec
 		}
 	}
 
-	// WHISPER-147: "click to select this" and "this is selected" are two different glyphs in the same slot —
-	// the select button only on a row you can switch to, a non-interactive mark only on the active row.
-	public void AssertSelectAndSelectedAreDistinct()
+	// WHISPER-149: choosing a model is the list's selection, not a row button. The models are a single-selection
+	// ListBox bound one way to the model in use, with no select / selected glyphs left anywhere.
+	public void AssertModelListIsASelectionList()
 	{
-		string select = GlyphValue().Match(Resources[Resources.IndexOf("x:Key=\"GlyphSelect\"", StringComparison.Ordinal)..]).Groups[1].Value;
-		string selected = GlyphValue().Match(Resources[Resources.IndexOf("x:Key=\"GlyphSelected\"", StringComparison.Ordinal)..]).Groups[1].Value;
-		select.Should().NotBeEmpty();
-		selected.Should().NotBeEmpty().And.NotBe(select, "selectable and selected must look different");
-
-		Views["ModelView"].Should().MatchRegex(
-			"<Button\\b[^>]*Content=\"\\{DynamicResource GlyphSelect\\}\"[^>]*Visibility=\"\\{Binding CanSelect\\b",
-			"the select button appears only on a row that can be selected");
-		Views["ModelView"].Should().MatchRegex(
-			"<TextBlock\\b[^>]*Text=\"\\{DynamicResource GlyphSelected\\}\"[^>]*ToolTip=[^>]*AutomationProperties\\.Name=[^>]*Visibility=\"\\{Binding IsActive\\b",
-			"the active row shows the selected mark, explained on hover and to screen readers");
+		string model = Views["ModelView"];
+		model.Should().MatchRegex("<ListBox\\b[^>]*ItemsSource=\"\\{Binding Models\\}\"", "the models are a ListBox");
+		model.Should().Contain("SelectedItem=\"{Binding ActiveModel, Mode=OneWay}\"",
+			"the selection is the model in use, and only the view-model moves it");
+		model.Should().Contain("SelectionMode=\"Single\"");
+		model.Should().NotContain("GlyphSelect", "selection is not an icon button");
+		Resources.Should().NotContain("GlyphSelect", "the select / selected glyphs are gone");
 	}
-
-	[GeneratedRegex(">(&#x[0-9A-Fa-f]+;)<")]
-	private static partial Regex GlyphValue();
-
 	[GeneratedRegex("<Button\\b[^>]*Content=\"\\{DynamicResource Glyph\\w+\\}\"[^>]*>")]
 	private static partial Regex IconOnlyButton();
 

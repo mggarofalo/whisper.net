@@ -112,6 +112,13 @@ public sealed class SettingsViewModelObservabilityTests
 			return (string?)current == "changed-value" ? "other-value" : "changed-value";
 		}
 
+		if (underlying == typeof(ModelItemViewModel))
+		{
+			return new ModelItemViewModel(
+				new Application.Models.ModelListItemDto("base.en", "Base (EN)", 100, default, default, default, IsDownloaded: true, IsActive: true),
+				Substitute.For<IMediator>());
+		}
+
 		throw new NotSupportedException($"no distinct value rule for {type}");
 	}
 }
