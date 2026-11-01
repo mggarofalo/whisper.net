@@ -119,6 +119,10 @@ public static class AppManagementServiceCollectionExtensions
 		// Pure policy over the IUpdateSource port; the startup hosted service below drives it.
 		services.AddSingleton<Updates.AutoUpdateService>();
 
+		// Lets the install-update handler shut the app down gracefully (the tray Quit path) so Velopack can
+		// apply the staged update. The specs register a fake that records the request instead.
+		services.AddSingleton<IAppLifetime, Lifecycle.HostAppLifetime>();
+
 		// User-visible error surfacing: backend failures route a non-technical notice through
 		// IUserNotifier; the WPF composition root attaches the tray-balloon presenter once the icon exists.
 		// The TryAdd inline dispatcher keeps headless compositions (doctor mode, host-lifecycle specs)

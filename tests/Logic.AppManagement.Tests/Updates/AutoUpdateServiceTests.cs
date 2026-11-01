@@ -1,5 +1,5 @@
-// Unit tests for the auto-update policy: the opt-in gate (no check when disabled, so no
-// egress), the happy path (a newer release is downloaded and staged), the up-to-date path, and graceful
+// Unit tests for the auto-update policy: the opt-in gate (no check unless the user setting or the
+// configuration switch is on, so no egress), the happy path (a newer release is downloaded and staged), the up-to-date path, and graceful
 // degradation (an unreachable channel is logged and swallowed, never thrown). Cancellation propagates.
 // Uses a substituted IUpdateSource and a recording logger; no Velopack, no network.
 
@@ -7,6 +7,7 @@ using Application.Configuration;
 using Application.Ports;
 using Application.Updates;
 using AwesomeAssertions;
+using Domain.Settings;
 using Logic.AppManagement.Updates;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -18,10 +19,27 @@ namespace Logic.AppManagement.Tests.Updates;
 public sealed class AutoUpdateServiceTests
 {
 	private readonly IUpdateSource _source = Substitute.For<IUpdateSource>();
+	private readonly ISettingsStore _settings = Substitute.For<ISettingsStore>();
 	private readonly RecordingLogger _logger = new();
 
+	public AutoUpdateServiceTests() =>
+		_settings.LoadAsync(Arg.Any<CancellationToken>()).Returns(AppSettings.Default);
+
 	private AutoUpdateService NewService(bool enabled) =>
-		new(_source, Options.Create(new AutoUpdateOptions { Enabled = enabled }), _logger);
+		new(_source, _settings, Options.Create(new AutoUpdateOptions { Enabled = enabled }), _logger);
+
+	[Fact]
+	public async Task Checks_when_the_user_opted_in_to_automatic_checks()
+	{
+		_settings.LoadAsync(Arg.Any<CancellationToken>())
+			.Returns(new AppSettings("base.en", HotkeyBinding.Parse("Ctrl+Win"), 500, true, automaticUpdateChecksEnabled: true));
+		_source.CheckForUpdatesAsync(Arg.Any<CancellationToken>()).Returns((AvailableUpdate?)null);
+
+		UpdateOutcome outcome = await NewService(enabled: false).UpdateIfAvailableAsync(CancellationToken.None);
+
+		outcome.Should().Be(UpdateOutcome.UpToDate);
+		await _source.Received(1).CheckForUpdatesAsync(Arg.Any<CancellationToken>());
+	}
 
 	[Fact]
 	public async Task Does_not_check_when_disabled()

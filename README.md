@@ -87,7 +87,7 @@ Right-click the tray icon → **Open Settings** to reach everything:
 |------|-----------------|
 | **Home** | A live status dashboard (active model, recent activity). |
 | **Models** | Browse, download, and switch the active speech model. |
-| **General** | Capture device, dictation hotkey, theme, run-on-login. |
+| **General** | Capture device, dictation hotkey, theme, run-on-login, the running version, and updates. |
 | **Text processing** | Filler-word removal, custom vocabulary, output transforms, optional AI rephrase. |
 | **History** | Browse, search, and re-copy past transcriptions; purge your data. |
 | **Stats** | Usage totals and per-day breakdown. |
@@ -106,9 +106,16 @@ network are these **opt-in** features, each **off by default** and each clearly 
   [Ollama](https://ollama.com) model. It is **disabled by default** and may target **only** a loopback
   address (`localhost` / `127.0.0.1` / `[::1]`); a remote endpoint is refused. Your text never leaves
   the machine. If the local model isn't running, your original text is kept unchanged.
-- **Automatic updates** — the app can check the project's [GitHub Releases](https://github.com/mggarofalo/whisper.net/releases)
-  for a newer **signed** version and install it. It is **disabled by default**; when enabled, the
-  release feed is the **only** thing contacted and **no user data is ever sent**.
+- **Updates** — the app can check the project's [GitHub Releases](https://github.com/mggarofalo/whisper.net/releases)
+  for a newer version and install it. It only does so when *you* ask:
+  - **Check for updates** (Settings → General) contacts GitHub once, when you click it. If a newer
+    release exists, **Download and restart** downloads it, then restarts the app into it.
+  - **Check for updates automatically when Whisper starts** is a separate setting, **off by default**.
+    When on, the app checks at startup and downloads a newer release in the background; it installs the
+    next time the app restarts.
+
+  In both cases the GitHub release feed is the **only** thing contacted and **no user data is ever sent**.
+  Opening the settings page does not check.
 
 There is **no telemetry**. Your transcription **history** is stored in a local database, and a more
 verbose **audit log** is off unless you enable it. You can **purge** both from disk at any time from the
@@ -121,8 +128,10 @@ History settings.
 
 ## Updating
 
-If automatic updates are enabled (Settings → it's off by default), the app updates itself in the
-background and applies the update on the next restart. Otherwise, download the latest
+Your version is shown under **About & updates** in Settings → General. Click **Check for updates**
+there, then **Download and restart** if a newer version is available. If you turn on automatic update
+checks (off by default), the app checks at startup, downloads in the background, and applies the update on
+the next restart. Or download the latest
 `Whisper.Net-win-Setup.exe` from [Releases](https://github.com/mggarofalo/whisper.net/releases/latest)
 and run it over your existing install.
 
